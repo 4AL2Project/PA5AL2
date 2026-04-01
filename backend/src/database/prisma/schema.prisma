@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Pharmacy {
+  pharmacy_id       String    @id @default(uuid())
+  name              String
+  email             String    @unique
+  address           String?
+  created_at        DateTime  @default(now())
+  last_upload_at    DateTime?
+  subscription_tier String    @default("free")
+
+  products          Product[]
+  sales             Sale[]
+  analyses          RiskAnalysis[]
+}
+
+model Product {
+  product_id     String   @id @default(uuid())
+  pharmacy_id    String
+  external_sku   String?
+  name           String
+  category       String?
+  brand          String?
+  expiry_date    DateTime
+  stock_quantity Int
+  unit_price     Float
+  cost_price     Float?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  pharmacy       Pharmacy      @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  sales          Sale[]
+  analyses       RiskAnalysis[]
+
+  @@index([pharmacy_id, expiry_date])
+  @@index([pharmacy_id, external_sku])
+}
+
+model Sale {
+  sale_id         String   @id @default(uuid())
+  product_id      String
+  pharmacy_id     String
+  sale_date       DateTime
+  quantity_sold   Int
+  unit_price_sold Float?
+  created_at      DateTime @default(now())
+
+  product         Product  @relation(fields: [product_id], references: [product_id])
+  pharmacy        Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
+
+  @@index([product_id, sale_date])
+}
+
+model RiskAnalysis {
+  analysis_id        String   @id @default(uuid())
+  product_id         String
+  pharmacy_id        String
+  analysis_date      DateTime @default(now())
+
+  days_to_expiry     Int
+  sales_velocity_30d Float
+  expected_sales     Float
+  excess_stock       Int
+  risk_score         Float
+  risk_level         String
+
+  suggested_discount Int
+  recoverable_value  Float
+  potential_loss     Float
+
+  product            Product  @relation(fields: [product_id], references: [product_id])
+  pharmacy           Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
+
+  @@unique([product_id, analysis_date])
+}

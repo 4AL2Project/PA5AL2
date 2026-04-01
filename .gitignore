@@ -3,3 +3,10 @@ dist/
 .env
 *.log
 .DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Claude Code
+.claude/

@@ -5,33 +5,41 @@ REST API for pharmacy expiry-risk analysis.
 ## Stack
 
 - **NestJS** — framework
-- **Prisma** — ORM (PostgreSQL)
-- **Supabase JWT** — authentication
+- **Prisma** — ORM
+- **PostgreSQL 16** — via Docker
 - **csv-parser / xlsx** — file ingestion
 
 ## Setup
 
 ```bash
-cp .env.example .env
-# fill DATABASE_URL and SUPABASE_JWT_SECRET
+# 1. Start the database
+docker compose up -d
 
+# 2. Configure environment
+cp .env.example .env   # default values already match docker-compose
+
+# 3. Install dependencies
 npm install
-npx prisma migrate dev --schema src/database/prisma/schema.prisma
+
+# 4. Run migrations and generate Prisma client
+npx prisma migrate dev --schema src/database/prisma/schema.prisma --name init
+
+# 5. Start dev server
 npm run dev
 ```
 
+Server runs on `http://localhost:3000`.
+
 ## API
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/upload` | Upload products/sales CSV or Excel |
-| GET | `/api/analysis/latest` | Latest risk analysis per product |
-| GET | `/api/products?risk_level=&category=` | Products with risk data |
-| GET | `/api/dashboard` | Aggregated pharmacy summary |
+All routes accept `?pharmacy_id=<uuid>` as a required query parameter.
 
-All routes require `Authorization: Bearer <supabase_jwt>`.
-
-The JWT payload must include a `pharmacy_id` claim.
+| Method | Path | Query params | Description |
+|--------|------|--------------|-------------|
+| POST | `/api/upload` | `pharmacy_id` | Upload products/sales CSV or Excel |
+| GET | `/api/analysis/latest` | `pharmacy_id` | Latest risk analysis per product |
+| GET | `/api/products` | `pharmacy_id`, `risk_level?`, `category?` | Products with risk data |
+| GET | `/api/dashboard` | `pharmacy_id` | Aggregated pharmacy summary |
 
 ## File format — products CSV
 

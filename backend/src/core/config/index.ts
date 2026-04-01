@@ -4,8 +4,4 @@ export const config = {
   database: {
     url: process.env.DATABASE_URL || '',
   },
-  supabase: {
-    jwtSecret: process.env.SUPABASE_JWT_SECRET || '',
-    url: process.env.SUPABASE_URL || '',
-  },
 };

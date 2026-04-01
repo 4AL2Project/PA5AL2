@@ -1,18 +1,16 @@
-import { Controller, Get, Query, Req } from '@nestjs/common';
+import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
 import { prisma } from '../../database/client';
-import { AuthRequest } from '../auth/auth.middleware';
 
 @Controller('api/products')
 export class ProductController {
   @Get()
   async getProducts(
-    @Req() req: AuthRequest,
+    @Query('pharmacy_id') pharmacyId: string,
     @Query('risk_level') riskLevel?: string,
     @Query('category') category?: string,
   ) {
-    const pharmacyId = req.user!.pharmacy_id!;
+    if (!pharmacyId) throw new BadRequestException('pharmacy_id is required');
 
-    // fetch latest analyses with optional filters
     const analyses = await prisma.riskAnalysis.findMany({
       where: {
         pharmacy_id: pharmacyId,

@@ -1,7 +1,8 @@
 import {
   Controller,
   Post,
-  Req,
+  Query,
+  BadRequestException,
   UploadedFiles,
   UseInterceptors,
   HttpCode,
@@ -9,7 +10,6 @@ import {
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
-import { AuthRequest } from '../auth/auth.middleware';
 import { UploadService } from './upload.service';
 
 @Controller('api/upload')
@@ -28,14 +28,14 @@ export class UploadController {
     ),
   )
   async upload(
-    @Req() req: AuthRequest,
+    @Query('pharmacy_id') pharmacyId: string,
     @UploadedFiles()
     files: {
       products?: Express.Multer.File[];
       sales?: Express.Multer.File[];
     },
   ) {
-    const pharmacyId = req.user!.pharmacy_id!;
+    if (!pharmacyId) throw new BadRequestException('pharmacy_id is required');
     return this.uploadService.processUpload(
       pharmacyId,
       files.products?.[0],

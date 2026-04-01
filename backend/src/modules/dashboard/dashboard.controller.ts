@@ -1,12 +1,11 @@
-import { Controller, Get, Req } from '@nestjs/common';
+import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
 import { prisma } from '../../database/client';
-import { AuthRequest } from '../auth/auth.middleware';
 
 @Controller('api/dashboard')
 export class DashboardController {
   @Get()
-  async getDashboard(@Req() req: AuthRequest) {
-    const pharmacyId = req.user!.pharmacy_id!;
+  async getDashboard(@Query('pharmacy_id') pharmacyId: string) {
+    if (!pharmacyId) throw new BadRequestException('pharmacy_id is required');
 
     const [pharmacy, analyses] = await Promise.all([
       prisma.pharmacy.findUnique({

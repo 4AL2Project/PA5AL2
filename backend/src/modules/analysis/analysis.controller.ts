@@ -1,15 +1,13 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
 import { AnalysisService } from './analysis.service';
-import { Req } from '@nestjs/common';
-import { AuthRequest } from '../auth/auth.middleware';
 
 @Controller('api/analysis')
 export class AnalysisController {
   constructor(private readonly analysisService: AnalysisService) {}
 
   @Get('latest')
-  async getLatest(@Req() req: AuthRequest) {
-    const pharmacyId = req.user!.pharmacy_id!;
+  async getLatest(@Query('pharmacy_id') pharmacyId: string) {
+    if (!pharmacyId) throw new BadRequestException('pharmacy_id is required');
     return this.analysisService.getLatestAnalysis(pharmacyId);
   }
 }

@@ -20,12 +20,12 @@ export class DashboardController {
       }),
     ]);
 
-    const byLevel = analyses.reduce<Record<string, number>>(
-      (acc, a) => {
+    const byLevel = analyses.reduce(
+      (acc: Record<string, number>, a) => {
         acc[a.risk_level] = (acc[a.risk_level] || 0) + 1;
         return acc;
       },
-      {},
+      {} as Record<string, number>,
     );
 
     return {

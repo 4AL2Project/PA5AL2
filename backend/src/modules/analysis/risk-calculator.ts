@@ -1,4 +1,14 @@
-import { Product, Sale } from '@prisma/client';
+interface Product {
+  expiry_date: Date;
+  stock_quantity: number;
+  unit_price: number;
+  cost_price?: number | null;
+}
+
+interface Sale {
+  sale_date: Date;
+  quantity_sold: number;
+}
 import { computeVelocity } from './sales-velocity';
 import { getDiscount } from './discount';
 

@@ -1,4 +1,7 @@
-import { Sale } from '@prisma/client';
+interface Sale {
+  sale_date: Date;
+  quantity_sold: number;
+}
 
 /**
  * Computes average daily sales velocity over the last 30 days.

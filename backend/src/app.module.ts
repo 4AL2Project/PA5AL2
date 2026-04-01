@@ -6,7 +6,6 @@ import { ProductModule } from './modules/product/product.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AuthMiddleware } from './modules/auth/auth.middleware';
 import { AnalysisJob } from './jobs/analysis.job';
-import { AnalysisService } from './modules/analysis/analysis.service';
 
 @Module({
   imports: [
@@ -16,7 +15,7 @@ import { AnalysisService } from './modules/analysis/analysis.service';
     ProductModule,
     DashboardModule,
   ],
-  providers: [AnalysisJob, AnalysisService],
+  providers: [AnalysisJob],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

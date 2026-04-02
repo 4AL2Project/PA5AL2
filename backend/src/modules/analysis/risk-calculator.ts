@@ -9,10 +9,10 @@ interface Sale {
   sale_date: Date;
   quantity_sold: number;
 }
-import { computeVelocity } from './sales-velocity';
-import { getDiscount } from './discount';
 
-export type RiskLevel = 'critical' | 'high' | 'moderate' | 'low' | 'safe';
+import { computeVelocity } from './sales-velocity';
+
+export type RiskLevel = 'critical' | 'high' | 'safe';
 
 export interface RiskResult {
   days_to_expiry: number;
@@ -21,9 +21,9 @@ export interface RiskResult {
   excess_stock: number;
   risk_score: number;
   risk_level: RiskLevel;
-  suggested_discount: number;
+  suggested_action: string;
   recoverable_value: number;
-  potential_loss: Float32Array | number;
+  potential_loss: number;
 }
 
 function daysToExpiry(product: Product): number {
@@ -33,12 +33,29 @@ function daysToExpiry(product: Product): number {
   return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
 }
 
+/**
+ * Classifie en 3 niveaux :
+ * - safe     : les ventes couvrent le stock → aucune action
+ * - high     : stock excédentaire mais il reste du temps → mise en vente B2C
+ * - critical : le stock ne s'écoulera pas avant péremption → don associatif
+ *
+ * Seuils :
+ *   score > 0.70  → safe
+ *   score > 0.30  → high
+ *   score ≤ 0.30  → critical
+ */
 function classify(score: number): RiskLevel {
-  if (score <= 0.2) return 'critical';
-  if (score <= 0.4) return 'high';
-  if (score <= 0.6) return 'moderate';
-  if (score <= 0.8) return 'low';
-  return 'safe';
+  if (score > 0.70) return 'safe';
+  if (score > 0.30) return 'high';
+  return 'critical';
+}
+
+function deriveAction(level: RiskLevel): string {
+  switch (level) {
+    case 'safe':     return 'Aucune action';
+    case 'high':     return 'Mise en vente B2C';
+    case 'critical': return 'Don associatif';
+  }
 }
 
 export function calculateRisk(product: Product, sales: Sale[]): RiskResult {
@@ -48,14 +65,17 @@ export function calculateRisk(product: Product, sales: Sale[]): RiskResult {
   const expected = velocity * days;
   const excess = Math.max(0, product.stock_quantity - expected);
 
-  // score = 1 means fully covered by expected sales (safe), 0 means no sales expected (critical)
   const score = product.stock_quantity > 0
     ? Math.min(1, expected / product.stock_quantity)
     : 0;
 
-  const suggestedDiscount = getDiscount(score, days);
-  const recoverableValue = excess * product.unit_price * (suggestedDiscount / 100);
+  const level = classify(score);
   const potentialLoss = excess * (product.cost_price ?? product.unit_price);
+
+  // La valeur récupérable est estimée à 50 % du prix de vente de l'excédent
+  // pour les niveaux high et critical (don ou vente B2C soldée)
+  const recoveryRate = level === 'safe' ? 0 : 0.5;
+  const recoverableValue = excess * product.unit_price * recoveryRate;
 
   return {
     days_to_expiry: days,
@@ -63,8 +83,8 @@ export function calculateRisk(product: Product, sales: Sale[]): RiskResult {
     expected_sales: expected,
     excess_stock: Math.round(excess),
     risk_score: parseFloat(score.toFixed(4)),
-    risk_level: classify(score),
-    suggested_discount: suggestedDiscount,
+    risk_level: level,
+    suggested_action: deriveAction(level),
     recoverable_value: parseFloat(recoverableValue.toFixed(2)),
     potential_loss: parseFloat(potentialLoss.toFixed(2)),
   };

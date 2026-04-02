@@ -71,7 +71,7 @@ model RiskAnalysis {
   risk_score         Float
   risk_level         String
 
-  suggested_discount Int
+  suggested_action   String
   recoverable_value  Float
   potential_loss     Float
 

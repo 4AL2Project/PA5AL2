@@ -82,20 +82,16 @@ function computeVelocity(saleDates: Date[], quantities: number[]): number {
   return total / 30
 }
 
-function getDiscount(score: number, days: number): number {
-  if (days <= 7 || score >= 0.8) return 50
-  if (days <= 14 || score >= 0.6) return 30
-  if (days <= 30 || score >= 0.4) return 20
-  if (score >= 0.2) return 10
-  return 0
+function classifyRisk(score: number): string {
+  if (score > 0.70) return 'safe'
+  if (score > 0.30) return 'high'
+  return 'critical'
 }
 
-function classifyRisk(score: number): string {
-  if (score <= 0.2) return 'critical'
-  if (score <= 0.4) return 'high'
-  if (score <= 0.6) return 'moderate'
-  if (score <= 0.8) return 'low'
-  return 'safe'
+function deriveAction(level: string): string {
+  if (level === 'safe') return 'Aucune action'
+  if (level === 'high') return 'Mise en vente B2C'
+  return 'Don associatif'
 }
 
 function calculateRisk(
@@ -112,7 +108,8 @@ function calculateRisk(
   const expected = velocity * days
   const excess = Math.max(0, stock - expected)
   const score = stock > 0 ? Math.min(1, expected / stock) : 0
-  const discount = getDiscount(score, days)
+  const level = classifyRisk(score)
+  const recoveryRate = level === 'safe' ? 0 : 0.5
 
   return {
     days_to_expiry: days,
@@ -120,9 +117,9 @@ function calculateRisk(
     expected_sales: expected,
     excess_stock: Math.round(excess),
     risk_score: parseFloat(score.toFixed(4)),
-    risk_level: classifyRisk(score),
-    suggested_discount: discount,
-    recoverable_value: parseFloat((excess * unitPrice * (discount / 100)).toFixed(2)),
+    risk_level: level,
+    suggested_action: deriveAction(level),
+    recoverable_value: parseFloat((excess * unitPrice * recoveryRate).toFixed(2)),
     potential_loss: parseFloat((excess * costPrice).toFixed(2)),
   }
 }

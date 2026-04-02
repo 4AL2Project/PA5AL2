@@ -1,21 +1,21 @@
 external_sku,name,category,brand,expiry_date,stock_quantity,unit_price,cost_price
-DOL-1000,Doliprane 1000mg x8,Douleur,Doliprane,2026-04-10,180,2.50,1.80
-RHI-100,Rhinofluimucil Sirop 200ml,ORL,Zambon,2026-04-12,95,6.90,5.00
-VIT-C1G,Vitamine C 1000mg Effervescent x20,Vitamines,Bayer,2026-04-15,200,4.80,3.20
-CETI-10,Cetirizine 10mg x7,Allergie,Mylan,2026-04-17,130,2.90,2.00
-SER-PHYS,Serum Physiologique Unidoses x20,ORL,Gilbert,2026-04-19,160,3.50,2.40
-IBU-400,Ibuprofene 400mg x12,Douleur,Mylan,2026-04-26,110,3.20,2.20
-DOL-PED,Doliprane Pediatrique 2,4% Sirop,Pediatrie,Doliprane,2026-04-22,75,4.20,3.00
-LACT-12,Lacteol Fort 10 sachets,Digestion,Lacteol,2026-04-28,45,8.90,6.20
-NIV-HYD,Creme Hydratante Intensive 200ml,Cosmetique,Nivea,2026-04-30,55,7.50,5.00
-AMO-500,Amoxicilline 500mg x12,Antibiotiques,Mylan,2026-05-15,60,5.40,3.80
-OME-3,Omega 3 Fort x60,Vitamines,Arkopharma,2026-05-21,85,12.90,9.00
-SHA-AP,Shampooing Antipelliculaire 200ml,Hygiene,Ducray,2026-05-10,40,9.80,6.50
-CRYO,Cryotherapie Spray 300ml,Traumatologie,Urgo,2026-05-03,35,14.50,10.00
-MAG-MAR,Magnesium Marin x60,Vitamines,Nutrimea,2026-06-16,70,11.50,8.00
-ZINC-15,Zinc 15mg x30,Immunite,Nutri & Co,2026-06-02,55,8.50,6.00
-ASP-500,Aspirine 500mg x20,Douleur,Bayer,2026-07-11,120,2.80,1.90
-PRO-BIO,Probiotiques Lactiplus x30,Digestion,Lacteol,2026-07-26,45,16.90,12.00
-GEL-HYD,Gel Hydroalcoolique 500ml,Hygiene,Sanytol,2026-08-16,80,5.90,3.50
-VIT-D,Vitamine D3 1000UI x90,Vitamines,Lescuyer,2026-09-02,60,9.50,6.80
-BAND-URG,Pansements Urgence x10,Premiers soins,Urgo,2026-08-21,90,6.20,4.00
+CRE-HYD-50,Creme Hydratante Visage 50ml,Soins visage,Vichy,2026-04-10,180,12.90,8.50
+SER-VIT-C,Serum Eclat Vitamine C 30ml,Soins visage,La Roche-Posay,2026-04-12,95,24.90,16.00
+MIC-EAU-400,Eau Micellaire Sensitive 400ml,Soins visage,Bioderma,2026-04-15,200,9.90,6.20
+BB-CREAM-30,BB Cream SPF15 30ml,Maquillage,Garnier,2026-04-17,130,8.50,5.00
+FOND-TEINT-30,Fond de Teint Fluide 30ml,Maquillage,Maybelline,2026-04-19,160,14.90,9.50
+CREME-CORP-200,Creme Corps Nourrissante 200ml,Soins corps,Nuxe,2026-04-26,110,15.90,10.00
+MASQ-ARG-75,Masque Purifiant Argile 75ml,Soins visage,Caudalie,2026-04-22,75,18.50,12.00
+GEL-DOUCHE-250,Gel Douche Surgras 250ml,Soins corps,Avene,2026-04-28,45,7.90,4.80
+HUILE-SEC-100,Huile Seche Corps 100ml,Soins corps,Nuxe,2026-04-30,55,22.90,14.50
+SHA-REP-250,Shampooing Reparateur 250ml,Cheveux,Kerastase,2026-05-15,60,28.90,18.00
+COND-LISS-200,Apres-Shampooing Lissant 200ml,Cheveux,L Oreal,2026-05-21,85,11.90,7.50
+ROUGE-LEV-3G,Rouge a Levres Satin 3g,Maquillage,Bourjois,2026-05-10,40,10.90,6.50
+MASCARA-BLK,Mascara Volume Noir 9ml,Maquillage,Maybelline,2026-05-03,35,12.90,8.00
+CREME-SOL-50,Creme Solaire SPF50 50ml,Solaire,La Roche-Posay,2026-06-16,70,19.90,12.50
+TONER-ROSE-150,Lotion Tonique Rose 150ml,Soins visage,Caudalie,2026-06-02,55,16.90,10.50
+EAU-PARF-50,Eau de Parfum Florale 50ml,Parfumerie,Clarins,2026-07-11,120,45.90,28.00
+CREME-NUIT-50,Creme de Nuit Anti-Age 50ml,Soins visage,Vichy,2026-07-26,45,34.90,22.00
+BAUME-LEV-15,Baume Levres Hydratant 15ml,Soins levres,Nuxe,2026-08-16,80,9.90,5.80
+CONTOUR-YEU-15,Contour des Yeux 15ml,Soins visage,Clarins,2026-09-02,60,38.90,24.00
+GOMMAGE-100,Gommage Corps Sucre 100ml,Soins corps,Garnier,2026-08-21,90,8.90,5.20

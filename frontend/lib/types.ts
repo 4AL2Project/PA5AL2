@@ -1,4 +1,4 @@
-export type RiskLevel = 'critical' | 'high' | 'moderate' | 'medium' | 'low' | 'safe'
+export type RiskLevel = 'critical' | 'high' | 'safe'
 
 export interface Product {
   id: string
@@ -17,9 +17,7 @@ export interface Product {
 export interface AnalysisStats {
   totalProducts: number
   criticalProducts: number
-  highRiskProducts: number
-  mediumRiskProducts: number
-  lowRiskProducts: number
+  highProducts: number
   safeProducts: number
   totalRecoveryValue: number
   lastAnalysisDate: string

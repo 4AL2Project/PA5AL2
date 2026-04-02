@@ -26,20 +26,14 @@ import {
 
 const riskColors: Record<string, string> = {
   critical: 'text-risk-critical',
-  high: 'text-risk-high',
-  medium: 'text-risk-medium',
-  moderate: 'text-risk-medium',
-  low: 'text-risk-low',
-  safe: 'text-risk-low',
+  high:     'text-risk-high',
+  safe:     'text-risk-low',
 }
 
 const riskBgColors: Record<string, string> = {
   critical: 'bg-risk-critical/10',
-  high: 'bg-risk-high/10',
-  medium: 'bg-risk-medium/10',
-  moderate: 'bg-risk-medium/10',
-  low: 'bg-risk-low/10',
-  safe: 'bg-risk-low/10',
+  high:     'bg-risk-high/10',
+  safe:     'bg-risk-low/10',
 }
 
 export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -100,7 +94,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   return (
     <DashboardLayout title={product.name} description={`SKU: ${product.sku}`}>
       <div className="space-y-6">
-        {/* Back Button */}
         <Button
           variant="ghost"
           onClick={() => router.back()}
@@ -110,7 +103,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           Retour
         </Button>
 
-        {/* Header Card */}
+        {/* Header */}
         <Card className="border-border/50">
           <CardContent className="pt-6">
             <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
@@ -127,18 +120,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <RiskBadge level={product.riskLevel} />
-                <Button variant="outline">Modifier</Button>
-                <Button>Appliquer l&apos;action</Button>
-              </div>
+              <RiskBadge level={product.riskLevel} />
             </div>
           </CardContent>
         </Card>
 
-        {/* Main Content Grid */}
+        {/* Métriques */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Risk Score Card */}
           <Card className="border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-medium">
@@ -156,19 +144,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 </div>
                 <Progress value={product.riskScore} className="h-2" />
                 <p className="text-sm text-muted-foreground">
-                  {product.riskScore >= 80
-                    ? 'Risque critique - Action immediate requise'
-                    : product.riskScore >= 60
-                    ? 'Risque eleve - Attention necessaire'
-                    : product.riskScore >= 40
-                    ? 'Risque modere - Surveillance recommandee'
-                    : 'Risque faible - Situation normale'}
+                  {product.riskScore >= 70
+                    ? 'Stock critique — don associatif recommande'
+                    : product.riskScore >= 30
+                    ? 'Ecoulement insuffisant — mise en vente B2C'
+                    : 'Ventes suffisantes — aucune action requise'}
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Expiration Card */}
           <Card className="border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-medium">
@@ -179,7 +164,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-baseline gap-2">
-                  <span className={`text-4xl font-bold ${daysLeft <= 2 ? 'text-risk-critical' : daysLeft <= 5 ? 'text-risk-high' : 'text-foreground'}`}>
+                  <span className={`text-4xl font-bold ${daysLeft <= 7 ? 'text-risk-critical' : daysLeft <= 14 ? 'text-risk-high' : 'text-foreground'}`}>
                     {daysLeft}
                   </span>
                   <span className="text-muted-foreground">jours restants</span>
@@ -187,7 +172,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-muted-foreground">
                   Expire le {formatDate(product.expirationDate)}
                 </p>
-                {daysLeft <= 3 && (
+                {daysLeft <= 7 && (
                   <div className="flex items-center gap-2 text-sm text-risk-critical">
                     <AlertTriangle className="h-4 w-4" />
                     Expiration imminente
@@ -197,7 +182,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </CardContent>
           </Card>
 
-          {/* Stock Card */}
           <Card className="border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-medium">
@@ -206,19 +190,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">{product.stock}</span>
-                  <span className="text-muted-foreground">unites</span>
-                </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold">{product.stock}</span>
+                <span className="text-muted-foreground">unites</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Action & Value Section */}
+        {/* Action & Valeur */}
         <div className="grid gap-6 md:grid-cols-2">
-          {/* Recommended Action */}
           <Card className="border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-medium">
@@ -239,15 +220,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </div>
               </div>
-              <div className="mt-4 space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Cette action permet de maximiser la recuperation de valeur tout en minimisant les pertes.
-                </p>
-              </div>
             </CardContent>
           </Card>
 
-          {/* Recovery Value */}
           <Card className="border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-medium">
@@ -259,28 +234,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-emerald-500">
-                    {formatCurrency(product.recoveryValue)}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Valeur initiale estimee</span>
-                    <span>{formatCurrency(product.recoveryValue * 1.5)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Perte evitee</span>
-                    <span className="text-emerald-500">+{formatCurrency(product.recoveryValue * 0.8)}</span>
-                  </div>
-                </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-emerald-500">
+                  {formatCurrency(product.recoveryValue)}
+                </span>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Metadata */}
+        {/* Métadonnées */}
         <Card className="border-border/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base font-medium">

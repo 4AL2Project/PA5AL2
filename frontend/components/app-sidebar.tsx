@@ -12,18 +12,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar'
 import {
   LayoutDashboard,
-  Upload,
   Package,
-  Settings,
   AlertTriangle,
   PanelLeftClose,
-  PanelLeft,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -34,11 +30,6 @@ const navigation = [
     icon: LayoutDashboard,
   },
   {
-    title: 'Upload',
-    href: '/upload',
-    icon: Upload,
-  },
-  {
     title: 'Produits',
     href: '/products',
     icon: Package,
@@ -47,7 +38,7 @@ const navigation = [
 
 export function AppSidebar() {
   const pathname = usePathname()
-  const { toggleSidebar, open } = useSidebar()
+  const { toggleSidebar } = useSidebar()
 
   return (
     <Sidebar>
@@ -97,18 +88,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border p-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/settings">
-                <Settings className="h-4 w-4" />
-                <span>Parametres</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   )
 }

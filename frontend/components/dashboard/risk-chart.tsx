@@ -18,27 +18,21 @@ interface RiskChartProps {
 
 const riskColors: Record<string, string> = {
   critical: 'var(--color-risk-critical)',
-  high: 'var(--color-risk-high)',
-  medium: 'var(--color-risk-medium)',
-  moderate: 'var(--color-risk-medium)',
-  low: 'var(--color-risk-low)',
-  safe: 'var(--color-risk-low)',
+  high:     'var(--color-risk-high)',
+  safe:     'var(--color-risk-low)',
 }
 
 const riskLabels: Record<string, string> = {
-  critical: 'Critique',
-  high: 'Eleve',
-  medium: 'Moyen',
-  moderate: 'Modere',
-  low: 'Faible',
-  safe: 'Sur',
+  critical: 'Don associatif',
+  high:     'Vente B2C',
+  safe:     'Sur',
 }
 
 export function RiskChart({ data }: RiskChartProps) {
   const chartData = data.map((item) => ({
     ...item,
-    name: riskLabels[item.level],
-    fill: riskColors[item.level],
+    name: riskLabels[item.level] ?? item.level,
+    fill: riskColors[item.level] ?? 'var(--color-muted-foreground)',
   }))
 
   return (
@@ -65,7 +59,7 @@ export function RiskChart({ data }: RiskChartProps) {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fill: 'var(--color-muted-foreground)', fontSize: 12 }}
-                width={70}
+                width={90}
               />
               <Tooltip
                 cursor={{ fill: 'var(--color-muted)', opacity: 0.3 }}
@@ -75,10 +69,7 @@ export function RiskChart({ data }: RiskChartProps) {
                   borderRadius: '8px',
                   color: 'var(--color-foreground)',
                 }}
-                formatter={(value: number, name: string) => [
-                  `${value}%`,
-                  'Pourcentage',
-                ]}
+                formatter={(value: number) => [`${value}%`, 'Pourcentage']}
               />
               <Bar dataKey="percentage" radius={[0, 4, 4, 0]}>
                 {chartData.map((entry, index) => (

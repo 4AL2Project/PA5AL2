@@ -13,29 +13,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { UploadModal } from '@/components/upload/upload-modal'
 import { fetchProducts } from '@/lib/api'
 import { Product, RiskLevel } from '@/lib/types'
-import { Search, Download, Filter, X, Loader2 } from 'lucide-react'
+import { Search, Filter, X, Loader2 } from 'lucide-react'
 
 const categories = [
   'Tous',
-  'Produits laitiers',
-  'Fruits & Legumes',
-  'Viandes',
-  'Poissons',
-  'Boulangerie',
-  'Boissons',
-  'Epicerie',
+  'Soins visage',
+  'Soins corps',
+  'Maquillage',
+  'Cheveux',
+  'Solaire',
+  'Parfumerie',
+  'Soins levres',
 ]
 
 const riskLevels: { value: RiskLevel | 'all'; label: string }[] = [
-  { value: 'all', label: 'Tous les niveaux' },
-  { value: 'critical', label: 'Critique' },
-  { value: 'high', label: 'Eleve' },
-  { value: 'moderate', label: 'Modere' },
-  { value: 'medium', label: 'Moyen' },
-  { value: 'low', label: 'Faible' },
-  { value: 'safe', label: 'Sur' },
+  { value: 'all',      label: 'Tous les niveaux' },
+  { value: 'critical', label: 'Don associatif' },
+  { value: 'high',     label: 'Vente B2C' },
+  { value: 'safe',     label: 'Sur' },
 ]
 
 export default function ProductsPage() {
@@ -57,13 +55,10 @@ export default function ProductsPage() {
       const matchesSearch =
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.sku.toLowerCase().includes(searchQuery.toLowerCase())
-
       const matchesCategory =
         selectedCategory === 'Tous' || product.category === selectedCategory
-
       const matchesRiskLevel =
         selectedRiskLevel === 'all' || product.riskLevel === selectedRiskLevel
-
       return matchesSearch && matchesCategory && matchesRiskLevel
     })
   }, [products, searchQuery, selectedCategory, selectedRiskLevel])
@@ -75,9 +70,7 @@ export default function ProductsPage() {
   }
 
   const hasActiveFilters =
-    searchQuery !== '' ||
-    selectedCategory !== 'Tous' ||
-    selectedRiskLevel !== 'all'
+    searchQuery !== '' || selectedCategory !== 'Tous' || selectedRiskLevel !== 'all'
 
   return (
     <DashboardLayout
@@ -89,7 +82,7 @@ export default function ProductsPage() {
       }
     >
       <div className="space-y-6">
-        {/* Filters */}
+        {/* Filtres */}
         <Card className="border-border/50">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -97,22 +90,31 @@ export default function ProductsPage() {
                 <Filter className="h-4 w-4" />
                 Filtres
               </CardTitle>
-              {hasActiveFilters && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleClearFilters}
-                  className="text-muted-foreground"
-                >
-                  <X className="mr-1 h-4 w-4" />
-                  Effacer
-                </Button>
-              )}
+              <div className="flex items-center gap-2">
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearFilters}
+                    className="text-muted-foreground"
+                  >
+                    <X className="mr-1 h-4 w-4" />
+                    Effacer
+                  </Button>
+                )}
+                <UploadModal
+                  defaultFileType="products"
+                  trigger={
+                    <Button variant="outline" size="sm">
+                      Importer produits
+                    </Button>
+                  }
+                />
+              </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4 md:flex-row">
-              {/* Search */}
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -122,12 +124,7 @@ export default function ProductsPage() {
                   className="pl-9"
                 />
               </div>
-
-              {/* Category Filter */}
-              <Select
-                value={selectedCategory}
-                onValueChange={setSelectedCategory}
-              >
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger className="w-full md:w-[200px]">
                   <SelectValue placeholder="Categorie" />
                 </SelectTrigger>
@@ -139,8 +136,6 @@ export default function ProductsPage() {
                   ))}
                 </SelectContent>
               </Select>
-
-              {/* Risk Level Filter */}
               <Select
                 value={selectedRiskLevel}
                 onValueChange={(value) =>
@@ -158,22 +153,14 @@ export default function ProductsPage() {
                   ))}
                 </SelectContent>
               </Select>
-
-              {/* Export Button */}
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Exporter
-              </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Products Table */}
+        {/* Table */}
         <Card className="border-border/50">
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium">
-              Liste des Produits
-            </CardTitle>
+            <CardTitle className="text-base font-medium">Liste des Produits</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -188,11 +175,7 @@ export default function ProductsPage() {
                 <p className="text-sm text-muted-foreground">
                   Essayez de modifier vos criteres de recherche
                 </p>
-                <Button
-                  variant="outline"
-                  onClick={handleClearFilters}
-                  className="mt-4"
-                >
+                <Button variant="outline" onClick={handleClearFilters} className="mt-4">
                   Effacer les filtres
                 </Button>
               </div>

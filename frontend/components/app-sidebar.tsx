@@ -12,6 +12,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
   SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar'
@@ -20,6 +21,7 @@ import {
   Package,
   AlertTriangle,
   PanelLeftClose,
+  Settings,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -42,10 +44,10 @@ export function AppSidebar() {
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+      <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
               <AlertTriangle className="h-4 w-4 text-primary-foreground" />
             </div>
             <div className="flex flex-col">
@@ -88,6 +90,18 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      <SidebarFooter className="border-t border-sidebar-border p-3">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link href="/settings">
+                <Settings className="h-4 w-4" />
+                <span>Parametres</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
     </Sidebar>
   )
 }

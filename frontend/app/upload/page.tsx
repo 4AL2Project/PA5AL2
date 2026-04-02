@@ -47,12 +47,12 @@ export default function UploadPage() {
       title="Import de Donnees"
       description="Importez vos fichiers d'inventaire pour analyse"
     >
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-2.5 lg:grid-cols-3">
         {/* Upload Area */}
         <div className="lg:col-span-2">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-base font-medium">
+              <CardTitle>
                 Importer un Fichier
               </CardTitle>
             </CardHeader>
@@ -61,7 +61,7 @@ export default function UploadPage() {
               <div className="flex gap-2">
                 <button
                   onClick={() => setFileType('products')}
-                  className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`flex-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                     fileType === 'products'
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border text-muted-foreground hover:border-primary/50'
@@ -71,7 +71,7 @@ export default function UploadPage() {
                 </button>
                 <button
                   onClick={() => setFileType('sales')}
-                  className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`flex-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                     fileType === 'sales'
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border text-muted-foreground hover:border-primary/50'
@@ -83,7 +83,7 @@ export default function UploadPage() {
 
               <UploadDropzone fileType={fileType} />
 
-              <div className="rounded-lg bg-muted/50 p-4">
+              <div className="rounded-md bg-muted/50 p-3">
                 <h4 className="mb-2 text-sm font-medium">Format attendu</h4>
                 <p className="text-sm text-muted-foreground">
                   {fileType === 'products'
@@ -108,7 +108,7 @@ export default function UploadPage() {
         <div className="lg:col-span-1">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-base font-medium">
+              <CardTitle>
                 Imports Recents
               </CardTitle>
             </CardHeader>

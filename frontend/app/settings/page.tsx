@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Separator } from '@/components/ui/separator'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function SettingsPage() {
   return (
@@ -12,20 +13,36 @@ export default function SettingsPage() {
       title="Parametres"
       description="Configurez les preferences de l'application"
     >
-      <div className="max-w-2xl space-y-6">
+      <div className="max-w-2xl space-y-3">
+        {/* Appearance */}
+        <Card className="border-border/50">
+          <CardHeader>
+            <CardTitle>Apparence</CardTitle>
+            <CardDescription>
+              Choisissez le theme de l&apos;interface
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label>Theme</Label>
+              <ThemeToggle />
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Notifications */}
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle className="text-base font-medium">Notifications</CardTitle>
+            <CardTitle>Notifications</CardTitle>
             <CardDescription>
               Gerez vos preferences de notification
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Alertes critiques</Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Recevoir une notification pour les produits critiques
                 </p>
               </div>
@@ -35,7 +52,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Rapport quotidien</Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Recevoir un resume quotidien par email
                 </p>
               </div>
@@ -45,7 +62,7 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Notifications push</Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-xs text-muted-foreground">
                   Activer les notifications dans le navigateur
                 </p>
               </div>
@@ -57,14 +74,14 @@ export default function SettingsPage() {
         {/* Thresholds */}
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle className="text-base font-medium">Seuils de Risque</CardTitle>
+            <CardTitle>Seuils de Risque</CardTitle>
             <CardDescription>
               Definissez les seuils de score pour chaque niveau de risque
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
+          <CardContent>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="critical">Seuil Critique</Label>
                 <Input
                   id="critical"
@@ -74,7 +91,7 @@ export default function SettingsPage() {
                   max="100"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="high">Seuil Eleve</Label>
                 <Input
                   id="high"
@@ -84,7 +101,7 @@ export default function SettingsPage() {
                   max="100"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="medium">Seuil Moyen</Label>
                 <Input
                   id="medium"
@@ -94,7 +111,7 @@ export default function SettingsPage() {
                   max="100"
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <Label htmlFor="low">Seuil Faible</Label>
                 <Input
                   id="low"
@@ -112,13 +129,13 @@ export default function SettingsPage() {
         {/* Email Settings */}
         <Card className="border-border/50">
           <CardHeader>
-            <CardTitle className="text-base font-medium">Email de Contact</CardTitle>
+            <CardTitle>Email de Contact</CardTitle>
             <CardDescription>
               Adresse email pour recevoir les alertes et rapports
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
+          <CardContent>
+            <div className="space-y-1.5">
               <Label htmlFor="email">Adresse email</Label>
               <Input
                 id="email"

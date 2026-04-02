@@ -33,8 +33,8 @@ export function UploadModal({ defaultFileType = 'products', trigger }: UploadMod
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button>
-            <Upload className="mr-2 h-4 w-4" />
+          <Button size="sm">
+            <Upload className="mr-1.5 h-3.5 w-3.5" />
             Importer
           </Button>
         )}

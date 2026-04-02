@@ -2,7 +2,6 @@ import { DashboardLayout } from '@/components/dashboard-layout'
 import { StatsCard } from '@/components/dashboard/stats-card'
 import { RiskTable } from '@/components/dashboard/risk-table'
 import { RiskChart } from '@/components/dashboard/risk-chart'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { UploadModal } from '@/components/upload/upload-modal'
 import { fetchLatestAnalysis, adaptToRiskDistribution } from '@/lib/api'
 import {
@@ -44,6 +43,16 @@ export default async function DashboardPage() {
     <DashboardLayout
       title="Dashboard"
       description={`Derniere analyse : ${formatDate(stats.lastAnalysisDate)}`}
+      actions={
+        <>
+          <UploadModal />
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/products?filter=critical">
+              Produits a donner ({criticalProducts.length})
+            </Link>
+          </Button>
+        </>
+      }
     >
       <div className="space-y-6">
         {/* Stats Grid */}
@@ -79,29 +88,24 @@ export default async function DashboardPage() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <Card className="border-border/50">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <div>
-                  <CardTitle className="text-base font-medium">
-                    Produits Prioritaires
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Produits necessitant une action immediate
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/products">
-                    Voir tout
-                    <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </Button>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <RiskTable products={topRiskProducts} compact />
-              </CardContent>
-            </Card>
+        <div className="grid gap-4 lg:grid-cols-3">
+          {/* Critical Products Table */}
+          <div className="lg:col-span-2 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-medium">Produits Prioritaires</h2>
+                <p className="text-xs text-muted-foreground">
+                  Produits necessitant une action immediate
+                </p>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/products">
+                  Voir tout
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <RiskTable products={topRiskProducts} compact />
           </div>
 
           <div className="lg:col-span-1">
@@ -109,22 +113,6 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Actions Rapides */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">Actions Rapides</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              <UploadModal />
-              <Button variant="outline" asChild>
-                <Link href="/products?filter=critical">
-                  Produits a donner ({criticalProducts.length})
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   )

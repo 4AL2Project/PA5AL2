@@ -9,7 +9,12 @@
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "prisma db seed"
+  },
+  "prisma": {
+    "schema": "src/database/prisma/schema.prisma",
+    "seed": "ts-node --transpile-only src/database/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

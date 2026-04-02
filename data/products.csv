@@ -1,0 +1,21 @@
+external_sku,name,category,brand,expiry_date,stock_quantity,unit_price,cost_price
+DOL-1000,Doliprane 1000mg x8,Douleur,Doliprane,2026-04-10,180,2.50,1.80
+RHI-100,Rhinofluimucil Sirop 200ml,ORL,Zambon,2026-04-12,95,6.90,5.00
+VIT-C1G,Vitamine C 1000mg Effervescent x20,Vitamines,Bayer,2026-04-15,200,4.80,3.20
+CETI-10,Cetirizine 10mg x7,Allergie,Mylan,2026-04-17,130,2.90,2.00
+SER-PHYS,Serum Physiologique Unidoses x20,ORL,Gilbert,2026-04-19,160,3.50,2.40
+IBU-400,Ibuprofene 400mg x12,Douleur,Mylan,2026-04-26,110,3.20,2.20
+DOL-PED,Doliprane Pediatrique 2,4% Sirop,Pediatrie,Doliprane,2026-04-22,75,4.20,3.00
+LACT-12,Lacteol Fort 10 sachets,Digestion,Lacteol,2026-04-28,45,8.90,6.20
+NIV-HYD,Creme Hydratante Intensive 200ml,Cosmetique,Nivea,2026-04-30,55,7.50,5.00
+AMO-500,Amoxicilline 500mg x12,Antibiotiques,Mylan,2026-05-15,60,5.40,3.80
+OME-3,Omega 3 Fort x60,Vitamines,Arkopharma,2026-05-21,85,12.90,9.00
+SHA-AP,Shampooing Antipelliculaire 200ml,Hygiene,Ducray,2026-05-10,40,9.80,6.50
+CRYO,Cryotherapie Spray 300ml,Traumatologie,Urgo,2026-05-03,35,14.50,10.00
+MAG-MAR,Magnesium Marin x60,Vitamines,Nutrimea,2026-06-16,70,11.50,8.00
+ZINC-15,Zinc 15mg x30,Immunite,Nutri & Co,2026-06-02,55,8.50,6.00
+ASP-500,Aspirine 500mg x20,Douleur,Bayer,2026-07-11,120,2.80,1.90
+PRO-BIO,Probiotiques Lactiplus x30,Digestion,Lacteol,2026-07-26,45,16.90,12.00
+GEL-HYD,Gel Hydroalcoolique 500ml,Hygiene,Sanytol,2026-08-16,80,5.90,3.50
+VIT-D,Vitamine D3 1000UI x90,Vitamines,Lescuyer,2026-09-02,60,9.50,6.80
+BAND-URG,Pansements Urgence x10,Premiers soins,Urgo,2026-08-21,90,6.20,4.00

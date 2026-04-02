@@ -46,7 +46,7 @@ export function RiskTable({ products, showActions = true, compact = false, class
   }
 
   return (
-    <div className={cn('rounded-lg border border-border/50', className)}>
+    <div className={cn('rounded-lg border border-border/50 bg-card', className)}>
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent border-border/50">

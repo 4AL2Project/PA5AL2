@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { DashboardLayout } from '@/components/dashboard-layout'
 import { RiskTable } from '@/components/dashboard/risk-table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -16,7 +15,7 @@ import {
 import { UploadModal } from '@/components/upload/upload-modal'
 import { fetchProducts } from '@/lib/api'
 import { Product, RiskLevel } from '@/lib/types'
-import { Search, Filter, X, Loader2 } from 'lucide-react'
+import { Search, X, Loader2 } from 'lucide-react'
 
 const categories = [
   'Tous',
@@ -80,108 +79,92 @@ export default function ProductsPage() {
           ? 'Chargement...'
           : `${filteredProducts.length} produits sur ${products.length}`
       }
+      actions={
+        <UploadModal
+          defaultFileType="products"
+          trigger={
+            <Button variant="outline" size="sm">
+              Importer produits
+            </Button>
+          }
+        />
+      }
     >
       <div className="space-y-6">
-        {/* Filtres */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-base font-medium">
-                <Filter className="h-4 w-4" />
-                Filtres
-              </CardTitle>
-              <div className="flex items-center gap-2">
-                {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearFilters}
-                    className="text-muted-foreground"
-                  >
-                    <X className="mr-1 h-4 w-4" />
-                    Effacer
-                  </Button>
-                )}
-                <UploadModal
-                  defaultFileType="products"
-                  trigger={
-                    <Button variant="outline" size="sm">
-                      Importer produits
-                    </Button>
-                  }
-                />
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col gap-4 md:flex-row">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher par nom ou SKU..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-full md:w-[200px]">
-                  <SelectValue placeholder="Categorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select
-                value={selectedRiskLevel}
-                onValueChange={(value) =>
-                  setSelectedRiskLevel(value as RiskLevel | 'all')
-                }
+        {/* Filters + Title */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-medium">Liste des Produits</h2>
+            {hasActiveFilters && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearFilters}
+                className="text-muted-foreground"
               >
-                <SelectTrigger className="w-full md:w-[180px]">
-                  <SelectValue placeholder="Niveau de risque" />
-                </SelectTrigger>
-                <SelectContent>
-                  {riskLevels.map((level) => (
-                    <SelectItem key={level.value} value={level.value}>
-                      {level.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Table */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium">Liste des Produits</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : filteredProducts.length > 0 ? (
-              <RiskTable products={filteredProducts} />
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="text-lg font-medium">Aucun produit trouve</p>
-                <p className="text-sm text-muted-foreground">
-                  Essayez de modifier vos criteres de recherche
-                </p>
-                <Button variant="outline" onClick={handleClearFilters} className="mt-4">
-                  Effacer les filtres
-                </Button>
-              </div>
+                <X className="mr-1 h-4 w-4" />
+                Effacer les filtres
+              </Button>
             )}
-          </CardContent>
-        </Card>
+          </div>
+          <div className="flex flex-col gap-3 md:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Rechercher par nom ou SKU..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger className="w-full md:w-[200px]">
+                <SelectValue placeholder="Categorie" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={selectedRiskLevel}
+              onValueChange={(value) =>
+                setSelectedRiskLevel(value as RiskLevel | 'all')
+              }
+            >
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Niveau de risque" />
+              </SelectTrigger>
+              <SelectContent>
+                {riskLevels.map((level) => (
+                  <SelectItem key={level.value} value={level.value}>
+                    {level.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : filteredProducts.length > 0 ? (
+          <RiskTable products={filteredProducts} />
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 text-center">
+            <p className="text-sm font-medium">Aucun produit trouve</p>
+            <p className="text-sm text-muted-foreground">
+              Essayez de modifier vos criteres de recherche
+            </p>
+            <Button variant="outline" onClick={handleClearFilters} className="mt-4">
+              Effacer les filtres
+            </Button>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   )

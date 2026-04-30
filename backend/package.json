@@ -7,6 +7,9 @@
     "build": "tsc",
     "start": "node dist/main.js",
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
@@ -16,25 +19,56 @@
     "schema": "src/database/prisma/schema.prisma",
     "seed": "ts-node --transpile-only src/database/seed.ts"
   },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/*.spec.ts"
+    ],
+    "collectCoverageFrom": [
+      "src/stock/domain/**/*.ts",
+      "src/stock/application/**/*.ts",
+      "src/actions/domain/model/**/*.ts",
+      "src/actions/domain/exceptions/**/*.ts",
+      "!**/*.spec.ts",
+      "!**/index.ts",
+      "!src/stock/domain/events/DomainEvent.ts",
+      "!src/stock/application/ports/CsvParserPort.ts",
+      "!src/stock/application/ports/EventBusPort.ts",
+      "!src/stock/application/ports/NotificationPort.ts",
+      "!src/stock/domain/repository/ProduitRepository.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 80,
+        "branches": 70,
+        "functions": 80,
+        "statements": 80
+      }
+    }
+  },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/schedule": "^4.0.0",
     "@prisma/client": "^5.0.0",
-    "csv-parser": "^3.0.0",
-    "xlsx": "^0.18.5",
-    "multer": "^1.4.5-lts.1",
-    "class-validator": "^0.14.0",
     "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.0",
+    "csv-parser": "^3.0.0",
+    "multer": "^1.4.5-lts.1",
     "reflect-metadata": "^0.1.14",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
+    "@types/jest": "^30.0.0",
     "@types/multer": "^1.4.11",
     "@types/node": "^20.0.0",
+    "jest": "^30.3.0",
     "prisma": "^5.0.0",
+    "ts-jest": "^29.4.9",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.0"
   }

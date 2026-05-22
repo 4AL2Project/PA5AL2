@@ -1,4 +1,5 @@
-import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
+import { BadRequestException,Controller, Get, Query } from '@nestjs/common';
+
 import { prisma } from '../../database/client';
 
 @Controller('api/products')

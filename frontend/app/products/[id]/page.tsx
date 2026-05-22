@@ -1,28 +1,29 @@
 'use client'
 
-import { use, useState, useEffect } from 'react'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Boxes,
+  Calendar,
+  ChevronRight,
+  Clock,
+  Euro,
+  Loader2,
+  Package,
+  Tag,
+  TrendingDown,
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { DashboardLayout } from '@/components/dashboard-layout'
+import { use, useEffect,useState } from 'react'
+
 import { RiskBadge } from '@/components/dashboard/risk-badge'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { DashboardLayout } from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription,CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
 import { fetchLatestAnalysis } from '@/lib/api'
 import { Product } from '@/lib/types'
-import {
-  ArrowLeft,
-  Package,
-  Calendar,
-  TrendingDown,
-  AlertTriangle,
-  Tag,
-  Boxes,
-  Euro,
-  Clock,
-  ChevronRight,
-  Loader2,
-} from 'lucide-react'
 
 const riskColors: Record<string, string> = {
   critical: 'text-risk-critical',

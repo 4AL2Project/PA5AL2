@@ -1,12 +1,10 @@
-node_modules/
-dist/
-.env
+node_modules
+dist
+build
+.next
+coverage
 *.log
 .DS_Store
-
-# IDE
-.idea/
-.vscode/
-
-# Claude Code
-.claude/
+.env
+.env.local
+.env.*.local

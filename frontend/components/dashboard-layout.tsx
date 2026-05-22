@@ -1,9 +1,10 @@
 'use client'
 
-import { SidebarProvider, SidebarInset, SidebarTrigger, useSidebar } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/app-sidebar'
 import { PanelLeft } from 'lucide-react'
+
+import { AppSidebar } from '@/components/app-sidebar'
 import { Button } from '@/components/ui/button'
+import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
 
 interface DashboardLayoutProps {
   children: React.ReactNode

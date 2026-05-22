@@ -1,4 +1,4 @@
-import { Product, AnalysisStats, RiskDistribution } from './types'
+import { AnalysisStats, Product, RiskDistribution } from './types';
 
 export const mockProducts: Product[] = [
   {
@@ -58,7 +58,7 @@ export const mockProducts: Product[] = [
     name: 'Pain de Mie Complet',
     sku: 'PMC-005',
     category: 'Boulangerie',
-    riskLevel: 'medium',
+    riskLevel: 'high',
     riskScore: 55,
     stock: 120,
     expirationDate: '2026-04-07',
@@ -71,7 +71,7 @@ export const mockProducts: Product[] = [
     name: 'Jus Orange Frais',
     sku: 'JOF-006',
     category: 'Boissons',
-    riskLevel: 'medium',
+    riskLevel: 'high',
     riskScore: 48,
     stock: 200,
     expirationDate: '2026-04-08',
@@ -84,7 +84,7 @@ export const mockProducts: Product[] = [
     name: 'Conserve Tomates',
     sku: 'CTM-007',
     category: 'Epicerie',
-    riskLevel: 'low',
+    riskLevel: 'safe',
     riskScore: 15,
     stock: 500,
     expirationDate: '2026-12-01',
@@ -97,7 +97,7 @@ export const mockProducts: Product[] = [
     name: 'Riz Basmati',
     sku: 'RBS-008',
     category: 'Epicerie',
-    riskLevel: 'low',
+    riskLevel: 'safe',
     riskScore: 8,
     stock: 300,
     expirationDate: '2027-06-01',
@@ -131,21 +131,19 @@ export const mockProducts: Product[] = [
     action: 'Remise immediate -40%',
     lastUpdated: '2026-04-01',
   },
-]
+];
 
 export const mockStats: AnalysisStats = {
   totalProducts: 1250,
   criticalProducts: 23,
-  highRiskProducts: 67,
-  mediumRiskProducts: 145,
-  lowRiskProducts: 1015,
+  highProducts: 212,
+  safeProducts: 1015,
   totalRecoveryValue: 45780,
   lastAnalysisDate: '2026-04-01T10:30:00',
-}
+};
 
 export const mockRiskDistribution: RiskDistribution[] = [
   { level: 'critical', count: 23, percentage: 1.8 },
-  { level: 'high', count: 67, percentage: 5.4 },
-  { level: 'medium', count: 145, percentage: 11.6 },
-  { level: 'low', count: 1015, percentage: 81.2 },
-]
+  { level: 'high', count: 212, percentage: 17.0 },
+  { level: 'safe', count: 1015, percentage: 81.2 },
+];

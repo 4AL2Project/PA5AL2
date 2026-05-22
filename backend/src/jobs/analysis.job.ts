@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
+
 import { prisma } from '../database/client';
 import { AnalysisService } from '../modules/analysis/analysis.service';
 
@@ -21,12 +22,15 @@ export class AnalysisJob {
 
     for (const pharmacy of pharmacies) {
       try {
-        const result = await this.analysisService.analyzeAllForPharmacy(pharmacy.pharmacy_id);
-        this.logger.log(
-          `[${pharmacy.name}] Analysis done: ${result.succeeded}/${result.total} products`,
+        const result = await this.analysisService.analyzeAllForPharmacy(
+          pharmacy.pharmacy_id
         );
-      } catch (err: any) {
-        this.logger.error(`[${pharmacy.name}] Analysis failed: ${err.message}`);
+        this.logger.log(
+          `[${pharmacy.name}] Analysis done: ${result.succeeded}/${result.total} products`
+        );
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        this.logger.error(`[${pharmacy.name}] Analysis failed: ${message}`);
       }
     }
 

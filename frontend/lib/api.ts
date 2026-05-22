@@ -1,6 +1,12 @@
 import { Product, AnalysisStats, RiskDistribution, RiskLevel } from '@/lib/types'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3000'
+// Côté navigateur : NEXT_PUBLIC_API_URL (ex. http://localhost:3005).
+// Côté serveur (SSR en conteneur) : INTERNAL_API_URL vise le service Compose
+// `backend` (ex. http://backend:3005), car `localhost` y désigne le conteneur frontend.
+const API_BASE =
+  (typeof window === 'undefined'
+    ? process.env.INTERNAL_API_URL ?? process.env.NEXT_PUBLIC_API_URL
+    : process.env.NEXT_PUBLIC_API_URL) ?? 'http://localhost:3000'
 const PHARMACY_ID = process.env.NEXT_PUBLIC_PHARMACY_ID ?? ''
 
 // ─── Adapteurs ────────────────────────────────────────────────────────────────

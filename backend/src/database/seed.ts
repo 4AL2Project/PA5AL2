@@ -126,6 +126,10 @@ function calculateRisk(
 
 // ─── Seed principal ────────────────────────────────────────────────────────────
 
+// UUID fixe de la pharmacie de démonstration : aligné sur NEXT_PUBLIC_PHARMACY_ID
+// pour que le frontend fonctionne sans configuration manuelle après le seed.
+const DEMO_PHARMACY_ID = '3c865b32-ba84-483d-8256-2b1d7d5e542e'
+
 async function main() {
   console.log('🌱 Démarrage du seed...\n')
 
@@ -135,14 +139,13 @@ async function main() {
   })
   if (existing) {
     console.log(`✅ Données déjà présentes (pharmacy_id: ${existing.pharmacy_id})`)
-    console.log('\n📋 Copiez cette valeur dans frontend/.env.local :')
-    console.log(`   NEXT_PUBLIC_PHARMACY_ID=${existing.pharmacy_id}\n`)
     return
   }
 
   // 1. Créer la pharmacie
   const pharmacy = await prisma.pharmacy.create({
     data: {
+      pharmacy_id: DEMO_PHARMACY_ID,
       name: 'Institut Beaute Demo',
       email: 'demo@cosmorisk.fr',
       address: '12 Place de la République, 75011 Paris',

@@ -76,7 +76,7 @@ export function UploadModal({ defaultFileType = 'products', trigger }: UploadMod
 
         <p className="text-xs text-muted-foreground">
           {fileType === 'products'
-            ? 'Colonnes : name, expiry_date, stock_quantity, unit_price. Optionnel : external_sku, category, brand, cost_price'
+            ? 'Colonnes : external_sku, name, expiry_date, stock_quantity, unit_price. Optionnel : lot_number, category, brand, cost_price'
             : 'Colonnes : external_sku, sale_date, quantity_sold. Optionnel : unit_price_sold'}
         </p>
       </DialogContent>

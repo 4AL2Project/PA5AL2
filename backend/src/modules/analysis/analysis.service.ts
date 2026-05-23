@@ -42,16 +42,20 @@ export class AnalysisService {
       select: { product_id: true },
     });
 
-    this.logger.log(`Analyzing ${products.length} products for pharmacy ${pharmacyId}`);
+    this.logger.log(
+      `Analyzing ${products.length} products for pharmacy ${pharmacyId}`
+    );
 
     const results = await Promise.allSettled(
-      products.map((p) => this.analyzeProduct(p.product_id, pharmacyId)),
+      products.map((p) => this.analyzeProduct(p.product_id, pharmacyId))
     );
 
     const succeeded = results.filter((r) => r.status === 'fulfilled').length;
     const failed = results.filter((r) => r.status === 'rejected').length;
 
-    this.logger.log(`Analysis complete: ${succeeded} succeeded, ${failed} failed`);
+    this.logger.log(
+      `Analysis complete: ${succeeded} succeeded, ${failed} failed`
+    );
     return { succeeded, failed, total: products.length };
   }
 

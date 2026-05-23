@@ -1,4 +1,4 @@
-import { BadRequestException,Controller, Get, Query } from '@nestjs/common';
+import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 
 import { prisma } from '../../database/client';
 
@@ -8,7 +8,7 @@ export class ProductController {
   async getProducts(
     @Query('pharmacy_id') pharmacyId: string,
     @Query('risk_level') riskLevel?: string,
-    @Query('category') category?: string,
+    @Query('category') category?: string
   ) {
     if (!pharmacyId) throw new BadRequestException('pharmacy_id is required');
 

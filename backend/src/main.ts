@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { Logger,ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
 import { AppModule } from './app.module';
@@ -18,7 +18,7 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: false,
       transform: true,
-    }),
+    })
   );
 
   await app.listen(config.port);

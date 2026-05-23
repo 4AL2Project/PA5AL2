@@ -9,7 +9,7 @@ Le cahier de test doit être stocké dans le dossier `tests-book` à la racine d
 
 Utilise le fichier `tests-book.example.md` disponible dans le dossier `tests-book` (à la racine du prot) comme exemple.
 
-iL faut tester des cas concrèts à l'image de ce que le métier pourrais tester. 
+iL faut tester des cas concrèts à l'image de ce que le métier pourrais tester.
 
 - Donc il faut éviter de faire 10 000 tests qui teste tout et n'importe quoi
 - Le test doit avoir une valeur unique

@@ -1,5 +1,5 @@
 ---
-name: test-visualy-and-correct-us
+name: Write us test
 description: Test visuellement et corrige l'implémentation d'une US
 ---
 

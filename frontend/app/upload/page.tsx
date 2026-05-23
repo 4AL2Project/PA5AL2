@@ -88,7 +88,7 @@ export default function UploadPage() {
                 <h4 className="mb-2 text-sm font-medium">Format attendu</h4>
                 <p className="text-sm text-muted-foreground">
                   {fileType === 'products'
-                    ? 'Colonnes requises: name, expiry_date, stock_quantity, unit_price. Optionnel: external_sku, category, brand, cost_price'
+                    ? 'Colonnes requises: external_sku, name, expiry_date, stock_quantity, unit_price. Optionnel: lot_number, category, brand, cost_price'
                     : 'Colonnes requises: external_sku, sale_date, quantity_sold. Optionnel: unit_price_sold'}
                 </p>
                 <div className="mt-3 flex gap-2">

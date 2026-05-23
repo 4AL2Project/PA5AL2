@@ -1,22 +1,22 @@
-'use client'
+'use client';
 
-import { Loader2,Search, X } from 'lucide-react'
-import { useEffect,useMemo, useState } from 'react'
+import { Loader2, Search, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 
-import { RiskTable } from '@/components/dashboard/risk-table'
-import { DashboardLayout } from '@/components/dashboard-layout'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { RiskTable } from '@/components/dashboard/risk-table';
+import { DashboardLayout } from '@/components/dashboard-layout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { UploadModal } from '@/components/upload/upload-modal'
-import { fetchProducts } from '@/lib/api'
-import { Product, RiskLevel } from '@/lib/types'
+} from '@/components/ui/select';
+import { UploadModal } from '@/components/upload/upload-modal';
+import { fetchProducts } from '@/lib/api';
+import { Product, RiskLevel } from '@/lib/types';
 
 const categories = [
   'Tous',
@@ -27,50 +27,54 @@ const categories = [
   'Solaire',
   'Parfumerie',
   'Soins levres',
-]
+];
 
 const riskLevels: { value: RiskLevel | 'all'; label: string }[] = [
-  { value: 'all',      label: 'Tous les niveaux' },
+  { value: 'all', label: 'Tous les niveaux' },
   { value: 'critical', label: 'Don associatif' },
-  { value: 'high',     label: 'Vente B2C' },
-  { value: 'safe',     label: 'Sur' },
-]
+  { value: 'high', label: 'Vente B2C' },
+  { value: 'safe', label: 'Sur' },
+];
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('Tous')
-  const [selectedRiskLevel, setSelectedRiskLevel] = useState<RiskLevel | 'all'>('all')
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Tous');
+  const [selectedRiskLevel, setSelectedRiskLevel] = useState<RiskLevel | 'all'>(
+    'all'
+  );
 
   useEffect(() => {
     fetchProducts()
       .then(({ products }) => setProducts(products))
       .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setLoading(false));
+  }, []);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
       const matchesSearch =
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.sku.toLowerCase().includes(searchQuery.toLowerCase())
+        product.sku.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory =
-        selectedCategory === 'Tous' || product.category === selectedCategory
+        selectedCategory === 'Tous' || product.category === selectedCategory;
       const matchesRiskLevel =
-        selectedRiskLevel === 'all' || product.riskLevel === selectedRiskLevel
-      return matchesSearch && matchesCategory && matchesRiskLevel
-    })
-  }, [products, searchQuery, selectedCategory, selectedRiskLevel])
+        selectedRiskLevel === 'all' || product.riskLevel === selectedRiskLevel;
+      return matchesSearch && matchesCategory && matchesRiskLevel;
+    });
+  }, [products, searchQuery, selectedCategory, selectedRiskLevel]);
 
   const handleClearFilters = () => {
-    setSearchQuery('')
-    setSelectedCategory('Tous')
-    setSelectedRiskLevel('all')
-  }
+    setSearchQuery('');
+    setSelectedCategory('Tous');
+    setSelectedRiskLevel('all');
+  };
 
   const hasActiveFilters =
-    searchQuery !== '' || selectedCategory !== 'Tous' || selectedRiskLevel !== 'all'
+    searchQuery !== '' ||
+    selectedCategory !== 'Tous' ||
+    selectedRiskLevel !== 'all';
 
   return (
     <DashboardLayout
@@ -118,7 +122,10 @@ export default function ProductsPage() {
                 className="pl-9"
               />
             </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select
+              value={selectedCategory}
+              onValueChange={setSelectedCategory}
+            >
               <SelectTrigger className="w-full md:w-[200px]">
                 <SelectValue placeholder="Categorie" />
               </SelectTrigger>
@@ -161,12 +168,16 @@ export default function ProductsPage() {
             <p className="text-sm text-muted-foreground">
               Essayez de modifier vos criteres de recherche
             </p>
-            <Button variant="outline" onClick={handleClearFilters} className="mt-4">
+            <Button
+              variant="outline"
+              onClick={handleClearFilters}
+              className="mt-4"
+            >
               Effacer les filtres
             </Button>
           </div>
         )}
       </div>
     </DashboardLayout>
-  )
+  );
 }

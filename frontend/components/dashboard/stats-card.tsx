@@ -1,19 +1,19 @@
-import { LucideIcon } from 'lucide-react'
+import { LucideIcon } from 'lucide-react';
 
-import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface StatsCardProps {
-  title: string
-  value: string | number
-  description?: string
-  icon: LucideIcon
+  title: string;
+  value: string | number;
+  description?: string;
+  icon: LucideIcon;
   trend?: {
-    value: number
-    isPositive: boolean
-  }
-  className?: string
-  iconClassName?: string
+    value: number;
+    isPositive: boolean;
+  };
+  className?: string;
+  iconClassName?: string;
 }
 
 export function StatsCard({
@@ -58,5 +58,5 @@ export function StatsCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import {
   Bar,
@@ -8,33 +8,33 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-} from 'recharts'
+} from 'recharts';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { RiskDistribution } from '@/lib/types'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RiskDistribution } from '@/lib/types';
 
 interface RiskChartProps {
-  data: RiskDistribution[]
+  data: RiskDistribution[];
 }
 
 const riskColors: Record<string, string> = {
   critical: 'var(--color-risk-critical)',
-  high:     'var(--color-risk-high)',
-  safe:     'var(--color-risk-low)',
-}
+  high: 'var(--color-risk-high)',
+  safe: 'var(--color-risk-low)',
+};
 
 const riskLabels: Record<string, string> = {
   critical: 'Don associatif',
-  high:     'Vente B2C',
-  safe:     'Sur',
-}
+  high: 'Vente B2C',
+  safe: 'Sur',
+};
 
 export function RiskChart({ data }: RiskChartProps) {
   const chartData = data.map((item) => ({
     ...item,
     name: riskLabels[item.level] ?? item.level,
     fill: riskColors[item.level] ?? 'var(--color-muted-foreground)',
-  }))
+  }));
 
   return (
     <Card className="border-border/50">
@@ -46,7 +46,11 @@ export function RiskChart({ data }: RiskChartProps) {
       <CardContent>
         <div className="h-[200px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 20 }}>
+            <BarChart
+              data={chartData}
+              layout="vertical"
+              margin={{ left: 0, right: 20 }}
+            >
               <XAxis
                 type="number"
                 axisLine={false}
@@ -95,5 +99,5 @@ export function RiskChart({ data }: RiskChartProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

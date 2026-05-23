@@ -9,7 +9,13 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/.next/**', '**/coverage/**'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/build/**',
+      '**/.next/**',
+      '**/coverage/**',
+    ],
   },
   js.configs.recommended,
   eslintConfigPrettier,
@@ -49,5 +55,5 @@ export default tseslint.config(
       'simple-import-sort/exports': 'error',
       'jsx-a11y/no-autofocus': 'off',
     },
-  },
+  }
 );

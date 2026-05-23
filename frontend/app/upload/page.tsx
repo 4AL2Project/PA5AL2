@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import { CheckCircle2,Clock, FileText } from 'lucide-react'
-import { useState } from 'react'
+import { CheckCircle2, Clock, FileText } from 'lucide-react';
+import { useState } from 'react';
 
-import { DashboardLayout } from '@/components/dashboard-layout'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { UploadDropzone } from '@/components/upload/upload-dropzone'
+import { DashboardLayout } from '@/components/dashboard-layout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { UploadDropzone } from '@/components/upload/upload-dropzone';
 
 const recentUploads = [
   {
@@ -29,10 +29,10 @@ const recentUploads = [
     status: 'success',
     records: 320,
   },
-]
+];
 
 export default function UploadPage() {
-  const [fileType, setFileType] = useState<'products' | 'sales'>('products')
+  const [fileType, setFileType] = useState<'products' | 'sales'>('products');
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {
@@ -41,7 +41,7 @@ export default function UploadPage() {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    })
+    });
 
   return (
     <DashboardLayout
@@ -53,9 +53,7 @@ export default function UploadPage() {
         <div className="lg:col-span-2">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle>
-                Importer un Fichier
-              </CardTitle>
+              <CardTitle>Importer un Fichier</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* File type selector */}
@@ -109,9 +107,7 @@ export default function UploadPage() {
         <div className="lg:col-span-1">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle>
-                Imports Recents
-              </CardTitle>
+              <CardTitle>Imports Recents</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {recentUploads.map((upload) => (
@@ -123,7 +119,9 @@ export default function UploadPage() {
                     <FileText className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-medium">{upload.name}</p>
+                    <p className="truncate text-sm font-medium">
+                      {upload.name}
+                    </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
                       {formatDate(upload.date)}
@@ -140,5 +138,5 @@ export default function UploadPage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

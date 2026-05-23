@@ -1,20 +1,32 @@
-'use client'
+'use client';
 
-import { PanelLeft } from 'lucide-react'
+import { PanelLeft } from 'lucide-react';
 
-import { AppSidebar } from '@/components/app-sidebar'
-import { Button } from '@/components/ui/button'
-import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/app-sidebar';
+import { Button } from '@/components/ui/button';
+import {
+  SidebarInset,
+  SidebarProvider,
+  useSidebar,
+} from '@/components/ui/sidebar';
 
 interface DashboardLayoutProps {
-  children: React.ReactNode
-  title: string
-  description?: string
-  actions?: React.ReactNode
+  children: React.ReactNode;
+  title: string;
+  description?: string;
+  actions?: React.ReactNode;
 }
 
-function DashboardHeader({ title, description, actions }: { title: string; description?: string; actions?: React.ReactNode }) {
-  const { open, toggleSidebar } = useSidebar()
+function DashboardHeader({
+  title,
+  description,
+  actions,
+}: {
+  title: string;
+  description?: string;
+  actions?: React.ReactNode;
+}) {
+  const { open, toggleSidebar } = useSidebar();
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border/50 px-6">
@@ -39,17 +51,26 @@ function DashboardHeader({ title, description, actions }: { title: string; descr
         {actions && <div className="flex items-center gap-2">{actions}</div>}
       </div>
     </header>
-  )
+  );
 }
 
-export function DashboardLayout({ children, title, description, actions }: DashboardLayoutProps) {
+export function DashboardLayout({
+  children,
+  title,
+  description,
+  actions,
+}: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-        <DashboardHeader title={title} description={description} actions={actions} />
+        <DashboardHeader
+          title={title}
+          description={description}
+          actions={actions}
+        />
         <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }

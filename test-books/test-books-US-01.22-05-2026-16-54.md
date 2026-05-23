@@ -3,28 +3,31 @@
 Test visuel via Playwright (desktop ≥1024px et mobile <440px) + vérifications API/Docker.
 Stack lancée via `docker compose up -d --build` à la racine.
 
-| Test | Cas | Desktop | Mobile | Verdict |
-|------|-----|:------:|:------:|:------:|
-| TC-01 | Démarrage du stack en une commande | — | — | ✅ OK |
-| TC-02 | API accessible + DB migrée + seed appliqué | — | — | ✅ OK |
-| TC-03 | Frontend accessible et connecté au backend | ✅ | ✅ | ✅ OK |
-| TC-04 | Démarrage à partir du `.env.example` seul | — | — | ✅ OK |
-| TC-05 | Persistance et redémarrage propre (idempotence) | — | — | ✅ OK |
-| TC-06 | Documentation hébergement OVH France (RGPD) | — | — | ✅ OK |
+| Test  | Cas                                             | Desktop | Mobile | Verdict |
+| ----- | ----------------------------------------------- | :-----: | :----: | :-----: |
+| TC-01 | Démarrage du stack en une commande              |    —    |   —    |  ✅ OK  |
+| TC-02 | API accessible + DB migrée + seed appliqué      |    —    |   —    |  ✅ OK  |
+| TC-03 | Frontend accessible et connecté au backend      |   ✅    |   ✅   |  ✅ OK  |
+| TC-04 | Démarrage à partir du `.env.example` seul       |    —    |   —    |  ✅ OK  |
+| TC-05 | Persistance et redémarrage propre (idempotence) |    —    |   —    |  ✅ OK  |
+| TC-06 | Documentation hébergement OVH France (RGPD)     |    —    |   —    |  ✅ OK  |
 
 ## Détail
 
 ### TC-01 — Démarrage en une commande ✅
+
 `cp .env.example .env` puis `docker compose up -d --build` → 3 services `postgres`,
 `backend`, `frontend` démarrés (`docker compose ps` : tous `Up`, postgres `healthy`).
 
 ### TC-02 — API + DB migrée + seed ✅
+
 - `GET /api/dashboard?pharmacy_id=3c865b32-…` → `200`, renvoie `total_products: 20`,
   `critical: 8 / high: 5 / safe: 7`, `total_recoverable: 7618.34`.
 - Logs backend : 2 migrations appliquées + `✅ Pharmacie créée`.
 - **KO au 1er essai** → corrigé (voir corrections #1 et #2).
 
 ### TC-03 — Frontend accessible + données ✅
+
 - `http://localhost:3000` → `200` en desktop (1280×900) et mobile (390×844).
 - Le dashboard affiche les données seedées (20 produits, distribution des risques,
   7 618 €). Captures : `screenshots/dashboard-desktop.png`, `dashboard-mobile.png`,
@@ -32,14 +35,17 @@ Stack lancée via `docker compose up -d --build` à la racine.
 - **KO au 1er essai** (ECONNREFUSED en SSR) → corrigé (correction #3).
 
 ### TC-04 — `.env.example` copier-coller ✅
+
 Démarrage réussi avec un simple `cp .env.example .env` sans édition ; chaque
 variable est commentée (rôle + valeur par défaut).
 
 ### TC-05 — Idempotence ✅
+
 `docker compose restart backend` → logs : `No pending migrations to apply.` +
 `✅ Données déjà présentes` ; API toujours `200`, aucun doublon.
 
 ### TC-06 — Hébergement OVH France / RGPD ✅
+
 Documenté dans `docs/HEBERGEMENT.md` (datacenters France, souveraineté, RGPD).
 
 ## Corrections implémentées pendant le test

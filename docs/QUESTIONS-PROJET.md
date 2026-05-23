@@ -14,7 +14,7 @@ Le système attend **deux fichiers distincts** (`upload.service.ts`), pas un seu
 **Fichier PRODUITS**
 | Colonne | Obligatoire | Rôle |
 |---|---|---|
-| `external_sku` | non* | identifiant produit côté LGO — clé anti-doublon |
+| `external_sku` | non\* | identifiant produit côté LGO — clé anti-doublon |
 | `name` | oui | nom produit |
 | `category`, `brand` | non | classification |
 | `expiry_date` | oui | date de péremption → moteur risque |
@@ -37,8 +37,9 @@ Le système attend **deux fichiers distincts** (`upload.service.ts`), pas un seu
 Upsert idempotent déjà en place pour les **produits** (`upload.service.ts`) : recherche sur `(pharmacy_id + external_sku)` → update si trouvé, sinon create. Ré-importer le même fichier ne crée pas de doublon.
 
 **3 trous connus :**
+
 - **Produits sans SKU** → `existing = null` à chaque fois → doublons garantis.
-- **Ventes jamais dédupliquées** (`create` sec) → ré-importer un fichier de ventes **double les ventes** → vélocité faussée. *Bug le plus impactant.*
+- **Ventes jamais dédupliquées** (`create` sec) → ré-importer un fichier de ventes **double les ventes** → vélocité faussée. _Bug le plus impactant._
 - L'index `[pharmacy_id, external_sku]` n'est pas `@@unique` → la base n'empêche pas physiquement le doublon, seul le code le fait.
 
 > Un produit est un **état** (on remplace), une vente est un **événement** (on accumule). Les exports LGO de ventes contiennent souvent une fenêtre glissante (30 derniers jours) → besoin d'une clé de dédup `external_sku + sale_date + quantity` ou d'un remplacement par fenêtre.
@@ -46,6 +47,7 @@ Upsert idempotent déjà en place pour les **produits** (`upload.service.ts`) : 
 ### À quelle fréquence faut-il faire des imports ?
 
 **1×/jour.**
+
 - Cahier des charges : « upload manuel, < 5 min/jour », cron d'analyse à **02h00**.
 - La vélocité se calcule sur 30 jours → un grain quotidien suffit, l'intra-journalier n'apporte rien.
 - Rituel naturel : export du LGO le matin à l'ouverture.
@@ -56,13 +58,13 @@ Upsert idempotent déjà en place pour les **produits** (`upload.service.ts`) : 
 
 **Non — le web (PWA) est le bon choix.**
 
-| Critère | Web PWA | Desktop |
-|---|---|---|
-| Déploiement 2 officines pilotes | URL, instantané | installeur par poste, MAJ manuelles |
-| Le LGO est déjà l'app desktop lourde | Savely = surcouche légère | redondant |
-| Offline (F13) | Service Workers suffisent | sur-dimensionné |
-| Multi-poste officine | n'importe quel navigateur | licence/poste |
-| Cahier des charges | impose Next.js PWA | hors stack |
+| Critère                              | Web PWA                   | Desktop                             |
+| ------------------------------------ | ------------------------- | ----------------------------------- |
+| Déploiement 2 officines pilotes      | URL, instantané           | installeur par poste, MAJ manuelles |
+| Le LGO est déjà l'app desktop lourde | Savely = surcouche légère | redondant                           |
+| Offline (F13)                        | Service Workers suffisent | sur-dimensionné                     |
+| Multi-poste officine                 | n'importe quel navigateur | licence/poste                       |
+| Cahier des charges                   | impose Next.js PWA        | hors stack                          |
 
 Le seul besoin "lourd" (scan matériel) est couvert par l'**app mobile B2B Flutter + Capacitor**, pas par un desktop.
 
@@ -87,12 +89,12 @@ Quand le moteur classe un produit en `high` → action « Mise en vente B2C » �
 
 🔴 **Vraie friction de faisabilité.** L'export LGO ne contient **aucune image** (cahier des charges : « données produit uniquement »). Le schéma n'a pas de champ image.
 
-| Option | Effort | Réaliste pour juillet ? |
-|---|---|---|
-| Base CIP/médicaments publique (mapping CIP13) | moyen | partiellement |
-| Image par catégorie / placeholder | faible | ✅ pour démo |
-| Upload manuel par l'officine | faible (code) / lourd (usage) | non |
-| API e-commerce / scraping | lourd + risqué juridiquement | non |
+| Option                                        | Effort                        | Réaliste pour juillet ? |
+| --------------------------------------------- | ----------------------------- | ----------------------- |
+| Base CIP/médicaments publique (mapping CIP13) | moyen                         | partiellement           |
+| Image par catégorie / placeholder             | faible                        | ✅ pour démo            |
+| Upload manuel par l'officine                  | faible (code) / lourd (usage) | non                     |
+| API e-commerce / scraping                     | lourd + risqué juridiquement  | non                     |
 
 > Le B2C étant en **V2 / feature-flaggé**, pas besoin de résoudre les vraies images pour la soutenance : un mapping `catégorie → placeholder` suffit, et on documente l'enrichissement via référentiel CIP comme chantier V2 (dette tracée dans un ADR). La donnée produit (stock) ≠ donnée commerciale (visuels) : Savely ne sera jamais la source des images → service séparé.
 
@@ -128,17 +130,19 @@ Aujourd'hui `risk-calculator.ts` envoie les `critical` vers le label `'Don assoc
 
 **Données manquantes (vraie charge de travail) — absentes du schéma Prisma :**
 
-| Entité | Champs clés | Pourquoi |
-|---|---|---|
-| `Association` | nom, adresse, **lat/lng**, catégories acceptées, rayon | matching 50 km |
-| `Donation` | produit, quantité, association, **statut**, dates, valeur, n° reçu | suivi + Cerfa |
+| Entité        | Champs clés                                                        | Pourquoi       |
+| ------------- | ------------------------------------------------------------------ | -------------- |
+| `Association` | nom, adresse, **lat/lng**, catégories acceptées, rayon             | matching 50 km |
+| `Donation`    | produit, quantité, association, **statut**, dates, valeur, n° reçu | suivi + Cerfa  |
 
 **Points d'attention :**
+
 - **Matching 50 km = calcul géospatial** (Haversine ou PostGIS). Nécessite un **annuaire d'associations** pré-rempli avec coordonnées (prévu dans l'Admin Global V2).
-- **Statut du don = machine à états** : pas de reçu fiscal sans don *retiré*. Règle métier à rendre inviolable (BDD).
+- **Statut du don = machine à états** : pas de reçu fiscal sans don _retiré_. Règle métier à rendre inviolable (BDD).
 - **Dépendance au Portail Asso (F20, V2)** pour la confirmation pickup → pour la V1/démo, statut changé manuellement par le titulaire (feature-flag).
 
 **Minimum démontrable :**
+
 1. Modèle `Association` + `Donation` + seed de quelques assos géolocalisées.
 2. Matching par distance (Haversine simple).
 3. Création d'un don avec statut manuel.

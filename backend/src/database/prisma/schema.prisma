@@ -24,7 +24,8 @@ model Pharmacy {
 model Product {
   product_id     String   @id @default(uuid())
   pharmacy_id    String
-  external_sku   String?
+  external_sku   String
+  lot_number     String?
   name           String
   category       String?
   brand          String?
@@ -39,8 +40,8 @@ model Product {
   sales          Sale[]
   analyses       RiskAnalysis[]
 
+  @@unique([pharmacy_id, external_sku])
   @@index([pharmacy_id, expiry_date])
-  @@index([pharmacy_id, external_sku])
 }
 
 model Sale {

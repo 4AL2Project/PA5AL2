@@ -105,13 +105,12 @@ Products are upserted by `(pharmacy_id, external_sku)`. Sales are created (not d
 ## Known Technical Debt
 
 1. **Sales deduplication**: Re-importing sales doubles records → skews velocity
-2. **SKU optionality**: Products without `external_sku` can't match to sales → classified as critical incorrectly
-3. **No test coverage**: Zero unit/integration tests
-4. **No real auth**: Multi-tenant isolation only via query param (insecure)
+2. **No test coverage**: Zero unit/integration tests
+3. **No real auth**: Multi-tenant isolation only via query param (insecure)
 
 ## File Upload Format
 
-**Products CSV**: `name` (req), `expiry_date` (req), `stock_quantity` (req), `unit_price` (req), `external_sku`, `category`, `brand`, `cost_price`
+**Products CSV**: `external_sku` (req), `name` (req), `expiry_date` (req), `stock_quantity` (req), `unit_price` (req), `lot_number`, `category`, `brand`, `cost_price`
 
 **Sales CSV**: `external_sku` (req), `sale_date` (req), `quantity_sold` (req), `unit_price_sold`
 

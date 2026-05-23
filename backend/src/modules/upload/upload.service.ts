@@ -73,16 +73,20 @@ export class UploadService {
     let updated = 0;
 
     for (const row of validated) {
-      const existing = row.external_sku
-        ? await prisma.product.findFirst({
-            where: { pharmacy_id: pharmacyId, external_sku: row.external_sku },
-          })
-        : null;
+      const existing = await prisma.product.findUnique({
+        where: {
+          pharmacy_id_external_sku: {
+            pharmacy_id: pharmacyId,
+            external_sku: row.external_sku,
+          },
+        },
+      });
 
       if (existing) {
         await prisma.product.update({
           where: { product_id: existing.product_id },
           data: {
+            lot_number: row.lot_number,
             name: row.name,
             category: row.category,
             brand: row.brand,
@@ -98,6 +102,7 @@ export class UploadService {
           data: {
             pharmacy_id: pharmacyId,
             external_sku: row.external_sku,
+            lot_number: row.lot_number,
             name: row.name,
             category: row.category,
             brand: row.brand,

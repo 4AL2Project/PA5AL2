@@ -4,32 +4,32 @@ import {
   Euro,
   Package,
   TrendingUp,
-} from 'lucide-react'
-import Link from 'next/link'
+} from 'lucide-react';
+import Link from 'next/link';
 
-import { RiskChart } from '@/components/dashboard/risk-chart'
-import { RiskTable } from '@/components/dashboard/risk-table'
-import { StatsCard } from '@/components/dashboard/stats-card'
-import { DashboardLayout } from '@/components/dashboard-layout'
-import { Button } from '@/components/ui/button'
-import { UploadModal } from '@/components/upload/upload-modal'
-import { adaptToRiskDistribution,fetchLatestAnalysis } from '@/lib/api'
+import { RiskChart } from '@/components/dashboard/risk-chart';
+import { RiskTable } from '@/components/dashboard/risk-table';
+import { StatsCard } from '@/components/dashboard/stats-card';
+import { DashboardLayout } from '@/components/dashboard-layout';
+import { Button } from '@/components/ui/button';
+import { UploadModal } from '@/components/upload/upload-modal';
+import { adaptToRiskDistribution, fetchLatestAnalysis } from '@/lib/api';
 
 export default async function DashboardPage() {
-  const { products, stats } = await fetchLatestAnalysis()
+  const { products, stats } = await fetchLatestAnalysis();
 
-  const criticalProducts = products.filter((p) => p.riskLevel === 'critical')
+  const criticalProducts = products.filter((p) => p.riskLevel === 'critical');
   const topRiskProducts = products
     .filter((p) => p.riskLevel === 'critical' || p.riskLevel === 'high')
-    .slice(0, 5)
-  const riskDistribution = adaptToRiskDistribution(stats)
+    .slice(0, 5);
+  const riskDistribution = adaptToRiskDistribution(stats);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'EUR',
       maximumFractionDigits: 0,
-    }).format(value)
+    }).format(value);
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {
@@ -38,7 +38,7 @@ export default async function DashboardPage() {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    })
+    });
 
   return (
     <DashboardLayout
@@ -113,8 +113,7 @@ export default async function DashboardPage() {
             <RiskChart data={riskDistribution} />
           </div>
         </div>
-
       </div>
     </DashboardLayout>
-  )
+  );
 }

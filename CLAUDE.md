@@ -21,6 +21,7 @@ PA5AL2/
 ## Development Commands
 
 ### Backend (port 3005)
+
 ```bash
 cd backend
 docker compose up -d                    # Start PostgreSQL
@@ -32,6 +33,7 @@ npm run dev                             # Start dev server
 ```
 
 ### Frontend (port 3000)
+
 ```bash
 cd frontend
 npm install
@@ -41,6 +43,7 @@ npm run lint                            # ESLint
 ```
 
 ### Prisma Commands (from backend/)
+
 ```bash
 npx prisma migrate dev --schema src/database/prisma/schema.prisma --name <migration_name>
 npx prisma studio --schema src/database/prisma/schema.prisma    # Database GUI
@@ -65,23 +68,23 @@ A daily cron job (2 AM) recalculates risk for all pharmacies.
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `backend/src/modules/analysis/risk-calculator.ts` | Risk classification algorithm |
-| `backend/src/modules/analysis/sales-velocity.ts` | 30-day velocity calculation |
-| `backend/src/modules/upload/upload.service.ts` | CSV/Excel import with upsert logic |
-| `backend/src/database/prisma/schema.prisma` | Data models |
-| `frontend/lib/api.ts` | API client with type adapters |
-| `frontend/lib/types.ts` | Frontend TypeScript types |
+| File                                              | Purpose                            |
+| ------------------------------------------------- | ---------------------------------- |
+| `backend/src/modules/analysis/risk-calculator.ts` | Risk classification algorithm      |
+| `backend/src/modules/analysis/sales-velocity.ts`  | 30-day velocity calculation        |
+| `backend/src/modules/upload/upload.service.ts`    | CSV/Excel import with upsert logic |
+| `backend/src/database/prisma/schema.prisma`       | Data models                        |
+| `frontend/lib/api.ts`                             | API client with type adapters      |
+| `frontend/lib/types.ts`                           | Frontend TypeScript types          |
 
 ## API Routes
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/upload` | Upload products/sales CSV or Excel |
-| GET | `/api/analysis/latest` | Latest risk analysis per product |
-| GET | `/api/products` | Products with risk data (filters: `risk_level`, `category`) |
-| GET | `/api/dashboard` | Aggregated pharmacy summary |
+| Method | Path                   | Description                                                 |
+| ------ | ---------------------- | ----------------------------------------------------------- |
+| POST   | `/api/upload`          | Upload products/sales CSV or Excel                          |
+| GET    | `/api/analysis/latest` | Latest risk analysis per product                            |
+| GET    | `/api/products`        | Products with risk data (filters: `risk_level`, `category`) |
+| GET    | `/api/dashboard`       | Aggregated pharmacy summary                                 |
 
 ## Data Models (Prisma)
 
@@ -95,10 +98,12 @@ Products are upserted by `(pharmacy_id, external_sku)`. Sales are created (not d
 ## Environment Variables
 
 **Backend (.env)**
+
 - `DATABASE_URL` — PostgreSQL connection string
 - `PORT` — Server port (default: 3005)
 
 **Frontend (.env.local)**
+
 - `NEXT_PUBLIC_API_URL` — Backend URL (default: http://localhost:3005)
 - `NEXT_PUBLIC_PHARMACY_ID` — Demo pharmacy UUID: `3c865b32-ba84-483d-8256-2b1d7d5e542e`
 
@@ -117,6 +122,7 @@ Products are upserted by `(pharmacy_id, external_sku)`. Sales are created (not d
 ## DDD Migration (In Progress)
 
 The backend is transitioning to Domain-Driven Design with:
+
 - `backend/src/core/domain/` — Base classes for value objects and domain events
 - Eventual migration of modules to follow aggregate/repository patterns
 

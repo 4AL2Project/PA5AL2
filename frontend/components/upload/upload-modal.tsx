@@ -1,35 +1,40 @@
-'use client'
+'use client';
 
-import { Upload } from 'lucide-react'
-import { useState } from 'react'
+import { Upload } from 'lucide-react';
+import { useState } from 'react';
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
+} from '@/components/ui/dialog';
 
-import { UploadDropzone } from './upload-dropzone'
+import { UploadDropzone } from './upload-dropzone';
 
 interface UploadModalProps {
   /** Type de fichier présélectionné à l'ouverture (défaut : products) */
-  defaultFileType?: 'products' | 'sales'
+  defaultFileType?: 'products' | 'sales';
   /** Noeud déclencheur personnalisé — si absent, un bouton par défaut est rendu */
-  trigger?: React.ReactNode
+  trigger?: React.ReactNode;
 }
 
-export function UploadModal({ defaultFileType = 'products', trigger }: UploadModalProps) {
-  const [open, setOpen] = useState(false)
-  const [fileType, setFileType] = useState<'products' | 'sales'>(defaultFileType)
+export function UploadModal({
+  defaultFileType = 'products',
+  trigger,
+}: UploadModalProps) {
+  const [open, setOpen] = useState(false);
+  const [fileType, setFileType] = useState<'products' | 'sales'>(
+    defaultFileType
+  );
 
   // Réinitialiser le type de fichier à la fermeture
   const handleOpenChange = (next: boolean) => {
-    if (!next) setFileType(defaultFileType)
-    setOpen(next)
-  }
+    if (!next) setFileType(defaultFileType);
+    setOpen(next);
+  };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -81,5 +86,5 @@ export function UploadModal({ defaultFileType = 'products', trigger }: UploadMod
         </p>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

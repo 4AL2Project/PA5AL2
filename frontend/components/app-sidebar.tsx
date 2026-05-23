@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import {
   AlertTriangle,
@@ -6,11 +6,11 @@ import {
   Package,
   PanelLeftClose,
   Settings,
-} from 'lucide-react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 import {
   Sidebar,
   SidebarContent,
@@ -23,7 +23,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from '@/components/ui/sidebar'
+} from '@/components/ui/sidebar';
 
 const navigation = [
   {
@@ -36,11 +36,11 @@ const navigation = [
     href: '/products',
     icon: Package,
   },
-]
+];
 
 export function AppSidebar() {
-  const pathname = usePathname()
-  const { toggleSidebar } = useSidebar()
+  const pathname = usePathname();
+  const { toggleSidebar } = useSidebar();
 
   return (
     <Sidebar>
@@ -75,10 +75,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {navigation.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                  >
+                  <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -103,5 +100,5 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

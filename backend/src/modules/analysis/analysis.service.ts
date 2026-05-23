@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { prisma } from '../../database/client';
 import { calculateRisk } from './risk-calculator';
 

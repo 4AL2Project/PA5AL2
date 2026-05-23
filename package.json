@@ -1,0 +1,28 @@
+{
+  "name": "savely",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint --fix",
+    "lint:frontend": "pnpm -F ./frontend lint",
+    "lint:backend": "pnpm -F ./backend lint",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "pnpm -r typecheck",
+    "typecheck:frontend": "pnpm -F ./frontend typecheck",
+    "typecheck:backend": "pnpm -F ./backend typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^10.0.0",
+    "eslint-plugin-import-x": "^4.0.0",
+    "eslint-plugin-simple-import-sort": "^12.0.0",
+    "eslint-plugin-unused-imports": "^4.0.0",
+    "globals": "^15.0.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}

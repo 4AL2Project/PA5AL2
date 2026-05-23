@@ -1,5 +1,5 @@
-import { cn } from '@/lib/utils'
 import { RiskLevel } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 interface RiskBadgeProps {
   level: RiskLevel

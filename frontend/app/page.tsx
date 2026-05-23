@@ -1,18 +1,19 @@
-import { DashboardLayout } from '@/components/dashboard-layout'
-import { StatsCard } from '@/components/dashboard/stats-card'
-import { RiskTable } from '@/components/dashboard/risk-table'
-import { RiskChart } from '@/components/dashboard/risk-chart'
-import { UploadModal } from '@/components/upload/upload-modal'
-import { fetchLatestAnalysis, adaptToRiskDistribution } from '@/lib/api'
 import {
   AlertTriangle,
+  ArrowRight,
+  Euro,
   Package,
   TrendingUp,
-  Euro,
-  ArrowRight,
 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+
+import { RiskChart } from '@/components/dashboard/risk-chart'
+import { RiskTable } from '@/components/dashboard/risk-table'
+import { StatsCard } from '@/components/dashboard/stats-card'
+import { DashboardLayout } from '@/components/dashboard-layout'
+import { Button } from '@/components/ui/button'
+import { UploadModal } from '@/components/upload/upload-modal'
+import { adaptToRiskDistribution,fetchLatestAnalysis } from '@/lib/api'
 
 export default async function DashboardPage() {
   const { products, stats } = await fetchLatestAnalysis()

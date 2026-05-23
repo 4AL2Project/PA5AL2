@@ -1,8 +1,16 @@
-import { BadRequestException,Controller, Get, Query } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Get,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 
 import { prisma } from '../../database/client';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('api/dashboard')
+@UseGuards(JwtAuthGuard)
 export class DashboardController {
   @Get()
   async getDashboard(@Query('pharmacy_id') pharmacyId: string) {
@@ -25,7 +33,7 @@ export class DashboardController {
         acc[a.risk_level] = (acc[a.risk_level] || 0) + 1;
         return acc;
       },
-      {} as Record<string, number>,
+      {} as Record<string, number>
     );
 
     return {
@@ -33,8 +41,14 @@ export class DashboardController {
       summary: {
         total_products: analyses.length,
         by_risk_level: byLevel,
-        total_recoverable: analyses.reduce((s, a) => s + a.recoverable_value, 0),
-        total_potential_loss: analyses.reduce((s, a) => s + a.potential_loss, 0),
+        total_recoverable: analyses.reduce(
+          (s, a) => s + a.recoverable_value,
+          0
+        ),
+        total_potential_loss: analyses.reduce(
+          (s, a) => s + a.potential_loss,
+          0
+        ),
       },
     };
   }

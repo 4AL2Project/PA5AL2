@@ -45,16 +45,19 @@ function daysToExpiry(product: Product): number {
  *   score ≤ 0.30  → critical
  */
 function classify(score: number): RiskLevel {
-  if (score > 0.70) return 'safe';
-  if (score > 0.30) return 'high';
+  if (score > 0.7) return 'safe';
+  if (score > 0.3) return 'high';
   return 'critical';
 }
 
 function deriveAction(level: RiskLevel): string {
   switch (level) {
-    case 'safe':     return 'Aucune action';
-    case 'high':     return 'Mise en vente B2C';
-    case 'critical': return 'Don associatif';
+    case 'safe':
+      return 'Aucune action';
+    case 'high':
+      return 'Mise en vente B2C';
+    case 'critical':
+      return 'Don associatif';
   }
 }
 
@@ -65,9 +68,10 @@ export function calculateRisk(product: Product, sales: Sale[]): RiskResult {
   const expected = velocity * days;
   const excess = Math.max(0, product.stock_quantity - expected);
 
-  const score = product.stock_quantity > 0
-    ? Math.min(1, expected / product.stock_quantity)
-    : 0;
+  const score =
+    product.stock_quantity > 0
+      ? Math.min(1, expected / product.stock_quantity)
+      : 0;
 
   const level = classify(score);
   const potentialLoss = excess * (product.cost_price ?? product.unit_price);

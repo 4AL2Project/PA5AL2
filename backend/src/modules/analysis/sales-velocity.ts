@@ -11,7 +11,9 @@ export function computeVelocity(sales: Sale[]): number {
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const recentSales = sales.filter((s) => new Date(s.sale_date) >= thirtyDaysAgo);
+  const recentSales = sales.filter(
+    (s) => new Date(s.sale_date) >= thirtyDaysAgo
+  );
 
   if (recentSales.length === 0) return 0;
 

@@ -19,6 +19,17 @@ model Pharmacy {
   products          Product[]
   sales             Sale[]
   analyses          RiskAnalysis[]
+  users             User[]
+}
+
+model User {
+  user_id     String   @id @default(uuid())
+  pharmacy_id String
+  email       String   @unique
+  password    String
+  created_at  DateTime @default(now())
+
+  pharmacy    Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
 }
 
 model Product {

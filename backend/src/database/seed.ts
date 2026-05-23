@@ -20,30 +20,40 @@ function daysAgo(n: number): Date {
 
 const PRODUCTS = [
   // ── Critique (stock élevé, expire très bientôt, ventes faibles)
-  { sku: 'CRE-HYD-50',    name: 'Creme Hydratante Visage 50ml',       category: 'Soins visage',  brand: 'Vichy',           expiresIn: 8,   stock: 180, price: 12.90, cost: 8.50  },
-  { sku: 'SER-VIT-C',     name: 'Serum Eclat Vitamine C 30ml',        category: 'Soins visage',  brand: 'La Roche-Posay',  expiresIn: 10,  stock: 95,  price: 24.90, cost: 16.00 },
-  { sku: 'MIC-EAU-400',   name: 'Eau Micellaire Sensitive 400ml',     category: 'Soins visage',  brand: 'Bioderma',        expiresIn: 13,  stock: 200, price: 9.90,  cost: 6.20  },
-  { sku: 'BB-CREAM-30',   name: 'BB Cream SPF15 30ml',                category: 'Maquillage',    brand: 'Garnier',         expiresIn: 15,  stock: 130, price: 8.50,  cost: 5.00  },
-  { sku: 'FOND-TEINT-30', name: 'Fond de Teint Fluide 30ml',          category: 'Maquillage',    brand: 'Maybelline',      expiresIn: 17,  stock: 160, price: 14.90, cost: 9.50  },
+  { sku: 'CRE-HYD-50',    lot: 'LOT-2026-A001', name: 'Creme Hydratante Visage 50ml',       category: 'Soins visage',  brand: 'Vichy',           expiresIn: 8,   stock: 180, price: 12.90, cost: 8.50  },
+  { sku: 'SER-VIT-C',     lot: 'LOT-2026-A002', name: 'Serum Eclat Vitamine C 30ml',        category: 'Soins visage',  brand: 'La Roche-Posay',  expiresIn: 10,  stock: 95,  price: 24.90, cost: 16.00 },
+  { sku: 'MIC-EAU-400',   lot: 'LOT-2026-A003', name: 'Eau Micellaire Sensitive 400ml',     category: 'Soins visage',  brand: 'Bioderma',        expiresIn: 13,  stock: 200, price: 9.90,  cost: 6.20  },
+  { sku: 'BB-CREAM-30',   lot: 'LOT-2026-A004', name: 'BB Cream SPF15 30ml',                category: 'Maquillage',    brand: 'Garnier',         expiresIn: 15,  stock: 130, price: 8.50,  cost: 5.00  },
+  { sku: 'FOND-TEINT-30', lot: 'LOT-2026-A005', name: 'Fond de Teint Fluide 30ml',          category: 'Maquillage',    brand: 'Maybelline',      expiresIn: 17,  stock: 160, price: 14.90, cost: 9.50  },
+  { sku: 'CREME-MAIN-75', lot: 'LOT-2026-A006', name: 'Creme Mains Reparatrice 75ml',       category: 'Soins corps',   brand: 'Avene',           expiresIn: 12,  stock: 140, price: 6.90,  cost: 4.20  },
   // ── Élevé (expire dans 2-4 semaines, stock modéré à fort)
-  { sku: 'CREME-CORP-200',name: 'Creme Corps Nourrissante 200ml',     category: 'Soins corps',   brand: 'Nuxe',            expiresIn: 24,  stock: 110, price: 15.90, cost: 10.00 },
-  { sku: 'MASQ-ARG-75',   name: 'Masque Purifiant Argile 75ml',       category: 'Soins visage',  brand: 'Caudalie',        expiresIn: 20,  stock: 75,  price: 18.50, cost: 12.00 },
-  { sku: 'GEL-DOUCHE-250',name: 'Gel Douche Surgras 250ml',           category: 'Soins corps',   brand: 'Avene',           expiresIn: 26,  stock: 45,  price: 7.90,  cost: 4.80  },
-  { sku: 'HUILE-SEC-100', name: 'Huile Seche Corps 100ml',            category: 'Soins corps',   brand: 'Nuxe',            expiresIn: 28,  stock: 55,  price: 22.90, cost: 14.50 },
+  { sku: 'CREME-CORP-200',lot: 'LOT-2026-B001', name: 'Creme Corps Nourrissante 200ml',     category: 'Soins corps',   brand: 'Nuxe',            expiresIn: 24,  stock: 110, price: 15.90, cost: 10.00 },
+  { sku: 'MASQ-ARG-75',   lot: 'LOT-2026-B002', name: 'Masque Purifiant Argile 75ml',       category: 'Soins visage',  brand: 'Caudalie',        expiresIn: 20,  stock: 75,  price: 18.50, cost: 12.00 },
+  { sku: 'GEL-DOUCHE-250',lot: 'LOT-2026-B003', name: 'Gel Douche Surgras 250ml',           category: 'Soins corps',   brand: 'Avene',           expiresIn: 26,  stock: 45,  price: 7.90,  cost: 4.80  },
+  { sku: 'HUILE-SEC-100', lot: 'LOT-2026-B004', name: 'Huile Seche Corps 100ml',            category: 'Soins corps',   brand: 'Nuxe',            expiresIn: 28,  stock: 55,  price: 22.90, cost: 14.50 },
+  { sku: 'DEMA-YEU-125',  lot: 'LOT-2026-B005', name: 'Demaquillant Yeux Bi-Phase 125ml',   category: 'Soins visage',  brand: 'Garnier',         expiresIn: 22,  stock: 90,  price: 5.90,  cost: 3.50  },
   // ── Modéré (1 à 2 mois)
-  { sku: 'SHA-REP-250',   name: 'Shampooing Reparateur 250ml',        category: 'Cheveux',       brand: 'Kerastase',       expiresIn: 43,  stock: 60,  price: 28.90, cost: 18.00 },
-  { sku: 'COND-LISS-200', name: 'Apres-Shampooing Lissant 200ml',     category: 'Cheveux',       brand: 'L Oreal',         expiresIn: 49,  stock: 85,  price: 11.90, cost: 7.50  },
-  { sku: 'ROUGE-LEV-3G',  name: 'Rouge a Levres Satin 3g',            category: 'Maquillage',    brand: 'Bourjois',        expiresIn: 38,  stock: 40,  price: 10.90, cost: 6.50  },
-  { sku: 'MASCARA-BLK',   name: 'Mascara Volume Noir 9ml',            category: 'Maquillage',    brand: 'Maybelline',      expiresIn: 31,  stock: 35,  price: 12.90, cost: 8.00  },
+  { sku: 'SHA-REP-250',   lot: 'LOT-2026-C001', name: 'Shampooing Reparateur 250ml',        category: 'Cheveux',       brand: 'Kerastase',       expiresIn: 43,  stock: 60,  price: 28.90, cost: 18.00 },
+  { sku: 'COND-LISS-200', lot: 'LOT-2026-C002', name: 'Apres-Shampooing Lissant 200ml',     category: 'Cheveux',       brand: 'L Oreal',         expiresIn: 49,  stock: 85,  price: 11.90, cost: 7.50  },
+  { sku: 'ROUGE-LEV-3G',  lot: 'LOT-2026-C003', name: 'Rouge a Levres Satin 3g',            category: 'Maquillage',    brand: 'Bourjois',        expiresIn: 38,  stock: 40,  price: 10.90, cost: 6.50  },
+  { sku: 'MASCARA-BLK',   lot: 'LOT-2026-C004', name: 'Mascara Volume Noir 9ml',            category: 'Maquillage',    brand: 'Maybelline',      expiresIn: 31,  stock: 35,  price: 12.90, cost: 8.00  },
+  { sku: 'VERN-ONG-10',   lot: 'LOT-2026-C005', name: 'Vernis a Ongles Rouge 10ml',         category: 'Maquillage',    brand: 'Bourjois',        expiresIn: 46,  stock: 50,  price: 9.90,  cost: 5.50  },
+  { sku: 'SOIN-CHEV-150', lot: 'LOT-2026-C006', name: 'Soin Cheveux Sans Rincage 150ml',    category: 'Cheveux',       brand: 'L Oreal',         expiresIn: 52,  stock: 70,  price: 13.90, cost: 8.50  },
   // ── Faible (2 à 4 mois, ventes correctes)
-  { sku: 'CREME-SOL-50',  name: 'Creme Solaire SPF50 50ml',           category: 'Solaire',       brand: 'La Roche-Posay',  expiresIn: 75,  stock: 70,  price: 19.90, cost: 12.50 },
-  { sku: 'TONER-ROSE-150',name: 'Lotion Tonique Rose 150ml',          category: 'Soins visage',  brand: 'Caudalie',        expiresIn: 61,  stock: 55,  price: 16.90, cost: 10.50 },
+  { sku: 'CREME-SOL-50',  lot: 'LOT-2026-D001', name: 'Creme Solaire SPF50 50ml',           category: 'Solaire',       brand: 'La Roche-Posay',  expiresIn: 75,  stock: 70,  price: 19.90, cost: 12.50 },
+  { sku: 'TONER-ROSE-150',lot: 'LOT-2026-D002', name: 'Lotion Tonique Rose 150ml',          category: 'Soins visage',  brand: 'Caudalie',        expiresIn: 61,  stock: 55,  price: 16.90, cost: 10.50 },
+  { sku: 'LAIT-CORP-400', lot: 'LOT-2026-D003', name: 'Lait Corporel Hydratant 400ml',      category: 'Soins corps',   brand: 'Nivea',           expiresIn: 82,  stock: 100, price: 8.90,  cost: 5.50  },
+  { sku: 'DEO-SPRAY-150', lot: 'LOT-2026-D004', name: 'Deodorant Spray 24h 150ml',          category: 'Soins corps',   brand: 'Nivea',           expiresIn: 68,  stock: 85,  price: 4.90,  cost: 2.80  },
   // ── Sûr (4 mois et plus, bonnes ventes)
-  { sku: 'EAU-PARF-50',   name: 'Eau de Parfum Florale 50ml',         category: 'Parfumerie',    brand: 'Clarins',         expiresIn: 100, stock: 120, price: 45.90, cost: 28.00 },
-  { sku: 'CREME-NUIT-50', name: 'Creme de Nuit Anti-Age 50ml',        category: 'Soins visage',  brand: 'Vichy',           expiresIn: 115, stock: 45,  price: 34.90, cost: 22.00 },
-  { sku: 'BAUME-LEV-15',  name: 'Baume Levres Hydratant 15ml',        category: 'Soins levres',  brand: 'Nuxe',            expiresIn: 136, stock: 80,  price: 9.90,  cost: 5.80  },
-  { sku: 'CONTOUR-YEU-15',name: 'Contour des Yeux 15ml',              category: 'Soins visage',  brand: 'Clarins',         expiresIn: 153, stock: 60,  price: 38.90, cost: 24.00 },
-  { sku: 'GOMMAGE-100',   name: 'Gommage Corps Sucre 100ml',          category: 'Soins corps',   brand: 'Garnier',         expiresIn: 141, stock: 90,  price: 8.90,  cost: 5.20  },
+  { sku: 'EAU-PARF-50',   lot: 'LOT-2026-E001', name: 'Eau de Parfum Florale 50ml',         category: 'Parfumerie',    brand: 'Clarins',         expiresIn: 100, stock: 120, price: 45.90, cost: 28.00 },
+  { sku: 'CREME-NUIT-50', lot: 'LOT-2026-E002', name: 'Creme de Nuit Anti-Age 50ml',        category: 'Soins visage',  brand: 'Vichy',           expiresIn: 115, stock: 45,  price: 34.90, cost: 22.00 },
+  { sku: 'BAUME-LEV-15',  lot: 'LOT-2026-E003', name: 'Baume Levres Hydratant 15ml',        category: 'Soins levres',  brand: 'Nuxe',            expiresIn: 136, stock: 80,  price: 9.90,  cost: 5.80  },
+  { sku: 'CONTOUR-YEU-15',lot: 'LOT-2026-E004', name: 'Contour des Yeux 15ml',              category: 'Soins visage',  brand: 'Clarins',         expiresIn: 153, stock: 60,  price: 38.90, cost: 24.00 },
+  { sku: 'GOMMAGE-100',   lot: 'LOT-2026-E005', name: 'Gommage Corps Sucre 100ml',          category: 'Soins corps',   brand: 'Garnier',         expiresIn: 141, stock: 90,  price: 8.90,  cost: 5.20  },
+  { sku: 'BRUME-CORP-200',lot: 'LOT-2026-E006', name: 'Brume Corps Parfumee 200ml',         category: 'Parfumerie',    brand: 'Nuxe',            expiresIn: 121, stock: 110, price: 14.90, cost: 9.00  },
+  { sku: 'SAVON-MAR-100', lot: 'LOT-2026-E007', name: 'Savon de Marseille Olive 100g',      category: 'Soins corps',   brand: 'Le Petit Marseillais', expiresIn: 168, stock: 130, price: 3.90,  cost: 2.20  },
+  { sku: 'CREME-PIED-75', lot: 'LOT-2026-E008', name: 'Creme Pieds Reparatrice 75ml',       category: 'Soins corps',   brand: 'Avene',           expiresIn: 145, stock: 65,  price: 11.90, cost: 7.00  },
+  { sku: 'EAU-FLOR-100',  lot: 'LOT-2026-E009', name: 'Eau Florale Bleuet 100ml',           category: 'Soins visage',  brand: 'Caudalie',        expiresIn: 130, stock: 75,  price: 13.90, cost: 8.50  },
 ]
 
 // Ventes sur 30 jours par SKU : [quantités sur 5 semaines] — calibrées pour générer tous les niveaux de risque
@@ -53,21 +63,31 @@ const SALES_PLAN: Record<string, number[]> = {
   'MIC-EAU-400':   [6, 6, 6, 6, 6],   // 1.0/j → critique
   'BB-CREAM-30':   [4, 4, 4, 5, 4],   // 0.7/j → critique
   'FOND-TEINT-30': [9, 9, 9, 9, 9],   // 1.5/j → critique
+  'CREME-MAIN-75': [3, 3, 3, 3, 3],   // 0.5/j → critique
   'CREME-CORP-200':[5, 5, 5, 5, 4],   // 0.8/j → élevé
   'MASQ-ARG-75':   [3, 3, 3, 3, 3],   // 0.5/j → élevé
   'GEL-DOUCHE-250':[2, 3, 2, 3, 2],   // 0.4/j → élevé
   'HUILE-SEC-100': [4, 4, 3, 4, 3],   // 0.6/j → élevé
+  'DEMA-YEU-125':  [4, 4, 4, 4, 4],   // 0.7/j → élevé
   'SHA-REP-250':   [3, 3, 3, 3, 3],   // 0.5/j → modéré
   'COND-LISS-200': [5, 5, 5, 5, 4],   // 0.8/j → modéré
   'ROUGE-LEV-3G':  [4, 4, 3, 4, 3],   // 0.6/j → modéré
   'MASCARA-BLK':   [2, 3, 2, 3, 2],   // 0.4/j → modéré
+  'VERN-ONG-10':   [3, 3, 3, 3, 3],   // 0.5/j → modéré
+  'SOIN-CHEV-150': [4, 4, 4, 4, 4],   // 0.7/j → modéré
   'CREME-SOL-50':  [5, 6, 5, 6, 5],   // 0.9/j → faible
   'TONER-ROSE-150':[5, 5, 5, 5, 4],   // 0.8/j → faible
+  'LAIT-CORP-400': [7, 7, 7, 7, 7],   // 1.2/j → faible
+  'DEO-SPRAY-150': [5, 5, 5, 5, 5],   // 0.8/j → faible
   'EAU-PARF-50':   [9, 9, 9, 9, 9],   // 1.5/j → sûr
   'CREME-NUIT-50': [4, 4, 4, 5, 4],   // 0.7/j → sûr
   'BAUME-LEV-15':  [7, 7, 7, 8, 7],   // 1.2/j → sûr
   'CONTOUR-YEU-15':[4, 4, 3, 4, 3],   // 0.6/j → sûr
   'GOMMAGE-100':   [7, 7, 7, 6, 6],   // 1.1/j → sûr
+  'BRUME-CORP-200':[8, 8, 8, 8, 8],   // 1.3/j → sûr
+  'SAVON-MAR-100': [9, 9, 9, 9, 9],   // 1.5/j → sûr
+  'CREME-PIED-75': [5, 5, 5, 5, 5],   // 0.8/j → sûr
+  'EAU-FLOR-100':  [6, 6, 6, 6, 6],   // 1.0/j → sûr
 }
 
 // ─── Algorithme de risque (dupliqué pour autonomie du script) ──────────────────
@@ -164,6 +184,7 @@ async function main() {
       data: {
         pharmacy_id: pharmacy.pharmacy_id,
         external_sku: p.sku,
+        lot_number: p.lot,
         name: p.name,
         category: p.category,
         brand: p.brand,

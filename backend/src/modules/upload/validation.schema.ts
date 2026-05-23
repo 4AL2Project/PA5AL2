@@ -1,7 +1,8 @@
 import { RawRow } from './csv.parser';
 
 export interface ProductRow {
-  external_sku?: string;
+  external_sku: string;
+  lot_number?: string;
   name: string;
   category?: string;
   brand?: string;
@@ -31,6 +32,7 @@ function isValidDate(value: string): boolean {
 export function validateProductRow(row: RawRow, index: number): ProductRow {
   const errors: string[] = [];
 
+  if (!row.external_sku) errors.push(`Row ${index}: missing external_sku`);
   if (!row.name) errors.push(`Row ${index}: missing product name`);
   if (!row.expiry_date || !isValidDate(String(row.expiry_date)))
     errors.push(`Row ${index}: invalid or missing expiry_date`);
@@ -46,7 +48,8 @@ export function validateProductRow(row: RawRow, index: number): ProductRow {
   if (errors.length > 0) throw new Error(errors.join('; '));
 
   return {
-    external_sku: row.external_sku ? String(row.external_sku) : undefined,
+    external_sku: String(row.external_sku),
+    lot_number: row.lot_number ? String(row.lot_number) : undefined,
     name: String(row.name),
     category: row.category ? String(row.category) : undefined,
     brand: row.brand ? String(row.brand) : undefined,

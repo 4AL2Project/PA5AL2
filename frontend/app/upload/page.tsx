@@ -1,10 +1,11 @@
 'use client'
 
+import { CheckCircle2,Clock, FileText } from 'lucide-react'
 import { useState } from 'react'
+
 import { DashboardLayout } from '@/components/dashboard-layout'
-import { UploadDropzone } from '@/components/upload/upload-dropzone'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, Clock, CheckCircle2 } from 'lucide-react'
+import { UploadDropzone } from '@/components/upload/upload-dropzone'
 
 const recentUploads = [
   {

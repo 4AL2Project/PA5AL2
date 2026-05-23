@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+
 import {
   Table,
   TableBody,
@@ -9,9 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { RiskBadge } from './risk-badge'
 import { Product } from '@/lib/types'
 import { cn } from '@/lib/utils'
+
+import { RiskBadge } from './risk-badge'
 
 interface RiskTableProps {
   products: Product[]

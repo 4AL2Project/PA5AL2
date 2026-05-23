@@ -1,6 +1,9 @@
 'use client'
 
+import { Upload } from 'lucide-react'
 import { useState } from 'react'
+
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -8,9 +11,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
+
 import { UploadDropzone } from './upload-dropzone'
-import { Upload } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 interface UploadModalProps {
   /** Type de fichier présélectionné à l'ouverture (défaut : products) */

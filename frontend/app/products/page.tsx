@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
-import { DashboardLayout } from '@/components/dashboard-layout'
+import { Loader2,Search, X } from 'lucide-react'
+import { useEffect,useMemo, useState } from 'react'
+
 import { RiskTable } from '@/components/dashboard/risk-table'
+import { DashboardLayout } from '@/components/dashboard-layout'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -15,7 +17,6 @@ import {
 import { UploadModal } from '@/components/upload/upload-modal'
 import { fetchProducts } from '@/lib/api'
 import { Product, RiskLevel } from '@/lib/types'
-import { Search, X, Loader2 } from 'lucide-react'
 
 const categories = [
   'Tous',

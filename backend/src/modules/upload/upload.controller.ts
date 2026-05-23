@@ -1,15 +1,16 @@
 import {
-  Controller,
-  Post,
-  Query,
   BadRequestException,
-  UploadedFiles,
-  UseInterceptors,
+  Controller,
   HttpCode,
   HttpStatus,
+  Post,
+  Query,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+
 import { UploadService } from './upload.service';
 
 @Controller('api/upload')

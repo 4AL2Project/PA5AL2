@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+
+import { ValidationError } from '../../core/errors';
 import { prisma } from '../../database/client';
+import { AnalysisService } from '../analysis/analysis.service';
 import { parseFile } from './csv.parser';
 import { validateProductRow, validateSaleRow } from './validation.schema';
-import { AnalysisService } from '../analysis/analysis.service';
-import { ValidationError } from '../../core/errors';
 
 @Injectable()
 export class UploadService {
@@ -14,13 +15,19 @@ export class UploadService {
   async processUpload(
     pharmacyId: string,
     productsFile?: Express.Multer.File,
-    salesFile?: Express.Multer.File,
+    salesFile?: Express.Multer.File
   ) {
     if (!productsFile && !salesFile) {
-      throw new ValidationError('At least one file (products or sales) is required');
+      throw new ValidationError(
+        'At least one file (products or sales) is required'
+      );
     }
 
-    const results: { products?: any; sales?: any; analysis?: any } = {};
+    const results: {
+      products?: Awaited<ReturnType<UploadService['importProducts']>>;
+      sales?: Awaited<ReturnType<UploadService['importSales']>>;
+      analysis?: Awaited<ReturnType<AnalysisService['analyzeAllForPharmacy']>>;
+    } = {};
 
     if (productsFile) {
       results.products = await this.importProducts(pharmacyId, productsFile);
@@ -37,7 +44,8 @@ export class UploadService {
     });
 
     // trigger analysis
-    results.analysis = await this.analysisService.analyzeAllForPharmacy(pharmacyId);
+    results.analysis =
+      await this.analysisService.analyzeAllForPharmacy(pharmacyId);
 
     return results;
   }
@@ -50,13 +58,15 @@ export class UploadService {
     rows.forEach((row, i) => {
       try {
         validated.push(validateProductRow(row, i + 2));
-      } catch (err: any) {
-        errors.push(err.message);
+      } catch (err) {
+        errors.push(err instanceof Error ? err.message : String(err));
       }
     });
 
     if (errors.length > 0) {
-      throw new ValidationError(`Product validation errors:\n${errors.join('\n')}`);
+      throw new ValidationError(
+        `Product validation errors:\n${errors.join('\n')}`
+      );
     }
 
     let inserted = 0;
@@ -113,13 +123,15 @@ export class UploadService {
     rows.forEach((row, i) => {
       try {
         validated.push(validateSaleRow(row, i + 2));
-      } catch (err: any) {
-        errors.push(err.message);
+      } catch (err) {
+        errors.push(err instanceof Error ? err.message : String(err));
       }
     });
 
     if (errors.length > 0) {
-      throw new ValidationError(`Sale validation errors:\n${errors.join('\n')}`);
+      throw new ValidationError(
+        `Sale validation errors:\n${errors.join('\n')}`
+      );
     }
 
     let inserted = 0;
@@ -131,7 +143,9 @@ export class UploadService {
       });
 
       if (!product) {
-        this.logger.warn(`SKU not found: ${row.external_sku} — skipping sale row`);
+        this.logger.warn(
+          `SKU not found: ${row.external_sku} — skipping sale row`
+        );
         skipped++;
         continue;
       }

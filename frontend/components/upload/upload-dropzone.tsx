@@ -1,73 +1,76 @@
-'use client'
+'use client';
 
-import { useState, useCallback } from 'react'
-import { cn } from '@/lib/utils'
-import { Upload, FileText, CheckCircle, XCircle, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { uploadFile } from '@/lib/api'
+import { CheckCircle, FileText, Loader2, Upload, XCircle } from 'lucide-react';
+import { useCallback, useState } from 'react';
 
-type UploadStatus = 'idle' | 'dragging' | 'uploading' | 'success' | 'error'
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { uploadFile } from '@/lib/api';
+import { cn } from '@/lib/utils';
+
+type UploadStatus = 'idle' | 'dragging' | 'uploading' | 'success' | 'error';
 
 interface UploadedFile {
-  name: string
-  size: number
-  type: string
+  name: string;
+  size: number;
+  type: string;
 }
 
 interface UploadResult {
-  inserted?: number
-  updated?: number
-  skipped?: number
-  total?: number
+  inserted?: number;
+  updated?: number;
+  skipped?: number;
+  total?: number;
 }
 
 interface UploadDropzoneProps {
-  fileType: 'products' | 'sales'
+  fileType: 'products' | 'sales';
 }
 
 export function UploadDropzone({ fileType }: UploadDropzoneProps) {
-  const [status, setStatus] = useState<UploadStatus>('idle')
-  const [progress, setProgress] = useState(0)
-  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<UploadResult | null>(null)
+  const [status, setStatus] = useState<UploadStatus>('idle');
+  const [progress, setProgress] = useState(0);
+  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<UploadResult | null>(null);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setStatus('dragging')
-  }, [])
+    e.preventDefault();
+    setStatus('dragging');
+  }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setStatus('idle')
-  }, [])
+    e.preventDefault();
+    setStatus('idle');
+  }, []);
 
   const performUpload = useCallback(
     async (file: File) => {
-      setUploadedFile({ name: file.name, size: file.size, type: file.type })
-      setStatus('uploading')
-      setProgress(0)
-      setResult(null)
+      setUploadedFile({ name: file.name, size: file.size, type: file.type });
+      setStatus('uploading');
+      setProgress(0);
+      setResult(null);
 
       const timer = setInterval(() => {
-        setProgress((p) => Math.min(p + 15, 90))
-      }, 300)
+        setProgress((p) => Math.min(p + 15, 90));
+      }, 300);
 
       try {
-        const data = await uploadFile(file, fileType)
-        clearInterval(timer)
-        setProgress(100)
-        setStatus('success')
-        setResult(fileType === 'products' ? data.products : data.sales)
+        const data = await uploadFile(file, fileType);
+        clearInterval(timer);
+        setProgress(100);
+        setStatus('success');
+        setResult(
+          (fileType === 'products' ? data.products : data.sales) ?? null
+        );
       } catch (err) {
-        clearInterval(timer)
-        setStatus('error')
-        setError(err instanceof Error ? err.message : 'Erreur inconnue')
+        clearInterval(timer);
+        setStatus('error');
+        setError(err instanceof Error ? err.message : 'Erreur inconnue');
       }
     },
-    [fileType],
-  )
+    [fileType]
+  );
 
   const validateAndUpload = useCallback(
     (file: File) => {
@@ -76,45 +79,45 @@ export function UploadDropzone({ fileType }: UploadDropzoneProps) {
         file.name.endsWith('.csv') ||
         file.name.endsWith('.xlsx')
       ) {
-        performUpload(file)
+        performUpload(file);
       } else {
-        setStatus('error')
-        setError('Format non supporte. Utilisez CSV ou XLSX.')
+        setStatus('error');
+        setError('Format non supporte. Utilisez CSV ou XLSX.');
       }
     },
-    [performUpload],
-  )
+    [performUpload]
+  );
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
-      e.preventDefault()
-      const file = e.dataTransfer.files[0]
-      if (file) validateAndUpload(file)
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file) validateAndUpload(file);
     },
-    [validateAndUpload],
-  )
+    [validateAndUpload]
+  );
 
   const handleFileInput = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (file) validateAndUpload(file)
+      const file = e.target.files?.[0];
+      if (file) validateAndUpload(file);
     },
-    [validateAndUpload],
-  )
+    [validateAndUpload]
+  );
 
   const handleReset = useCallback(() => {
-    setStatus('idle')
-    setProgress(0)
-    setUploadedFile(null)
-    setError(null)
-    setResult(null)
-  }, [])
+    setStatus('idle');
+    setProgress(0);
+    setUploadedFile(null);
+    setError(null);
+    setResult(null);
+  }, []);
 
   const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  }
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   return (
     <div className="w-full">
@@ -124,11 +127,12 @@ export function UploadDropzone({ fileType }: UploadDropzoneProps) {
         onDrop={handleDrop}
         className={cn(
           'relative flex min-h-[300px] cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-all',
-          status === 'idle' && 'border-border hover:border-primary/50 hover:bg-muted/30',
+          status === 'idle' &&
+            'border-border hover:border-primary/50 hover:bg-muted/30',
           status === 'dragging' && 'border-primary bg-primary/5',
           status === 'uploading' && 'border-primary/50 bg-muted/30',
           status === 'success' && 'border-risk-low bg-risk-low/5',
-          status === 'error' && 'border-risk-critical bg-risk-critical/5',
+          status === 'error' && 'border-risk-critical bg-risk-critical/5'
         )}
       >
         {status === 'idle' && (
@@ -204,7 +208,9 @@ export function UploadDropzone({ fileType }: UploadDropzoneProps) {
                 <p className="mt-1 text-sm text-muted-foreground">
                   {result.inserted != null && `${result.inserted} inseres`}
                   {result.updated != null && ` · ${result.updated} mis a jour`}
-                  {result.skipped != null && result.skipped > 0 && ` · ${result.skipped} ignores`}
+                  {result.skipped != null &&
+                    result.skipped > 0 &&
+                    ` · ${result.skipped} ignores`}
                 </p>
               )}
             </div>
@@ -232,5 +238,5 @@ export function UploadDropzone({ fileType }: UploadDropzoneProps) {
         )}
       </div>
     </div>
-  )
+  );
 }

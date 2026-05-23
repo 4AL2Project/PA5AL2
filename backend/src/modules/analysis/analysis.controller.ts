@@ -1,4 +1,5 @@
-import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
+import { BadRequestException,Controller, Get, Query } from '@nestjs/common';
+
 import { AnalysisService } from './analysis.service';
 
 @Controller('api/analysis')

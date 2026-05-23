@@ -1,10 +1,20 @@
 'use client'
 
+import {
+  AlertTriangle,
+  LayoutDashboard,
+  Package,
+  PanelLeftClose,
+  Settings,
+} from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+
+import { Button } from '@/components/ui/button'
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -12,18 +22,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
-  SidebarTrigger,
   useSidebar,
 } from '@/components/ui/sidebar'
-import {
-  LayoutDashboard,
-  Package,
-  AlertTriangle,
-  PanelLeftClose,
-  Settings,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
 
 const navigation = [
   {

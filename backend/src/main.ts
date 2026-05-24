@@ -22,7 +22,10 @@ async function bootstrap() {
   );
 
   await app.listen(config.port);
-  Logger.log(`Server running localy on http://localhost:${config.port}`, 'Bootstrap');
+  Logger.log(
+    `Server running localy on http://localhost:${config.port}`,
+    'Bootstrap'
+  );
 }
 
 bootstrap();

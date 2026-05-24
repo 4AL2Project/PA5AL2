@@ -4,7 +4,7 @@
   "description": "Pharmacy risk analysis backend API",
   "main": "dist/main.js",
   "scripts": {
-    "build": "tsc",
+    "build": "nest build",
     "start": "node dist/main.js",
     "dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "lint": "eslint src/",
@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
+    "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
     "prisma:seed": "prisma db seed"
   },

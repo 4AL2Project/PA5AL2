@@ -27,6 +27,7 @@ model User {
   pharmacy_id String
   email       String   @unique
   password    String
+  role        String   @default("TITULAIRE")
   created_at  DateTime @default(now())
 
   pharmacy    Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])

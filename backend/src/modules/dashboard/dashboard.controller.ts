@@ -1,21 +1,21 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Query,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, UseGuards, UseInterceptors } from '@nestjs/common';
 
 import { prisma } from '../../database/client';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { TenantPharmacyId } from '../auth/decorators/tenant-pharmacy.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { TenantGuard } from '../auth/guards/tenant.guard';
+import { MaskFinancialInterceptor } from '../auth/interceptors/mask-financial.interceptor';
+import { UserRole } from '../auth/roles.enum';
 
 @Controller('api/dashboard')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
+@Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR, UserRole.ADMIN_SAVELY)
+@UseInterceptors(MaskFinancialInterceptor)
 export class DashboardController {
   @Get()
-  async getDashboard(@Query('pharmacy_id') pharmacyId: string) {
-    if (!pharmacyId) throw new BadRequestException('pharmacy_id is required');
-
+  async getDashboard(@TenantPharmacyId() pharmacyId: string) {
     const [pharmacy, analyses] = await Promise.all([
       prisma.pharmacy.findUnique({
         where: { pharmacy_id: pharmacyId },

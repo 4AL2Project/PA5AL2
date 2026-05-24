@@ -1,10 +1,14 @@
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   IsUUID,
   MinLength,
 } from 'class-validator';
+
+import { UserRole } from '../roles.enum';
 
 export class RegisterDto {
   @IsEmail()
@@ -16,6 +20,10 @@ export class RegisterDto {
 
   @IsUUID()
   pharmacy_id!: string;
+
+  @IsOptional()
+  @IsEnum(UserRole)
+  role?: UserRole;
 }
 
 export class LoginDto {

@@ -8,11 +8,13 @@ import * as bcrypt from 'bcryptjs';
 
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
+import { UserRole } from './roles.enum';
 
 export interface JwtPayload {
   sub: string;
   email: string;
   pharmacy_id: string;
+  role: UserRole;
 }
 
 export interface AuthTokens {
@@ -24,7 +26,12 @@ export interface AuthTokens {
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}
 
-  async register(email: string, password: string, pharmacyId: string) {
+  async register(
+    email: string,
+    password: string,
+    pharmacyId: string,
+    role: UserRole = UserRole.TITULAIRE
+  ) {
     const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) throw new ConflictException('Email already registered');
 
@@ -35,11 +42,12 @@ export class AuthService {
 
     const hash = await bcrypt.hash(password, config.auth.bcryptRounds);
     const user = await prisma.user.create({
-      data: { email, password: hash, pharmacy_id: pharmacyId },
+      data: { email, password: hash, pharmacy_id: pharmacyId, role },
       select: {
         user_id: true,
         email: true,
         pharmacy_id: true,
+        role: true,
         created_at: true,
       },
     });
@@ -57,6 +65,7 @@ export class AuthService {
       sub: user.user_id,
       email: user.email,
       pharmacy_id: user.pharmacy_id,
+      role: user.role as UserRole,
     });
   }
 
@@ -74,6 +83,7 @@ export class AuthService {
       sub: payload.sub,
       email: payload.email,
       pharmacy_id: payload.pharmacy_id,
+      role: payload.role,
     });
   }
 

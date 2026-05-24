@@ -9,3 +9,5 @@ coverage
 .env
 .env.local
 .env.*.local
+package-lock.json
+backend/openapi.json

@@ -7,6 +7,12 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import { prisma } from '../../database/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -17,12 +23,17 @@ import { TenantGuard } from '../auth/guards/tenant.guard';
 import { MaskFinancialInterceptor } from '../auth/interceptors/mask-financial.interceptor';
 import { UserRole } from '../auth/roles.enum';
 
+@ApiTags('products')
+@ApiBearerAuth('access-token')
 @Controller('api/products')
 @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
 @Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR, UserRole.ADMIN_SAVELY)
 @UseInterceptors(MaskFinancialInterceptor)
 export class ProductController {
   @Get()
+  @ApiOperation({ summary: 'List products with their latest risk analysis' })
+  @ApiQuery({ name: 'risk_level', required: false, enum: ['critical', 'high', 'safe'] })
+  @ApiQuery({ name: 'category', required: false })
   async getProducts(
     @TenantPharmacyId() pharmacyId: string,
     @Query('risk_level') riskLevel?: string,
@@ -59,6 +70,7 @@ export class ProductController {
   }
 
   @Get(':product_id')
+  @ApiOperation({ summary: 'Fetch a single product by id (tenant-scoped)' })
   async getProduct(
     @TenantPharmacyId() pharmacyId: string,
     @Param('product_id') productId: string

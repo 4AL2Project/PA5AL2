@@ -9,16 +9,32 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import {
+  ApiConsumes,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 
 import { UploadService } from './upload.service';
 
+@ApiTags('upload')
 @Controller('api/upload')
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
   @Post()
   @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Import CSV / Excel products + sales for a pharmacy',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiQuery({
+    name: 'pharmacy_id',
+    required: true,
+    schema: { type: 'string', format: 'uuid' },
+  })
   @UseInterceptors(
     FileFieldsInterceptor(
       [

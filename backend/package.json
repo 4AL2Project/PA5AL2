@@ -1,5 +1,5 @@
 {
-  "name": "pharma-risk-backend",
+  "name": "backend",
   "version": "1.0.0",
   "description": "Pharmacy risk analysis backend API",
   "main": "dist/main.js",

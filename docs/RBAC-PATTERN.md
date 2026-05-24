@@ -6,15 +6,15 @@ côté backend **doit** suivre ce pattern.
 
 ## Briques fournies (dans `backend/src/modules/auth/`)
 
-| Brique | Fichier | Rôle |
-| --- | --- | --- |
-| `UserRole` | `roles.enum.ts` | Énumère `TITULAIRE`, `PREPARATEUR`, `ADMIN_SAVELY` |
-| `@Roles(...)` | `decorators/roles.decorator.ts` | Déclare les rôles autorisés sur la route |
-| `@CurrentUser()` | `decorators/current-user.decorator.ts` | Injecte le `JwtPayload` du porteur du token |
-| `@TenantPharmacyId()` | `decorators/tenant-pharmacy.decorator.ts` | Injecte le `pharmacy_id` résolu par `TenantGuard` |
-| `JwtAuthGuard` | `guards/jwt-auth.guard.ts` | Vérifie le bearer token et hydrate `req.user` |
-| `RolesGuard` | `guards/roles.guard.ts` | Refuse 403 si le rôle ne fait pas partie de `@Roles(...)` |
-| `TenantGuard` | `guards/tenant.guard.ts` | Refuse 403 si le client tente d’accéder à une autre officine |
+| Brique                     | Fichier                                      | Rôle                                                                           |
+| -------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------ |
+| `UserRole`                 | `roles.enum.ts`                              | Énumère `TITULAIRE`, `PREPARATEUR`, `ADMIN_SAVELY`                             |
+| `@Roles(...)`              | `decorators/roles.decorator.ts`              | Déclare les rôles autorisés sur la route                                       |
+| `@CurrentUser()`           | `decorators/current-user.decorator.ts`       | Injecte le `JwtPayload` du porteur du token                                    |
+| `@TenantPharmacyId()`      | `decorators/tenant-pharmacy.decorator.ts`    | Injecte le `pharmacy_id` résolu par `TenantGuard`                              |
+| `JwtAuthGuard`             | `guards/jwt-auth.guard.ts`                   | Vérifie le bearer token et hydrate `req.user`                                  |
+| `RolesGuard`               | `guards/roles.guard.ts`                      | Refuse 403 si le rôle ne fait pas partie de `@Roles(...)`                      |
+| `TenantGuard`              | `guards/tenant.guard.ts`                     | Refuse 403 si le client tente d’accéder à une autre officine                   |
 | `MaskFinancialInterceptor` | `interceptors/mask-financial.interceptor.ts` | Masque `cost_price`, `recoverable_value`, `potential_loss`… pour `PREPARATEUR` |
 
 ## Règle d’or

@@ -20,7 +20,9 @@ export class AnalysisController {
   constructor(private readonly analysisService: AnalysisService) {}
 
   @Get('latest')
-  @ApiOperation({ summary: 'Latest risk analysis per product for the pharmacy' })
+  @ApiOperation({
+    summary: 'Latest risk analysis per product for the pharmacy',
+  })
   async getLatest(@TenantPharmacyId() pharmacyId: string) {
     return this.analysisService.getLatestAnalysis(pharmacyId);
   }

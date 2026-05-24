@@ -30,7 +30,9 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Échanger email + password contre une paire de tokens' })
+  @ApiOperation({
+    summary: 'Échanger email + password contre une paire de tokens',
+  })
   @ApiOkResponse({ type: AuthTokensDto })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto.email, dto.password);
@@ -38,7 +40,9 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Renouveler une paire de tokens via un refresh token' })
+  @ApiOperation({
+    summary: 'Renouveler une paire de tokens via un refresh token',
+  })
   @ApiOkResponse({ type: AuthTokensDto })
   refresh(@Body() dto: RefreshDto) {
     return this.authService.refresh(dto.refresh_token);

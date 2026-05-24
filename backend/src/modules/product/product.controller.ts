@@ -32,7 +32,11 @@ import { UserRole } from '../auth/roles.enum';
 export class ProductController {
   @Get()
   @ApiOperation({ summary: 'List products with their latest risk analysis' })
-  @ApiQuery({ name: 'risk_level', required: false, enum: ['critical', 'high', 'safe'] })
+  @ApiQuery({
+    name: 'risk_level',
+    required: false,
+    enum: ['critical', 'high', 'safe'],
+  })
   @ApiQuery({ name: 'category', required: false })
   async getProducts(
     @TenantPharmacyId() pharmacyId: string,

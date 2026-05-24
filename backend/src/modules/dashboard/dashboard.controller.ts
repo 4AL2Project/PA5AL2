@@ -18,7 +18,9 @@ import { UserRole } from '../auth/roles.enum';
 @UseInterceptors(MaskFinancialInterceptor)
 export class DashboardController {
   @Get()
-  @ApiOperation({ summary: 'Aggregated pharmacy KPIs (counts + recoverable values)' })
+  @ApiOperation({
+    summary: 'Aggregated pharmacy KPIs (counts + recoverable values)',
+  })
   async getDashboard(@TenantPharmacyId() pharmacyId: string) {
     const [pharmacy, analyses] = await Promise.all([
       prisma.pharmacy.findUnique({

@@ -1,4 +1,5 @@
 import { Controller, Get, UseGuards, UseInterceptors } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { prisma } from '../../database/client';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -9,12 +10,17 @@ import { TenantGuard } from '../auth/guards/tenant.guard';
 import { MaskFinancialInterceptor } from '../auth/interceptors/mask-financial.interceptor';
 import { UserRole } from '../auth/roles.enum';
 
+@ApiTags('dashboard')
+@ApiBearerAuth('access-token')
 @Controller('api/dashboard')
 @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
 @Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR, UserRole.ADMIN_SAVELY)
 @UseInterceptors(MaskFinancialInterceptor)
 export class DashboardController {
   @Get()
+  @ApiOperation({
+    summary: 'Aggregated pharmacy KPIs (counts + recoverable values)',
+  })
   async getDashboard(@TenantPharmacyId() pharmacyId: string) {
     const [pharmacy, analyses] = await Promise.all([
       prisma.pharmacy.findUnique({

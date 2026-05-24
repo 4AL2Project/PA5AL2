@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+
 import { prisma } from '../../database/client';
 import { calculateRisk } from './risk-calculator';
 
@@ -41,16 +42,20 @@ export class AnalysisService {
       select: { product_id: true },
     });
 
-    this.logger.log(`Analyzing ${products.length} products for pharmacy ${pharmacyId}`);
+    this.logger.log(
+      `Analyzing ${products.length} products for pharmacy ${pharmacyId}`
+    );
 
     const results = await Promise.allSettled(
-      products.map((p) => this.analyzeProduct(p.product_id, pharmacyId)),
+      products.map((p) => this.analyzeProduct(p.product_id, pharmacyId))
     );
 
     const succeeded = results.filter((r) => r.status === 'fulfilled').length;
     const failed = results.filter((r) => r.status === 'rejected').length;
 
-    this.logger.log(`Analysis complete: ${succeeded} succeeded, ${failed} failed`);
+    this.logger.log(
+      `Analysis complete: ${succeeded} succeeded, ${failed} failed`
+    );
     return { succeeded, failed, total: products.length };
   }
 
@@ -78,8 +83,6 @@ export class AnalysisService {
       total_products: analyses.length,
       critical: analyses.filter((a) => a.risk_level === 'critical').length,
       high: analyses.filter((a) => a.risk_level === 'high').length,
-      moderate: analyses.filter((a) => a.risk_level === 'moderate').length,
-      low: analyses.filter((a) => a.risk_level === 'low').length,
       safe: analyses.filter((a) => a.risk_level === 'safe').length,
       recoverable: analyses.reduce((sum, a) => sum + a.recoverable_value, 0),
       potential_loss: analyses.reduce((sum, a) => sum + a.potential_loss, 0),

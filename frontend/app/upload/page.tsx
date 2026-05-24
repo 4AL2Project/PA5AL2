@@ -1,10 +1,11 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { DashboardLayout } from '@/components/dashboard-layout'
-import { UploadDropzone } from '@/components/upload/upload-dropzone'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, Clock, CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Clock, FileText } from 'lucide-react';
+import { useState } from 'react';
+
+import { DashboardLayout } from '@/components/dashboard-layout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { UploadDropzone } from '@/components/upload/upload-dropzone';
 
 const recentUploads = [
   {
@@ -28,10 +29,10 @@ const recentUploads = [
     status: 'success',
     records: 320,
   },
-]
+];
 
 export default function UploadPage() {
-  const [fileType, setFileType] = useState<'products' | 'sales'>('products')
+  const [fileType, setFileType] = useState<'products' | 'sales'>('products');
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {
@@ -40,28 +41,26 @@ export default function UploadPage() {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    })
+    });
 
   return (
     <DashboardLayout
       title="Import de Donnees"
       description="Importez vos fichiers d'inventaire pour analyse"
     >
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-2.5 lg:grid-cols-3">
         {/* Upload Area */}
         <div className="lg:col-span-2">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-base font-medium">
-                Importer un Fichier
-              </CardTitle>
+              <CardTitle>Importer un Fichier</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* File type selector */}
               <div className="flex gap-2">
                 <button
                   onClick={() => setFileType('products')}
-                  className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`flex-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                     fileType === 'products'
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border text-muted-foreground hover:border-primary/50'
@@ -71,7 +70,7 @@ export default function UploadPage() {
                 </button>
                 <button
                   onClick={() => setFileType('sales')}
-                  className={`flex-1 rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                  className={`flex-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
                     fileType === 'sales'
                       ? 'border-primary bg-primary/10 text-primary'
                       : 'border-border text-muted-foreground hover:border-primary/50'
@@ -83,11 +82,11 @@ export default function UploadPage() {
 
               <UploadDropzone fileType={fileType} />
 
-              <div className="rounded-lg bg-muted/50 p-4">
+              <div className="rounded-md bg-muted/50 p-3">
                 <h4 className="mb-2 text-sm font-medium">Format attendu</h4>
                 <p className="text-sm text-muted-foreground">
                   {fileType === 'products'
-                    ? 'Colonnes requises: name, expiry_date, stock_quantity, unit_price. Optionnel: external_sku, category, brand, cost_price'
+                    ? 'Colonnes requises: external_sku, name, expiry_date, stock_quantity, unit_price. Optionnel: lot_number, category, brand, cost_price'
                     : 'Colonnes requises: external_sku, sale_date, quantity_sold. Optionnel: unit_price_sold'}
                 </p>
                 <div className="mt-3 flex gap-2">
@@ -108,9 +107,7 @@ export default function UploadPage() {
         <div className="lg:col-span-1">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle className="text-base font-medium">
-                Imports Recents
-              </CardTitle>
+              <CardTitle>Imports Recents</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {recentUploads.map((upload) => (
@@ -122,7 +119,9 @@ export default function UploadPage() {
                     <FileText className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-medium">{upload.name}</p>
+                    <p className="truncate text-sm font-medium">
+                      {upload.name}
+                    </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
                       {formatDate(upload.date)}
@@ -139,5 +138,5 @@ export default function UploadPage() {
         </div>
       </div>
     </DashboardLayout>
-  )
+  );
 }

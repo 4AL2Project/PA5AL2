@@ -1,59 +1,64 @@
-'use client'
+'use client';
 
-import { use, useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { DashboardLayout } from '@/components/dashboard-layout'
-import { RiskBadge } from '@/components/dashboard/risk-badge'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
-import { Separator } from '@/components/ui/separator'
-import { fetchLatestAnalysis } from '@/lib/api'
-import { Product } from '@/lib/types'
 import {
-  ArrowLeft,
-  Package,
-  Calendar,
-  TrendingDown,
   AlertTriangle,
-  Tag,
+  ArrowLeft,
   Boxes,
-  Euro,
-  Clock,
+  Calendar,
   ChevronRight,
+  Clock,
+  Euro,
   Loader2,
-} from 'lucide-react'
+  Package,
+  Tag,
+  TrendingDown,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { use, useEffect, useState } from 'react';
+
+import { RiskBadge } from '@/components/dashboard/risk-badge';
+import { DashboardLayout } from '@/components/dashboard-layout';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Progress } from '@/components/ui/progress';
+import { Separator } from '@/components/ui/separator';
+import { fetchLatestAnalysis } from '@/lib/api';
+import { Product } from '@/lib/types';
 
 const riskColors: Record<string, string> = {
   critical: 'text-risk-critical',
   high: 'text-risk-high',
-  medium: 'text-risk-medium',
-  moderate: 'text-risk-medium',
-  low: 'text-risk-low',
   safe: 'text-risk-low',
-}
+};
 
 const riskBgColors: Record<string, string> = {
   critical: 'bg-risk-critical/10',
   high: 'bg-risk-high/10',
-  medium: 'bg-risk-medium/10',
-  moderate: 'bg-risk-medium/10',
-  low: 'bg-risk-low/10',
   safe: 'bg-risk-low/10',
-}
+};
 
-export default function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params)
-  const router = useRouter()
-  const [product, setProduct] = useState<Product | null | undefined>(undefined)
+export default function ProductDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = use(params);
+  const router = useRouter();
+  const [product, setProduct] = useState<Product | null | undefined>(undefined);
 
   useEffect(() => {
     fetchLatestAnalysis()
       .then(({ products }) => {
-        setProduct(products.find((p) => p.id === id) ?? null)
+        setProduct(products.find((p) => p.id === id) ?? null);
       })
-      .catch(() => setProduct(null))
-  }, [id])
+      .catch(() => setProduct(null));
+  }, [id]);
 
   if (product === undefined) {
     return (
@@ -62,7 +67,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           <Loader2 className="h-10 w-10 animate-spin text-muted-foreground" />
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   if (product === null) {
@@ -80,27 +85,30 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           </Button>
         </div>
       </DashboardLayout>
-    )
+    );
   }
 
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value)
+    new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(value);
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: 'long',
       year: 'numeric',
-    })
+    });
 
   const daysLeft = Math.ceil(
-    (new Date(product.expirationDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-  )
+    (new Date(product.expirationDate).getTime() - Date.now()) /
+      (1000 * 60 * 60 * 24)
+  );
 
   return (
     <DashboardLayout title={product.name} description={`SKU: ${product.sku}`}>
       <div className="space-y-6">
-        {/* Back Button */}
         <Button
           variant="ghost"
           onClick={() => router.back()}
@@ -110,35 +118,38 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           Retour
         </Button>
 
-        {/* Header Card */}
+        {/* Header */}
         <Card className="border-border/50">
           <CardContent className="pt-6">
             <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
               <div className="flex items-start gap-4">
-                <div className={`flex h-14 w-14 items-center justify-center rounded-xl ${riskBgColors[product.riskLevel]}`}>
-                  <Package className={`h-7 w-7 ${riskColors[product.riskLevel]}`} />
+                <div
+                  className={`flex h-14 w-14 items-center justify-center rounded-xl ${riskBgColors[product.riskLevel]}`}
+                >
+                  <Package
+                    className={`h-7 w-7 ${riskColors[product.riskLevel]}`}
+                  />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold">{product.name}</h1>
                   <div className="flex items-center gap-3 mt-1">
-                    <span className="text-sm text-muted-foreground font-mono">{product.sku}</span>
+                    <span className="text-sm text-muted-foreground font-mono">
+                      {product.sku}
+                    </span>
                     <Separator orientation="vertical" className="h-4" />
-                    <span className="text-sm text-muted-foreground">{product.category}</span>
+                    <span className="text-sm text-muted-foreground">
+                      {product.category}
+                    </span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <RiskBadge level={product.riskLevel} />
-                <Button variant="outline">Modifier</Button>
-                <Button>Appliquer l&apos;action</Button>
-              </div>
+              <RiskBadge level={product.riskLevel} />
             </div>
           </CardContent>
         </Card>
 
-        {/* Main Content Grid */}
+        {/* Métriques */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Risk Score Card */}
           <Card className="border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-medium">
@@ -149,26 +160,25 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-baseline gap-2">
-                  <span className={`text-4xl font-bold ${riskColors[product.riskLevel]}`}>
+                  <span
+                    className={`text-4xl font-bold ${riskColors[product.riskLevel]}`}
+                  >
                     {product.riskScore}
                   </span>
                   <span className="text-muted-foreground">/ 100</span>
                 </div>
                 <Progress value={product.riskScore} className="h-2" />
                 <p className="text-sm text-muted-foreground">
-                  {product.riskScore >= 80
-                    ? 'Risque critique - Action immediate requise'
-                    : product.riskScore >= 60
-                    ? 'Risque eleve - Attention necessaire'
-                    : product.riskScore >= 40
-                    ? 'Risque modere - Surveillance recommandee'
-                    : 'Risque faible - Situation normale'}
+                  {product.riskScore >= 70
+                    ? 'Stock critique — don associatif recommande'
+                    : product.riskScore >= 30
+                      ? 'Ecoulement insuffisant — mise en vente B2C'
+                      : 'Ventes suffisantes — aucune action requise'}
                 </p>
               </div>
             </CardContent>
           </Card>
 
-          {/* Expiration Card */}
           <Card className="border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-medium">
@@ -179,7 +189,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-baseline gap-2">
-                  <span className={`text-4xl font-bold ${daysLeft <= 2 ? 'text-risk-critical' : daysLeft <= 5 ? 'text-risk-high' : 'text-foreground'}`}>
+                  <span
+                    className={`text-4xl font-bold ${daysLeft <= 7 ? 'text-risk-critical' : daysLeft <= 14 ? 'text-risk-high' : 'text-foreground'}`}
+                  >
                     {daysLeft}
                   </span>
                   <span className="text-muted-foreground">jours restants</span>
@@ -187,7 +199,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-muted-foreground">
                   Expire le {formatDate(product.expirationDate)}
                 </p>
-                {daysLeft <= 3 && (
+                {daysLeft <= 7 && (
                   <div className="flex items-center gap-2 text-sm text-risk-critical">
                     <AlertTriangle className="h-4 w-4" />
                     Expiration imminente
@@ -197,7 +209,6 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             </CardContent>
           </Card>
 
-          {/* Stock Card */}
           <Card className="border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-medium">
@@ -206,19 +217,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">{product.stock}</span>
-                  <span className="text-muted-foreground">unites</span>
-                </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold">{product.stock}</span>
+                <span className="text-muted-foreground">unites</span>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Action & Value Section */}
+        {/* Action & Valeur */}
         <div className="grid gap-6 md:grid-cols-2">
-          {/* Recommended Action */}
           <Card className="border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-medium">
@@ -230,24 +238,22 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className={`rounded-lg p-4 ${riskBgColors[product.riskLevel]}`}>
+              <div
+                className={`rounded-lg p-4 ${riskBgColors[product.riskLevel]}`}
+              >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <Tag className={`h-5 w-5 ${riskColors[product.riskLevel]}`} />
+                    <Tag
+                      className={`h-5 w-5 ${riskColors[product.riskLevel]}`}
+                    />
                     <span className="font-semibold">{product.action}</span>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </div>
               </div>
-              <div className="mt-4 space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  Cette action permet de maximiser la recuperation de valeur tout en minimisant les pertes.
-                </p>
-              </div>
             </CardContent>
           </Card>
 
-          {/* Recovery Value */}
           <Card className="border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base font-medium">
@@ -259,28 +265,16 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold text-emerald-500">
-                    {formatCurrency(product.recoveryValue)}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Valeur initiale estimee</span>
-                    <span>{formatCurrency(product.recoveryValue * 1.5)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Perte evitee</span>
-                    <span className="text-emerald-500">+{formatCurrency(product.recoveryValue * 0.8)}</span>
-                  </div>
-                </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-bold text-emerald-500">
+                  {formatCurrency(product.recoveryValue)}
+                </span>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Metadata */}
+        {/* Métadonnées */}
         <Card className="border-border/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-base font-medium">
@@ -291,7 +285,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
               <div>
-                <p className="text-sm text-muted-foreground">Derniere mise a jour</p>
+                <p className="text-sm text-muted-foreground">
+                  Derniere mise a jour
+                </p>
                 <p className="font-medium">{formatDate(product.lastUpdated)}</p>
               </div>
               <div>
@@ -307,5 +303,5 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         </Card>
       </div>
     </DashboardLayout>
-  )
+  );
 }

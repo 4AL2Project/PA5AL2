@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+
+import { ValidationError } from '../../core/errors';
 import { prisma } from '../../database/client';
+import { AnalysisService } from '../analysis/analysis.service';
 import { parseFile } from './csv.parser';
 import { validateProductRow, validateSaleRow } from './validation.schema';
-import { AnalysisService } from '../analysis/analysis.service';
-import { ValidationError } from '../../core/errors';
 
 @Injectable()
 export class UploadService {
@@ -14,13 +15,19 @@ export class UploadService {
   async processUpload(
     pharmacyId: string,
     productsFile?: Express.Multer.File,
-    salesFile?: Express.Multer.File,
+    salesFile?: Express.Multer.File
   ) {
     if (!productsFile && !salesFile) {
-      throw new ValidationError('At least one file (products or sales) is required');
+      throw new ValidationError(
+        'At least one file (products or sales) is required'
+      );
     }
 
-    const results: { products?: any; sales?: any; analysis?: any } = {};
+    const results: {
+      products?: Awaited<ReturnType<UploadService['importProducts']>>;
+      sales?: Awaited<ReturnType<UploadService['importSales']>>;
+      analysis?: Awaited<ReturnType<AnalysisService['analyzeAllForPharmacy']>>;
+    } = {};
 
     if (productsFile) {
       results.products = await this.importProducts(pharmacyId, productsFile);
@@ -37,7 +44,8 @@ export class UploadService {
     });
 
     // trigger analysis
-    results.analysis = await this.analysisService.analyzeAllForPharmacy(pharmacyId);
+    results.analysis =
+      await this.analysisService.analyzeAllForPharmacy(pharmacyId);
 
     return results;
   }
@@ -50,29 +58,35 @@ export class UploadService {
     rows.forEach((row, i) => {
       try {
         validated.push(validateProductRow(row, i + 2));
-      } catch (err: any) {
-        errors.push(err.message);
+      } catch (err) {
+        errors.push(err instanceof Error ? err.message : String(err));
       }
     });
 
     if (errors.length > 0) {
-      throw new ValidationError(`Product validation errors:\n${errors.join('\n')}`);
+      throw new ValidationError(
+        `Product validation errors:\n${errors.join('\n')}`
+      );
     }
 
     let inserted = 0;
     let updated = 0;
 
     for (const row of validated) {
-      const existing = row.external_sku
-        ? await prisma.product.findFirst({
-            where: { pharmacy_id: pharmacyId, external_sku: row.external_sku },
-          })
-        : null;
+      const existing = await prisma.product.findUnique({
+        where: {
+          pharmacy_id_external_sku: {
+            pharmacy_id: pharmacyId,
+            external_sku: row.external_sku,
+          },
+        },
+      });
 
       if (existing) {
         await prisma.product.update({
           where: { product_id: existing.product_id },
           data: {
+            lot_number: row.lot_number,
             name: row.name,
             category: row.category,
             brand: row.brand,
@@ -88,6 +102,7 @@ export class UploadService {
           data: {
             pharmacy_id: pharmacyId,
             external_sku: row.external_sku,
+            lot_number: row.lot_number,
             name: row.name,
             category: row.category,
             brand: row.brand,
@@ -113,13 +128,15 @@ export class UploadService {
     rows.forEach((row, i) => {
       try {
         validated.push(validateSaleRow(row, i + 2));
-      } catch (err: any) {
-        errors.push(err.message);
+      } catch (err) {
+        errors.push(err instanceof Error ? err.message : String(err));
       }
     });
 
     if (errors.length > 0) {
-      throw new ValidationError(`Sale validation errors:\n${errors.join('\n')}`);
+      throw new ValidationError(
+        `Sale validation errors:\n${errors.join('\n')}`
+      );
     }
 
     let inserted = 0;
@@ -131,7 +148,9 @@ export class UploadService {
       });
 
       if (!product) {
-        this.logger.warn(`SKU not found: ${row.external_sku} — skipping sale row`);
+        this.logger.warn(
+          `SKU not found: ${row.external_sku} — skipping sale row`
+        );
         skipped++;
         continue;
       }

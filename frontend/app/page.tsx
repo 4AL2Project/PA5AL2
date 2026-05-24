@@ -1,35 +1,35 @@
-import { DashboardLayout } from '@/components/dashboard-layout'
-import { StatsCard } from '@/components/dashboard/stats-card'
-import { RiskTable } from '@/components/dashboard/risk-table'
-import { RiskChart } from '@/components/dashboard/risk-chart'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { fetchLatestAnalysis, adaptToRiskDistribution } from '@/lib/api'
 import {
   AlertTriangle,
+  ArrowRight,
+  Euro,
   Package,
   TrendingUp,
-  Euro,
-  ArrowRight,
-  RefreshCw,
-} from 'lucide-react'
-import Link from 'next/link'
+} from 'lucide-react';
+import Link from 'next/link';
+
+import { RiskChart } from '@/components/dashboard/risk-chart';
+import { RiskTable } from '@/components/dashboard/risk-table';
+import { StatsCard } from '@/components/dashboard/stats-card';
+import { DashboardLayout } from '@/components/dashboard-layout';
+import { Button } from '@/components/ui/button';
+import { UploadModal } from '@/components/upload/upload-modal';
+import { adaptToRiskDistribution, fetchLatestAnalysis } from '@/lib/api';
 
 export default async function DashboardPage() {
-  const { products, stats } = await fetchLatestAnalysis()
+  const { products, stats } = await fetchLatestAnalysis();
 
-  const criticalProducts = products.filter((p) => p.riskLevel === 'critical')
+  const criticalProducts = products.filter((p) => p.riskLevel === 'critical');
   const topRiskProducts = products
     .filter((p) => p.riskLevel === 'critical' || p.riskLevel === 'high')
-    .slice(0, 5)
-  const riskDistribution = adaptToRiskDistribution(stats)
+    .slice(0, 5);
+  const riskDistribution = adaptToRiskDistribution(stats);
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'EUR',
       maximumFractionDigits: 0,
-    }).format(value)
+    }).format(value);
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {
@@ -38,12 +38,22 @@ export default async function DashboardPage() {
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-    })
+    });
 
   return (
     <DashboardLayout
       title="Dashboard"
-      description={`Derniere analyse: ${formatDate(stats.lastAnalysisDate)}`}
+      description={`Derniere analyse : ${formatDate(stats.lastAnalysisDate)}`}
+      actions={
+        <>
+          <UploadModal />
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/products?filter=critical">
+              Produits a donner ({criticalProducts.length})
+            </Link>
+          </Button>
+        </>
+      }
     >
       <div className="space-y-6">
         {/* Stats Grid */}
@@ -56,19 +66,17 @@ export default async function DashboardPage() {
             iconClassName="bg-primary/10 text-primary"
           />
           <StatsCard
-            title="Produits Critiques"
+            title="Don associatif"
             value={stats.criticalProducts}
             description="Action immediate requise"
             icon={AlertTriangle}
-            trend={{ value: -12, isPositive: true }}
             iconClassName="bg-risk-critical/10 text-risk-critical"
           />
           <StatsCard
-            title="Risque Eleve"
-            value={stats.highRiskProducts}
-            description="A surveiller"
+            title="Vente B2C"
+            value={stats.highProducts}
+            description="A mettre en ligne"
             icon={TrendingUp}
-            trend={{ value: 5, isPositive: false }}
             iconClassName="bg-risk-high/10 text-risk-high"
           />
           <StatsCard
@@ -81,69 +89,31 @@ export default async function DashboardPage() {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-3">
           {/* Critical Products Table */}
-          <div className="lg:col-span-2">
-            <Card className="border-border/50">
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <div>
-                  <CardTitle className="text-base font-medium">
-                    Produits Prioritaires
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Produits necessitant une action immediate
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <RefreshCw className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href="/products">
-                      Voir tout
-                      <ArrowRight className="ml-1 h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <RiskTable products={topRiskProducts} compact />
-              </CardContent>
-            </Card>
+          <div className="lg:col-span-2 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-base font-medium">Produits Prioritaires</h2>
+                <p className="text-xs text-muted-foreground">
+                  Produits necessitant une action immediate
+                </p>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/products">
+                  Voir tout
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <RiskTable products={topRiskProducts} compact />
           </div>
 
-          {/* Risk Distribution Chart */}
           <div className="lg:col-span-1">
             <RiskChart data={riskDistribution} />
           </div>
         </div>
-
-        {/* Quick Actions */}
-        <Card className="border-border/50">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-medium">
-              Actions Rapides
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              <Button asChild>
-                <Link href="/upload">
-                  Importer des donnees
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link href="/products?filter=critical">
-                  Voir produits critiques ({criticalProducts.length})
-                </Link>
-              </Button>
-              <Button variant="outline">
-                Exporter le rapport
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
-  )
+  );
 }

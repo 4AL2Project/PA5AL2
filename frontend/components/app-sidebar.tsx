@@ -1,10 +1,20 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import {
+  AlertTriangle,
+  LayoutDashboard,
+  Package,
+  PanelLeftClose,
+  Settings,
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+import { Button } from '@/components/ui/button';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -12,20 +22,8 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
-  SidebarTrigger,
   useSidebar,
-} from '@/components/ui/sidebar'
-import {
-  LayoutDashboard,
-  Upload,
-  Package,
-  Settings,
-  AlertTriangle,
-  PanelLeftClose,
-  PanelLeft,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
+} from '@/components/ui/sidebar';
 
 const navigation = [
   {
@@ -34,27 +32,22 @@ const navigation = [
     icon: LayoutDashboard,
   },
   {
-    title: 'Upload',
-    href: '/upload',
-    icon: Upload,
-  },
-  {
     title: 'Produits',
     href: '/products',
     icon: Package,
   },
-]
+];
 
 export function AppSidebar() {
-  const pathname = usePathname()
-  const { toggleSidebar, open } = useSidebar()
+  const pathname = usePathname();
+  const { toggleSidebar } = useSidebar();
 
   return (
     <Sidebar>
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+      <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
               <AlertTriangle className="h-4 w-4 text-primary-foreground" />
             </div>
             <div className="flex flex-col">
@@ -82,10 +75,7 @@ export function AppSidebar() {
             <SidebarMenu>
               {navigation.map((item) => (
                 <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={pathname === item.href}
-                  >
+                  <SidebarMenuButton asChild isActive={pathname === item.href}>
                     <Link href={item.href}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -97,7 +87,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t border-sidebar-border p-4">
+      <SidebarFooter className="border-t border-sidebar-border p-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
@@ -110,5 +100,5 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

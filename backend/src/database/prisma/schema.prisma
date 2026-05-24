@@ -19,12 +19,25 @@ model Pharmacy {
   products          Product[]
   sales             Sale[]
   analyses          RiskAnalysis[]
+  users             User[]
+}
+
+model User {
+  user_id     String   @id @default(uuid())
+  pharmacy_id String
+  email       String   @unique
+  password    String
+  role        String   @default("TITULAIRE")
+  created_at  DateTime @default(now())
+
+  pharmacy    Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
 }
 
 model Product {
   product_id     String   @id @default(uuid())
   pharmacy_id    String
-  external_sku   String?
+  external_sku   String
+  lot_number     String?
   name           String
   category       String?
   brand          String?
@@ -39,8 +52,8 @@ model Product {
   sales          Sale[]
   analyses       RiskAnalysis[]
 
+  @@unique([pharmacy_id, external_sku])
   @@index([pharmacy_id, expiry_date])
-  @@index([pharmacy_id, external_sku])
 }
 
 model Sale {
@@ -71,7 +84,7 @@ model RiskAnalysis {
   risk_score         Float
   risk_level         String
 
-  suggested_discount Int
+  suggested_action   String
   recoverable_value  Float
   potential_loss     Float
 

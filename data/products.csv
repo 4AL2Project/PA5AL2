@@ -1,0 +1,21 @@
+external_sku,name,category,brand,expiry_date,stock_quantity,unit_price,cost_price
+CRE-HYD-50,Creme Hydratante Visage 50ml,Soins visage,Vichy,2026-04-10,180,12.90,8.50
+SER-VIT-C,Serum Eclat Vitamine C 30ml,Soins visage,La Roche-Posay,2026-04-12,95,24.90,16.00
+MIC-EAU-400,Eau Micellaire Sensitive 400ml,Soins visage,Bioderma,2026-04-15,200,9.90,6.20
+BB-CREAM-30,BB Cream SPF15 30ml,Maquillage,Garnier,2026-04-17,130,8.50,5.00
+FOND-TEINT-30,Fond de Teint Fluide 30ml,Maquillage,Maybelline,2026-04-19,160,14.90,9.50
+CREME-CORP-200,Creme Corps Nourrissante 200ml,Soins corps,Nuxe,2026-04-26,110,15.90,10.00
+MASQ-ARG-75,Masque Purifiant Argile 75ml,Soins visage,Caudalie,2026-04-22,75,18.50,12.00
+GEL-DOUCHE-250,Gel Douche Surgras 250ml,Soins corps,Avene,2026-04-28,45,7.90,4.80
+HUILE-SEC-100,Huile Seche Corps 100ml,Soins corps,Nuxe,2026-04-30,55,22.90,14.50
+SHA-REP-250,Shampooing Reparateur 250ml,Cheveux,Kerastase,2026-05-15,60,28.90,18.00
+COND-LISS-200,Apres-Shampooing Lissant 200ml,Cheveux,L Oreal,2026-05-21,85,11.90,7.50
+ROUGE-LEV-3G,Rouge a Levres Satin 3g,Maquillage,Bourjois,2026-05-10,40,10.90,6.50
+MASCARA-BLK,Mascara Volume Noir 9ml,Maquillage,Maybelline,2026-05-03,35,12.90,8.00
+CREME-SOL-50,Creme Solaire SPF50 50ml,Solaire,La Roche-Posay,2026-06-16,70,19.90,12.50
+TONER-ROSE-150,Lotion Tonique Rose 150ml,Soins visage,Caudalie,2026-06-02,55,16.90,10.50
+EAU-PARF-50,Eau de Parfum Florale 50ml,Parfumerie,Clarins,2026-07-11,120,45.90,28.00
+CREME-NUIT-50,Creme de Nuit Anti-Age 50ml,Soins visage,Vichy,2026-07-26,45,34.90,22.00
+BAUME-LEV-15,Baume Levres Hydratant 15ml,Soins levres,Nuxe,2026-08-16,80,9.90,5.80
+CONTOUR-YEU-15,Contour des Yeux 15ml,Soins visage,Clarins,2026-09-02,60,38.90,24.00
+GOMMAGE-100,Gommage Corps Sucre 100ml,Soins corps,Garnier,2026-08-21,90,8.90,5.20

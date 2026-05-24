@@ -1,18 +1,19 @@
-import { Card, CardContent } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
-import { LucideIcon } from 'lucide-react'
+import { LucideIcon } from 'lucide-react';
+
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface StatsCardProps {
-  title: string
-  value: string | number
-  description?: string
-  icon: LucideIcon
+  title: string;
+  value: string | number;
+  description?: string;
+  icon: LucideIcon;
   trend?: {
-    value: number
-    isPositive: boolean
-  }
-  className?: string
-  iconClassName?: string
+    value: number;
+    isPositive: boolean;
+  };
+  className?: string;
+  iconClassName?: string;
 }
 
 export function StatsCard({
@@ -26,10 +27,10 @@ export function StatsCard({
 }: StatsCardProps) {
   return (
     <Card className={cn('border-border/50', className)}>
-      <CardContent className="pt-6">
+      <CardContent>
         <div className="flex items-start justify-between">
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{title}</p>
+            <p className="text-xs text-muted-foreground">{title}</p>
             <p className="text-2xl font-semibold tracking-tight">{value}</p>
             {description && (
               <p className="text-xs text-muted-foreground">{description}</p>
@@ -48,14 +49,14 @@ export function StatsCard({
           </div>
           <div
             className={cn(
-              'rounded-lg p-2.5',
+              'rounded-md p-2',
               iconClassName ?? 'bg-primary/10 text-primary'
             )}
           >
-            <Icon className="h-5 w-5" />
+            <Icon className="h-4 w-4" />
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

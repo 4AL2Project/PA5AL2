@@ -13,7 +13,7 @@ NestJS Swagger module is wired in `backend/src/main.ts` via
 - Raw OpenAPI JSON: `http://localhost:3005/api/docs-json`
 
 The same document can be generated as a static file (for type generation
-or CI artefacts):
+or CI artefacts ):
 
 ```bash
 cd backend

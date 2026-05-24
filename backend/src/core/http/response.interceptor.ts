@@ -21,9 +21,10 @@ function isAlreadyEnveloped(value: unknown): value is SuccessResponse<unknown> {
 }
 
 @Injectable()
-export class ResponseEnvelopeInterceptor
-  implements NestInterceptor<unknown, unknown>
-{
+export class ResponseEnvelopeInterceptor implements NestInterceptor<
+  unknown,
+  unknown
+> {
   intercept(
     context: ExecutionContext,
     next: CallHandler<unknown>

@@ -46,9 +46,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     const body: ErrorResponse = {
       success: false,
-      error: details !== undefined
-        ? { code, message, details }
-        : { code, message },
+      error:
+        details !== undefined ? { code, message, details } : { code, message },
     };
 
     response.status(status).json(body);

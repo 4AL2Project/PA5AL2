@@ -493,6 +493,7 @@ async function main() {
       pharmacy_id: pharmacy.pharmacy_id,
       email: DEMO_USER_EMAIL,
       password: passwordHash,
+      status: 'ACTIVE',
     },
   });
   console.log(

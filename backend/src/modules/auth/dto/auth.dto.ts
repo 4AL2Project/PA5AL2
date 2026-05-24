@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsEnum,
@@ -11,32 +12,67 @@ import {
 import { UserRole } from '../roles.enum';
 
 export class RegisterDto {
+  @ApiProperty({ example: 'titulaire@officine-a.fr', format: 'email' })
   @IsEmail()
   email!: string;
 
+  @ApiProperty({ example: 'P4ssw0rd!', minLength: 8 })
   @IsString()
   @MinLength(8)
   password!: string;
 
+  @ApiProperty({
+    example: '3c865b32-ba84-483d-8256-2b1d7d5e542e',
+    format: 'uuid',
+  })
   @IsUUID()
   pharmacy_id!: string;
 
+  @ApiPropertyOptional({ enum: UserRole, example: UserRole.TITULAIRE })
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
 }
 
 export class LoginDto {
+  @ApiProperty({ example: 'titulaire@officine-a.fr', format: 'email' })
   @IsEmail()
   email!: string;
 
+  @ApiProperty({ example: 'P4ssw0rd!' })
   @IsString()
   @IsNotEmpty()
   password!: string;
 }
 
 export class RefreshDto {
+  @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIs...' })
   @IsString()
   @IsNotEmpty()
   refresh_token!: string;
+}
+
+export class AuthTokensDto {
+  @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIs...' })
+  access_token!: string;
+
+  @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIs...' })
+  refresh_token!: string;
+}
+
+export class RegisteredUserDto {
+  @ApiProperty({ format: 'uuid' })
+  user_id!: string;
+
+  @ApiProperty({ format: 'email' })
+  email!: string;
+
+  @ApiProperty({ format: 'uuid' })
+  pharmacy_id!: string;
+
+  @ApiProperty({ enum: UserRole })
+  role!: UserRole;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  created_at!: Date;
 }

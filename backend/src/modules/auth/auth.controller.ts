@@ -10,7 +10,12 @@ export class AuthController {
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto.email, dto.password, dto.pharmacy_id);
+    return this.authService.register(
+      dto.email,
+      dto.password,
+      dto.pharmacy_id,
+      dto.role
+    );
   }
 
   @Post('login')

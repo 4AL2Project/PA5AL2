@@ -2,6 +2,7 @@
   "name": "savely",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "pnpm@10.15.1",
   "scripts": {
     "lint": "pnpm -r lint",
     "lint:fix": "pnpm -r lint --fix",

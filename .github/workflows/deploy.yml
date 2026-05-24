@@ -2,7 +2,7 @@ name: CI/CD Backend
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
     paths:
       - 'backend/**'
       - '.github/workflows/deploy.yml'
@@ -37,9 +37,10 @@ jobs:
         run: npm run typecheck
 
   deploy:
-    name: Deploy to Render
+    name: Deploy to Render (${{ github.ref == 'refs/heads/main' && 'production' || 'dev' }})
     needs: ci
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'dev' }}
 
     steps:
       - name: Trigger Render deploy hook

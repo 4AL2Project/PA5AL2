@@ -125,7 +125,11 @@ describe('InvitationService.accept', () => {
       address: '12 rue de la Paix, 75001 Paris',
       siret: '12345678901234',
     },
-    titulaire: { first_name: 'Marie', last_name: 'Dupont', phone: '0612345678' },
+    titulaire: {
+      first_name: 'Marie',
+      last_name: 'Dupont',
+      phone: '0612345678',
+    },
     accepted_terms: true as unknown,
   };
 
@@ -214,7 +218,10 @@ describe('InvitationService.accept', () => {
       address: '15 avenue de la Republique',
       siret: '12345678901234',
     };
-    await service.accept('valid-token', { ...validBody, pharmacy: correctedPharmacy });
+    await service.accept('valid-token', {
+      ...validBody,
+      pharmacy: correctedPharmacy,
+    });
     expect(prisma.pharmacy.update).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ name: correctedPharmacy.name }),

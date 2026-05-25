@@ -3,12 +3,13 @@
 import {
   AlertTriangle,
   LayoutDashboard,
+  LogOut,
   Package,
   PanelLeftClose,
   Settings,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +25,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { endSession } from '@/lib/auth';
 
 const navigation = [
   {
@@ -40,7 +42,13 @@ const navigation = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { toggleSidebar } = useSidebar();
+
+  const handleLogout = async () => {
+    await endSession();
+    router.replace('/login');
+  };
 
   return (
     <Sidebar>
@@ -95,6 +103,12 @@ export function AppSidebar() {
                 <Settings className="h-4 w-4" />
                 <span>Parametres</span>
               </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+              <span>Se déconnecter</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

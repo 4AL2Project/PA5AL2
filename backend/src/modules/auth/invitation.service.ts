@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  GoneException,
-  Injectable,
-} from '@nestjs/common';
+import { BadRequestException, GoneException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { config } from '../../core/config';

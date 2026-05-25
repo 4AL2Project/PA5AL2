@@ -10,9 +10,65 @@ import { EmailService } from './email.service';
 import { UserRole } from './roles.enum';
 import { generateToken, hashToken } from './token.util';
 
+export interface PharmacyListItem {
+  pharmacy_id: string;
+  name: string;
+  address: string | null;
+  siret: string | null;
+  created_at: Date;
+  titulaire: {
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
+    phone: string | null;
+    status: string;
+  } | null;
+}
+
 @Injectable()
 export class AdminService {
   constructor(private readonly emailService: EmailService) {}
+
+  async listPharmacies(actorRole: UserRole, actorPharmacyId: string) {
+    if (actorRole !== UserRole.ADMIN_SAVELY) {
+      throw new ForbiddenException('Reserve aux administrateurs Savely');
+    }
+    const rows = await prisma.pharmacy.findMany({
+      where: { NOT: { pharmacy_id: actorPharmacyId } },
+      orderBy: { created_at: 'desc' },
+      include: {
+        users: {
+          where: { role: UserRole.TITULAIRE },
+          orderBy: { created_at: 'asc' },
+          take: 1,
+          select: {
+            first_name: true,
+            last_name: true,
+            email: true,
+            phone: true,
+            status: true,
+          },
+        },
+      },
+    });
+    const items: PharmacyListItem[] = rows.map((p) => ({
+      pharmacy_id: p.pharmacy_id,
+      name: p.name,
+      address: p.address,
+      siret: p.siret,
+      created_at: p.created_at,
+      titulaire: p.users[0]
+        ? {
+            first_name: p.users[0].first_name,
+            last_name: p.users[0].last_name,
+            email: p.users[0].email,
+            phone: p.users[0].phone,
+            status: p.users[0].status,
+          }
+        : null,
+    }));
+    return { pharmacies: items };
+  }
 
   async createPharmacyWithTitulaire(
     pharmacyData: { name: string; address: string; siret: string },

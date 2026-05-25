@@ -57,7 +57,7 @@ describe('MagicLinkService.send', () => {
     emailMock.sendMagicLinkEmail.mockResolvedValue(undefined);
   });
 
-  it("repond sans erreur (200 silencieux) quand email connu et ACTIVE", async () => {
+  it('repond sans erreur (200 silencieux) quand email connu et ACTIVE', async () => {
     prisma.user.findUnique.mockResolvedValue({
       user_id: 'user-uuid',
       email: 'marie@pharma.fr',
@@ -67,13 +67,13 @@ describe('MagicLinkService.send', () => {
     expect(emailMock.sendMagicLinkEmail).toHaveBeenCalled();
   });
 
-  it("repond sans erreur (200 silencieux) quand email inconnu -- ne leak pas le compte", async () => {
+  it('repond sans erreur (200 silencieux) quand email inconnu -- ne leak pas le compte', async () => {
     prisma.user.findUnique.mockResolvedValue(null);
     await expect(service.send('inconnu@example.com')).resolves.toBeUndefined();
     expect(emailMock.sendMagicLinkEmail).not.toHaveBeenCalled();
   });
 
-  it("repond sans erreur (200 silencieux) quand utilisateur PENDING", async () => {
+  it('repond sans erreur (200 silencieux) quand utilisateur PENDING', async () => {
     prisma.user.findUnique.mockResolvedValue({
       user_id: 'user-uuid',
       email: 'pending@pharma.fr',
@@ -199,7 +199,9 @@ describe('MagicLinkService.verify', () => {
       ...makeValidMagicToken(),
       expires_at: new Date(Date.now() - 1000),
     });
-    await expect(service.verify('expired-token')).rejects.toThrow(GoneException);
+    await expect(service.verify('expired-token')).rejects.toThrow(
+      GoneException
+    );
   });
 
   it('leve 410 Gone si le token est deja consomme', async () => {
@@ -212,7 +214,9 @@ describe('MagicLinkService.verify', () => {
 
   it('leve 410 Gone si le token est introuvable', async () => {
     prisma.authToken.findFirst.mockResolvedValue(null);
-    await expect(service.verify('unknown-token')).rejects.toThrow(GoneException);
+    await expect(service.verify('unknown-token')).rejects.toThrow(
+      GoneException
+    );
   });
 
   it('recherche par hash SHA-256, jamais le token en clair', async () => {

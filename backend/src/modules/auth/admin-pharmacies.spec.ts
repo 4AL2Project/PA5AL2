@@ -10,7 +10,7 @@ import { UserRole } from './roles.enum';
 // --- Mocks -------------------------------------------------------------------
 jest.mock('../../database/client', () => ({
   prisma: {
-    pharmacy: { create: jest.fn() },
+    pharmacy: { create: jest.fn(), findMany: jest.fn() },
     user: { findUnique: jest.fn(), create: jest.fn() },
     authToken: { create: jest.fn() },
   },
@@ -19,7 +19,7 @@ jest.mock('../../database/client', () => ({
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { prisma } = require('../../database/client') as {
   prisma: {
-    pharmacy: { create: jest.Mock };
+    pharmacy: { create: jest.Mock; findMany: jest.Mock };
     user: { findUnique: jest.Mock; create: jest.Mock };
     authToken: { create: jest.Mock };
   };
@@ -144,5 +144,67 @@ describe('AdminService.createPharmacyWithTitulaire', () => {
     );
     const createCall = prisma.user.create.mock.calls[0][0];
     expect(createCall.data.role).toBe(UserRole.TITULAIRE);
+  });
+});
+
+describe('AdminService.listPharmacies', () => {
+  let service: AdminService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    service = new AdminService(emailMock as unknown as EmailService);
+  });
+
+  it('leve ForbiddenException si le role acteur nest pas ADMIN_SAVELY', async () => {
+    await expect(
+      service.listPharmacies(UserRole.TITULAIRE, 'any-id')
+    ).rejects.toThrow(ForbiddenException);
+  });
+
+  it('exclut la pharmacie de l acteur et inclut le premier titulaire', async () => {
+    prisma.pharmacy.findMany.mockResolvedValue([
+      {
+        pharmacy_id: 'p1',
+        name: 'Pharma A',
+        address: '1 rue X',
+        siret: '111',
+        created_at: new Date('2026-05-01'),
+        users: [
+          {
+            first_name: 'Marie',
+            last_name: 'Dupont',
+            email: 'marie@a.fr',
+            phone: '0600000001',
+            status: 'PENDING',
+          },
+        ],
+      },
+      {
+        pharmacy_id: 'p2',
+        name: 'Pharma B',
+        address: null,
+        siret: null,
+        created_at: new Date('2026-04-01'),
+        users: [],
+      },
+    ]);
+
+    const result = await service.listPharmacies(
+      UserRole.ADMIN_SAVELY,
+      'admin-pharmacy-id'
+    );
+
+    expect(prisma.pharmacy.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { NOT: { pharmacy_id: 'admin-pharmacy-id' } },
+        orderBy: { created_at: 'desc' },
+      })
+    );
+    expect(result.pharmacies).toHaveLength(2);
+    expect(result.pharmacies[0]).toMatchObject({
+      pharmacy_id: 'p1',
+      titulaire: { email: 'marie@a.fr', status: 'PENDING' },
+    });
+    expect(result.pharmacies[1].titulaire).toBeNull();
   });
 });

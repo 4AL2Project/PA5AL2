@@ -459,8 +459,72 @@ function calculateRisk(
 // pour que le frontend fonctionne sans configuration manuelle après le seed.
 const DEMO_PHARMACY_ID = '3c865b32-ba84-483d-8256-2b1d7d5e542e';
 
+const ADMIN_PHARMACY_ID = '00000000-0000-0000-0000-000000000001';
+const ADMIN_EMAIL = 'admin@savely.fr';
+const ADMIN_PASSWORD = 'admin1234';
+
+async function seedAdmin() {
+  const adminPharmacy = await prisma.pharmacy.upsert({
+    where: { pharmacy_id: ADMIN_PHARMACY_ID },
+    update: {},
+    create: {
+      pharmacy_id: ADMIN_PHARMACY_ID,
+      name: 'Savely (Admin)',
+      email: 'admin-internal@savely.fr',
+      address: 'Interne',
+      siret: '00000000000000',
+      subscription_tier: 'admin',
+    },
+  });
+
+  const passwordHash = await bcrypt.hash(ADMIN_PASSWORD, 12);
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: ADMIN_EMAIL },
+  });
+
+  if (existingAdmin) {
+    // Idempotence corrective : on s'assure que le user a bien le bon rôle,
+    // le bon statut et un mot de passe valide, même s'il a été créé avant
+    // l'introduction du rôle ADMIN_SAVELY.
+    const needsFix =
+      existingAdmin.role !== 'ADMIN_SAVELY' ||
+      existingAdmin.status !== 'ACTIVE' ||
+      existingAdmin.pharmacy_id !== adminPharmacy.pharmacy_id;
+    if (needsFix) {
+      await prisma.user.update({
+        where: { user_id: existingAdmin.user_id },
+        data: {
+          pharmacy_id: adminPharmacy.pharmacy_id,
+          role: 'ADMIN_SAVELY',
+          status: 'ACTIVE',
+          password: passwordHash,
+        },
+      });
+      console.log(`✅ Admin corrigé : ${ADMIN_EMAIL} (rôle/statut réalignés)`);
+    } else {
+      console.log(`✅ Admin déjà présent : ${ADMIN_EMAIL}`);
+    }
+    return;
+  }
+
+  await prisma.user.create({
+    data: {
+      pharmacy_id: adminPharmacy.pharmacy_id,
+      email: ADMIN_EMAIL,
+      password: passwordHash,
+      role: 'ADMIN_SAVELY',
+      status: 'ACTIVE',
+      first_name: 'Admin',
+      last_name: 'Savely',
+    },
+  });
+  console.log(`✅ Admin créé : ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
+}
+
 async function main() {
   console.log('🌱 Démarrage du seed...\n');
+
+  await seedAdmin();
 
   // Idempotence : ne pas recréer si déjà présent
   const existing = await prisma.pharmacy.findFirst({
@@ -593,8 +657,9 @@ async function main() {
 
   console.log('\n─────────────────────────────────────────────');
   console.log('🏁 Seed terminé avec succès !\n');
-  console.log('📋 Copiez cette valeur dans frontend/.env.local :');
-  console.log(`   NEXT_PUBLIC_PHARMACY_ID=${pharmacy.pharmacy_id}`);
+  console.log('🔑 Comptes de connexion :');
+  console.log(`   Admin     : ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
+  console.log(`   Titulaire : ${DEMO_USER_EMAIL} / ${DEMO_USER_PASSWORD}`);
   console.log('─────────────────────────────────────────────\n');
 }
 

@@ -5,14 +5,12 @@ import {
   RiskLevel,
 } from '@/lib/types';
 
-// Côté navigateur : NEXT_PUBLIC_API_URL (ex. http://localhost:3005).
-// Côté serveur (SSR en conteneur) : INTERNAL_API_URL vise le service Compose
-// `backend` (ex. http://backend:3005), car `localhost` y désigne le conteneur frontend.
-const API_BASE =
-  (typeof window === 'undefined'
-    ? (process.env.INTERNAL_API_URL ?? process.env.NEXT_PUBLIC_API_URL)
-    : process.env.NEXT_PUBLIC_API_URL) ?? 'http://localhost:3000';
-const PHARMACY_ID = process.env.NEXT_PUBLIC_PHARMACY_ID ?? '';
+const IS_SERVER = typeof window === 'undefined';
+
+const DIRECT_API_BASE =
+  process.env.INTERNAL_API_URL ??
+  process.env.NEXT_PUBLIC_API_URL ??
+  'http://localhost:3005';
 
 // ─── Formes brutes renvoyées par l'API backend ─────────────────────────────────
 
@@ -110,12 +108,27 @@ export function adaptToRiskDistribution(
 // ─── Helpers fetch ─────────────────────────────────────────────────────────────
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, { cache: 'no-store', ...init });
-  if (!res.ok) {
-    const text = await res.text().catch(() => res.statusText);
-    throw new Error(`API ${res.status}: ${text}`);
+  const url = IS_SERVER ? `${DIRECT_API_BASE}${path}` : `/api/be${path}`;
+  const headers = new Headers(init?.headers);
+  if (IS_SERVER) {
+    // Lecture dynamique pour éviter d'importer next/headers depuis un module client.
+    const { cookies } = await import('next/headers');
+    const access = (await cookies()).get('savely_access')?.value;
+    if (access) headers.set('Authorization', `Bearer ${access}`);
   }
-  return res.json() as Promise<T>;
+  const res = await fetch(url, { cache: 'no-store', ...init, headers });
+  const payload = await res.json().catch(() => null);
+  if (payload && typeof payload === 'object' && 'success' in payload) {
+    const env = payload as
+      | { success: true; data: T }
+      | { success: false; error: { code: string; message: string } };
+    if (env.success) return env.data;
+    throw new Error(`API ${res.status}: ${env.error?.message ?? 'error'}`);
+  }
+  if (!res.ok) {
+    throw new Error(`API ${res.status}`);
+  }
+  return payload as T;
 }
 
 // ─── Fonctions publiques ───────────────────────────────────────────────────────
@@ -127,7 +140,7 @@ export async function fetchLatestAnalysis(): Promise<{
   const data = await apiFetch<{
     products?: RawRiskAnalysis[];
     summary?: RawSummary;
-  }>(`/api/analysis/latest?pharmacy_id=${PHARMACY_ID}`);
+  }>(`/api/analysis/latest`);
   return {
     products: (data.products ?? []).map(adaptRiskAnalysis),
     stats: adaptStats(data.summary ?? {}),
@@ -138,12 +151,12 @@ export async function fetchProducts(filters?: {
   risk_level?: string;
   category?: string;
 }): Promise<{ products: Product[]; total: number }> {
-  const params = new URLSearchParams({ pharmacy_id: PHARMACY_ID });
+  const params = new URLSearchParams();
   if (filters?.risk_level) params.set('risk_level', filters.risk_level);
   if (filters?.category) params.set('category', filters.category);
-
+  const qs = params.toString();
   const data = await apiFetch<{ products?: RawRiskAnalysis[]; total?: number }>(
-    `/api/products?${params.toString()}`
+    `/api/products${qs ? `?${qs}` : ''}`
   );
   return {
     products: (data.products ?? []).map(adaptRiskAnalysis),
@@ -157,7 +170,7 @@ export async function uploadFile(
 ): Promise<UploadResponse> {
   const form = new FormData();
   form.append(fileType, file);
-  return apiFetch<UploadResponse>(`/api/upload?pharmacy_id=${PHARMACY_ID}`, {
+  return apiFetch<UploadResponse>(`/api/upload`, {
     method: 'POST',
     body: form,
   });

@@ -12,9 +12,9 @@ export const config = {
       process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-me',
     accessTtl: '15m',
     refreshTtl: '7d',
-    invitationTtlMs: 48 * 60 * 60 * 1000,   // 48h
-    magicLinkTtlMs: 15 * 60 * 1000,          // 15min
-    magicLinkRateLimit: 3,                    // max requests per window
+    invitationTtlMs: 48 * 60 * 60 * 1000, // 48h
+    magicLinkTtlMs: 15 * 60 * 1000, // 15min
+    magicLinkRateLimit: 3, // max requests per window
     magicLinkRateLimitWindowMs: 15 * 60 * 1000, // 15min window
   },
   email: {

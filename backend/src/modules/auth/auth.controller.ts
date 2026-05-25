@@ -22,10 +22,7 @@ import {
   RegisterDto,
   RegisteredUserDto,
 } from './dto/auth.dto';
-import {
-  AcceptInvitationDto,
-  InvitationInfoDto,
-} from './dto/invitation.dto';
+import { AcceptInvitationDto, InvitationInfoDto } from './dto/invitation.dto';
 import { MagicLinkRequestDto, MagicLinkVerifyDto } from './dto/magic-link.dto';
 import { InvitationService } from './invitation.service';
 import { MagicLinkService } from './magic-link.service';

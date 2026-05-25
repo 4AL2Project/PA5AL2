@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -10,6 +11,7 @@ import {
   ApiBearerAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
@@ -29,6 +31,17 @@ import { UserRole } from './roles.enum';
 @Controller('api/admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
+
+  @Get('pharmacies')
+  @ApiOperation({
+    summary:
+      'Liste les pharmacies inscrites avec leur titulaire (ADMIN_SAVELY uniquement)',
+  })
+  @ApiOkResponse({ description: 'Liste des pharmacies' })
+  @ApiForbiddenResponse({ description: 'Reserve aux administrateurs Savely' })
+  listPharmacies(@CurrentUser() user: { role: UserRole; pharmacy_id: string }) {
+    return this.adminService.listPharmacies(user.role, user.pharmacy_id);
+  }
 
   @Post('pharmacies')
   @HttpCode(HttpStatus.CREATED)

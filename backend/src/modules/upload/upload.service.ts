@@ -155,14 +155,22 @@ export class UploadService {
         continue;
       }
 
-      await prisma.sale.create({
-        data: {
+      await prisma.sale.upsert({
+        where: {
+          product_id_sale_date_quantity_sold: {
+            product_id: product.product_id,
+            sale_date: new Date(row.sale_date),
+            quantity_sold: row.quantity_sold,
+          },
+        },
+        create: {
           product_id: product.product_id,
           pharmacy_id: pharmacyId,
           sale_date: new Date(row.sale_date),
           quantity_sold: row.quantity_sold,
           unit_price_sold: row.unit_price_sold,
         },
+        update: {},
       });
       inserted++;
     }

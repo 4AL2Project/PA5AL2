@@ -89,6 +89,7 @@ model Sale {
   product         Product  @relation(fields: [product_id], references: [product_id])
   pharmacy        Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
 
+  @@unique([product_id, sale_date, quantity_sold])
   @@index([product_id, sale_date])
 }
 

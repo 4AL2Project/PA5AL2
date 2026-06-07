@@ -29,17 +29,17 @@ La DLP est bien manipulée par les LGO (notamment au scan DataMatrix à la dispe
 
 ## Options considérées
 
-| Option | Description | Verdict |
-|---|---|---|
-| **A. Continuer sur la DLP avec données fictives** | Maintenir l'architecture telle quelle, peupler `expiry_date` avec un seed inventé. | Rejetée — incompatible avec l'engagement client et académique. |
-| **B. Pivot Anti-Stock Dormant** (choisi) | Remplacer la métrique cœur `days_to_expiry` par `days_of_cover`. Garder l'architecture, l'API, les 3 niveaux et la majorité des actions. | **Retenue**. |
-| C. Capture DLP via scan mobile DataMatrix | Demander aux préparateurs de scanner chaque boîte à la réception pour capturer DLP + lot. | Reportée en V2 — demande de la discipline opérationnelle, ne couvre pas la parapharmacie. |
-| D. Demander un export enrichi au LGO | Solliciter Winpharma & co pour exposer la DLP dans l'export. | Hors délais — décision commerciale, non maîtrisable côté projet. |
-| E. Lean Recall + Analytics ventes uniquement | Couper le moteur de risque, ne garder que les modules qui marchent sans DLP. | Périmètre trop restreint — perte du narratif anti-gaspillage. |
+| Option                                            | Description                                                                                                                              | Verdict                                                                                   |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **A. Continuer sur la DLP avec données fictives** | Maintenir l'architecture telle quelle, peupler `expiry_date` avec un seed inventé.                                                       | Rejetée — incompatible avec l'engagement client et académique.                            |
+| **B. Pivot Anti-Stock Dormant** (choisi)          | Remplacer la métrique cœur `days_to_expiry` par `days_of_cover`. Garder l'architecture, l'API, les 3 niveaux et la majorité des actions. | **Retenue**.                                                                              |
+| C. Capture DLP via scan mobile DataMatrix         | Demander aux préparateurs de scanner chaque boîte à la réception pour capturer DLP + lot.                                                | Reportée en V2 — demande de la discipline opérationnelle, ne couvre pas la parapharmacie. |
+| D. Demander un export enrichi au LGO              | Solliciter Winpharma & co pour exposer la DLP dans l'export.                                                                             | Hors délais — décision commerciale, non maîtrisable côté projet.                          |
+| E. Lean Recall + Analytics ventes uniquement      | Couper le moteur de risque, ne garder que les modules qui marchent sans DLP.                                                             | Périmètre trop restreint — perte du narratif anti-gaspillage.                             |
 
 ## Décision retenue
 
-**Pivoter le moteur de risque vers la détection de stock dormant** (Option B). La métrique cœur passe de *"jours avant péremption"* à *"jours de couverture de stock"*. Les niveaux, les actions et l'architecture restent.
+**Pivoter le moteur de risque vers la détection de stock dormant** (Option B). La métrique cœur passe de _"jours avant péremption"_ à _"jours de couverture de stock"_. Les niveaux, les actions et l'architecture restent.
 
 ### Nouvelle formule
 
@@ -56,21 +56,21 @@ Classification (3 niveaux identiques) :
 
 ### Nouveau plan d'actions
 
-| Niveau | Actions disponibles |
-|---|---|
-| `safe` | Aucune |
-| `high` | Promo B2C · Transfert inter-officines · Réduire prochaine commande |
+| Niveau     | Actions disponibles                                                            |
+| ---------- | ------------------------------------------------------------------------------ |
+| `safe`     | Aucune                                                                         |
+| `high`     | Promo B2C · Transfert inter-officines · Réduire prochaine commande             |
 | `critical` | Don associatif (reçu fiscal Cerfa) · Retour fournisseur (si contrat le permet) |
 
-L'action *"Destruction"* disparaît (sans péremption, rien à détruire). L'action *"Réduire prochaine commande"* apparaît — valeur ajoutée immédiate au pharmacien.
+L'action _"Destruction"_ disparaît (sans péremption, rien à détruire). L'action _"Réduire prochaine commande"_ apparaît — valeur ajoutée immédiate au pharmacien.
 
 ### Reformulation produit
 
-| Avant | Après |
-|---|---|
-| *"Détectez vos péremptions imminentes"* | *"Détectez vos stocks dormants"* |
-| *"Réduisez vos destructions"* | *"Libérez votre capital immobilisé"* |
-| KPI : € en risque de péremption | KPI : **€ immobilisés en stock dormant** |
+| Avant                                   | Après                                    |
+| --------------------------------------- | ---------------------------------------- |
+| _"Détectez vos péremptions imminentes"_ | _"Détectez vos stocks dormants"_         |
+| _"Réduisez vos destructions"_           | _"Libérez votre capital immobilisé"_     |
+| KPI : € en risque de péremption         | KPI : **€ immobilisés en stock dormant** |
 
 Le narratif anti-gaspillage est préservé : il s'agit toujours d'éviter une perte, mais une perte de **capital** plutôt que de **produit**.
 
@@ -85,14 +85,14 @@ Le narratif anti-gaspillage est préservé : il s'agit toujours d'éviter une pe
 
 ### Backend
 
-| Fichier | Modification | Effort |
-|---|---|---|
-| `risk-calculator.ts` | Réécriture de `calculateRisk()` selon la nouvelle formule | ~2h |
-| `sales-velocity.ts` | Inchangé | 0 |
-| `analysis.service.ts` | Adaptation noms de champs | 30 min |
-| `analysis.job.ts` | Inchangé | 0 |
-| `dashboard.controller.ts` | KPIs reformulés (`total_capital_locked`, top dormants) | 1h |
-| `seed.ts` | Suppression des DLP fictives, accent sur la variété des vitesses | 30 min |
+| Fichier                   | Modification                                                     | Effort |
+| ------------------------- | ---------------------------------------------------------------- | ------ |
+| `risk-calculator.ts`      | Réécriture de `calculateRisk()` selon la nouvelle formule        | ~2h    |
+| `sales-velocity.ts`       | Inchangé                                                         | 0      |
+| `analysis.service.ts`     | Adaptation noms de champs                                        | 30 min |
+| `analysis.job.ts`         | Inchangé                                                         | 0      |
+| `dashboard.controller.ts` | KPIs reformulés (`total_capital_locked`, top dormants)           | 1h     |
+| `seed.ts`                 | Suppression des DLP fictives, accent sur la variété des vitesses | 30 min |
 
 ### Frontend
 
@@ -103,16 +103,16 @@ Le narratif anti-gaspillage est préservé : il s'agit toujours d'éviter une pe
 
 ## Impact sur le backlog (Notion)
 
-| US | Impact |
-|---|---|
-| US-02 Schéma socle | `expiry_date` devient optionnel |
-| US-10 Import | Inchangé |
-| US-20 Calcul risque | Réécrit selon nouvelle formule (retourne *À faire*) |
-| US-21 Moteur actions | Reformulé : par niveau de rotation, pas par DLP |
-| US-30 Don associatif | Conservé, narratif renforcé (assos préfèrent les non-périssables) |
-| US-31 Recall | Conservé pour valeur réglementaire (saisie manuelle V1 si pas de scan) |
-| US-40 Dashboard | KPI principal devient *€ immobilisés* |
-| Reste du backlog | Inchangé |
+| US                   | Impact                                                                 |
+| -------------------- | ---------------------------------------------------------------------- |
+| US-02 Schéma socle   | `expiry_date` devient optionnel                                        |
+| US-10 Import         | Inchangé                                                               |
+| US-20 Calcul risque  | Réécrit selon nouvelle formule (retourne _À faire_)                    |
+| US-21 Moteur actions | Reformulé : par niveau de rotation, pas par DLP                        |
+| US-30 Don associatif | Conservé, narratif renforcé (assos préfèrent les non-périssables)      |
+| US-31 Recall         | Conservé pour valeur réglementaire (saisie manuelle V1 si pas de scan) |
+| US-40 Dashboard      | KPI principal devient _€ immobilisés_                                  |
+| Reste du backlog     | Inchangé                                                               |
 
 ## Ce que nous décidons explicitement de NE PAS faire
 
@@ -136,7 +136,7 @@ Le narratif anti-gaspillage est préservé : il s'agit toujours d'éviter une pe
 - Perte du narratif **"anti-péremption"** viscéral pour la presse / le grand public.
 - Le don associatif perd l'urgence d'une date couperet — moins de pression sur l'action.
 - Les seuils `60/180 jours` sont posés en dur ; ils devront être validés / calibrés avec le client pilote.
-- Le moteur réécrit (US-20) repasse en *À faire*, donc redescend dans le Kanban.
+- Le moteur réécrit (US-20) repasse en _À faire_, donc redescend dans le Kanban.
 - L'action **"Réduire prochaine commande"** suppose qu'on connaît le cycle de commande — donnée non présente dans l'export, à manipuler comme indicateur, pas comme action automatique.
 
 ## Questions ouvertes
@@ -149,7 +149,7 @@ Le narratif anti-gaspillage est préservé : il s'agit toujours d'éviter une pe
 
 ## Liens
 
-- Backlog Notion : *Savely — Suivi de Projet*
+- Backlog Notion : _Savely — Suivi de Projet_
 - [USER-STORIES.md](../../USER-STORIES.md)
 - [QUESTIONS-PROJET.md](../QUESTIONS-PROJET.md)
 - Cahier des charges technique V1.0 (avril 2026)

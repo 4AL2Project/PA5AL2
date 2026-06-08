@@ -4,65 +4,71 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Savely** is a pharmacy risk analysis system that helps pharmacies detect and manage expiring pharmaceutical/cosmetic products. It uses a 3-level risk classification (critical/high/safe) to suggest actions: donations, B2C promotions, or no action.
+**Savely** helps pharmacies recover the cash tied up in **dormant stock** (slow-moving parapharmacy/cosmetic products), by turning their LGO stock/sales exports into prioritized actions: B2C resale, charity donation (with Cerfa tax receipt), or no action. It uses a 3-level classification (critical/high/safe).
+
+> **Pivot (2026):** Savely originally targeted product *expiry* (DLP), but real LGO exports don't contain expiry dates. The product pivoted to **dormant-stock detection** (`days_of_cover`). See `docs/adr/0001-pivot-stock-dormant.md`. New agents should read **`AGENT.md`** first.
 
 ## Architecture
 
 ```
-PA5AL2/
-├── frontend/          # Next.js 16 (App Router), React 19, Tailwind, shadcn/ui
+PA5AL2/                # pnpm workspace (monorepo)
+├── frontend/          # Next.js (App Router), React, Tailwind, shadcn/ui
 ├── backend/           # NestJS 10, Prisma ORM, PostgreSQL 16
+├── packages/
+│   └── api-client/    # shared API client / types (front ↔ back)
 ├── data/              # Sample CSV files for testing
-└── docs/              # Project documentation
+├── docs/              # ADR, business analysis, contracts
+└── docker-compose.yml # PostgreSQL (root)
 ```
 
-**Multi-tenant design**: All API endpoints require `?pharmacy_id=<uuid>` query parameter.
+**Multi-tenant design**: API endpoints currently require `?pharmacy_id=<uuid>` (no real auth yet — see Known Technical Debt).
+
+**Where the real code lives**: `backend/src/modules/` (`analysis`, `upload`, `product`, `dashboard`). **Ignore `backend/dist/contexts/`** — stale build of an abandoned DDD experiment.
 
 ## Development Commands
 
-### Backend (port 3005)
+This repo is a **pnpm workspace** (`pnpm@10`). Run commands from the repo root.
 
 ```bash
-cd backend
-docker compose up -d                    # Start PostgreSQL
-npm install
-npm run prisma:generate                 # Generate Prisma client
-npm run prisma:migrate                  # Run migrations
-npm run prisma:seed                     # Seed demo data (idempotent)
-npm run dev                             # Start dev server
+pnpm install                         # install the whole workspace
+docker compose up -d                 # PostgreSQL (root docker-compose.yml)
+
+pnpm -F backend prisma:generate      # Prisma client
+pnpm -F backend prisma:migrate       # migrations
+pnpm -F backend prisma:seed          # seed demo data (idempotent)
+
+pnpm -F backend dev                  # API on :3005
+pnpm -F frontend dev                 # Web on :3000
 ```
 
-### Frontend (port 3000)
+Quality (whole repo): `pnpm lint` · `pnpm typecheck` · `pnpm format`.
+
+> A **husky pre-commit hook** runs `lint:fix` + `format` + `typecheck`. The first two **rewrite staged files** (re-`git add` afterwards), and a typecheck failure **blocks the commit**.
+
+### Prisma (direct, from backend/)
 
 ```bash
-cd frontend
-npm install
-npm run dev                             # Start dev server
-npm run build                           # Production build
-npm run lint                            # ESLint
-```
-
-### Prisma Commands (from backend/)
-
-```bash
-npx prisma migrate dev --schema src/database/prisma/schema.prisma --name <migration_name>
-npx prisma studio --schema src/database/prisma/schema.prisma    # Database GUI
+pnpm -F backend exec prisma migrate dev --schema src/database/prisma/schema.prisma --name <migration_name>
+pnpm -F backend exec prisma studio --schema src/database/prisma/schema.prisma    # Database GUI
 ```
 
 ## Core Domain: Risk Calculation
 
-The risk engine (`backend/src/modules/analysis/risk-calculator.ts`) is the business logic heart:
+The risk engine (`backend/src/modules/analysis/risk-calculator.ts`) is the business-logic heart. Classification stays 3-level (`safe`/`high`/`critical`) → actions (no action / B2C resale / donation).
+
+**Target metric (post-pivot — dormant stock):**
 
 ```
-Risk Score = Expected Sales / Total Stock  (0.0 to 1.0)
+days_of_cover  = stock / sales_velocity_30d   (∞ if velocity = 0)
+capital_locked = stock × cost_price
 
-Expected Sales = Sales Velocity (30d) × Days to Expiry
-
-Classification:
-  score > 0.70  → 'safe'     → No action
-  score > 0.30  → 'high'     → B2C promotion
-  score ≤ 0.30  → 'critical' → Donation/disposal
+  days_of_cover < 60   → 'safe'      → no action
+  days_of_cover < 180  → 'high'      → B2C resale
+  days_of_cover ≥ 180  → 'critical'  → charity donation
+  velocity == 0        → 'critical'
 ```
+
+> ⚠️ **The current code still implements the OLD expiry-based formula** (`risk_score = velocity × days_to_expiry / stock`). Rewriting it to `days_of_cover` is User Story **US-20** (not done yet). Don't treat the code's formula as the target — see `docs/adr/0001-pivot-stock-dormant.md`.
 
 A daily cron job (2 AM) recalculates risk for all pharmacies.
 
@@ -95,6 +101,8 @@ A daily cron job (2 AM) recalculates risk for all pharmacies.
 
 Products are upserted by `(pharmacy_id, external_sku)`. Sales are created (not deduplicated — known bug).
 
+**Post-pivot target** (see `docs/ANALYSE-METIER.md`): rename `RiskAnalysis` → `StockAnalysis` (`days_of_cover`, `capital_locked`); add `Action`, `Association`, `Donation` (V1) and `Offer`, `Order`, `ClientB2C` (V2 click & collect); make `external_sku` required and `expiry_date` optional/deprecated.
+
 ## Environment Variables
 
 **Backend (.env)**
@@ -109,21 +117,26 @@ Products are upserted by `(pharmacy_id, external_sku)`. Sales are created (not d
 
 ## Known Technical Debt
 
-1. **Sales deduplication**: Re-importing sales doubles records → skews velocity
-2. **No test coverage**: Zero unit/integration tests
-3. **No real auth**: Multi-tenant isolation only via query param (insecure)
+1. **Sales deduplication**: Re-importing sales doubles records → skews velocity (US-11)
+2. **No test coverage**: Zero unit/integration tests despite the TDD requirement
+3. **No real auth**: Multi-tenant isolation only via query param (insecure — US-03/US-04)
+4. **Risk engine not yet pivoted**: code still uses `days_to_expiry`; target is `days_of_cover` (US-20)
+5. **Stock-truth tension**: LGO re-import is the source of truth, but click & collect (V2) holds live reservations between imports — unresolved (future ADR 0002)
 
 ## File Upload Format
 
-**Products CSV**: `external_sku` (req), `name` (req), `expiry_date` (req), `stock_quantity` (req), `unit_price` (req), `lot_number`, `category`, `brand`, `cost_price`
+**Products CSV**: `external_sku` (req), `name` (req), `stock_quantity` (req), `unit_price` (req), `cost_price` (needed for capital-locked), `lot_number`, `category`, `brand`, `expiry_date` (optional — not in real LGO exports)
 
 **Sales CSV**: `external_sku` (req), `sale_date` (req), `quantity_sold` (req), `unit_price_sold`
 
-## DDD Migration (In Progress)
+## DDD Migration (Abandoned)
 
-The backend is transitioning to Domain-Driven Design with:
+An earlier Domain-Driven Design migration (bounded contexts under `src/contexts/`) was **a test and has been abandoned**. Only stale compiled JS remains in `backend/dist/contexts/` — ignore it. The real, active code is in `backend/src/modules/`.
 
-- `backend/src/core/domain/` — Base classes for value objects and domain events
-- Eventual migration of modules to follow aggregate/repository patterns
+## Reference Docs
 
-See `docs/QUESTIONS-PROJET.md` for detailed architectural decisions.
+- `AGENT.md` — agent quick-start (current source of truth)
+- `docs/adr/0001-pivot-stock-dormant.md` — why the engine moves off expiry
+- `docs/ANALYSE-METIER.md` — actors, journeys, scope, target entities
+- `USER-STORIES.md` — backlog (mirrored in Notion)
+- `docs/QUESTIONS-PROJET.md` — scoping decisions

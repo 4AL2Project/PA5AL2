@@ -11,10 +11,10 @@ Savely transforme les **exports de stock et de ventes** d'une officine (CSV/XLSX
 
 ## 2. ⚠️ Pivot en cours (à connaître avant de toucher au moteur)
 
-Le produit a **pivoté** de la *péremption* (DLP) vers le *stock dormant* — parce que les exports LGO réels ne contiennent pas la date de péremption. Voir `docs/adr/0001-pivot-stock-dormant.md`.
+Le produit a **pivoté** de la _péremption_ (DLP) vers le _stock dormant_ — parce que les exports LGO réels ne contiennent pas la date de péremption. Voir `docs/adr/0001-pivot-stock-dormant.md`.
 
 - **Cible** : `days_of_cover = stock / velocity_30d` (seuils <60j safe / <180j high / ≥180j critical / velocity=0 → critical).
-- **MAIS le code actuel** (`backend/src/modules/analysis/risk-calculator.ts`) **implémente encore l'ancienne formule** basée sur `days_to_expiry`. La réécriture est la User Story **US-20** (statut *À faire*). Ne te fie pas à la formule du code comme si elle était la cible.
+- **MAIS le code actuel** (`backend/src/modules/analysis/risk-calculator.ts`) **implémente encore l'ancienne formule** basée sur `days_to_expiry`. La réécriture est la User Story **US-20** (statut _À faire_). Ne te fie pas à la formule du code comme si elle était la cible.
 
 ## 3. Architecture & où vit le vrai code
 
@@ -69,6 +69,7 @@ Schéma Prisma : `backend/src/database/prisma/schema.prisma` (passer `--schema` 
 
 Entités actuelles : `Pharmacy`, `Product`, `Sale`, `RiskAnalysis`.
 Cible post-pivot (cf. `docs/ANALYSE-METIER.md`) :
+
 - Renommer `RiskAnalysis` → `StockAnalysis` (`days_of_cover`, `capital_immobilise`).
 - Nouvelles : `Action`, `Association`, `Donation` (V1) ; `Offer`, `Order`, `ClientB2C` (V2 click & collect).
 - `Product.external_sku` doit devenir **obligatoire** ; `expiry_date` optionnel/déprécié ; `lot_number` optionnel.
@@ -76,20 +77,20 @@ Cible post-pivot (cf. `docs/ANALYSE-METIER.md`) :
 ## 7. Dette & pièges connus
 
 - 🐛 **Déduplication des ventes** : `upload.service.ts` fait un `create` sec sur les ventes → ré-importer un fichier **double les ventes** et fausse la vélocité (US-11). Le plus impactant.
-- ⚠️ **Vérité du stock** (tension non tranchée) : la source de vérité est l'export LGO ré-importé, mais le click & collect (V2) pose des *holds* vivants entre deux imports. Décision d'archi à acter (futur ADR 0002).
+- ⚠️ **Vérité du stock** (tension non tranchée) : la source de vérité est l'export LGO ré-importé, mais le click & collect (V2) pose des _holds_ vivants entre deux imports. Décision d'archi à acter (futur ADR 0002).
 - **Pas de tests** sur le code existant malgré l'exigence TDD.
 - **Périmètre** : V1 = Détection + Don + Admin minimal ; V2 feature-flaggé = Click & Collect. Ne pas démarrer du V2 sans confirmation.
 
 ## 8. Documents de référence
 
-| Doc | Contenu |
-| --- | --- |
-| `docs/adr/0001-pivot-stock-dormant.md` | Le *pourquoi* du pivot (décision d'archi) |
-| `docs/ANALYSE-METIER.md` | Acteurs, parcours, périmètre, entités — le *quoi* |
-| `USER-STORIES.md` | Backlog (aussi sur Notion : page « Savely — Suivi de Projet ») |
-| `docs/QUESTIONS-PROJET.md` | Décisions de cadrage (CSV, doublons, B2C, images…) |
-| `docs/RBAC-PATTERN.md`, `docs/API-CONTRACT.md`, `docs/HEBERGEMENT.md` | Patterns transverses |
-| `CLAUDE.md` | Guide historique — ⚠️ sections moteur/DDD obsolètes depuis le pivot |
+| Doc                                                                   | Contenu                                                             |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `docs/adr/0001-pivot-stock-dormant.md`                                | Le _pourquoi_ du pivot (décision d'archi)                           |
+| `docs/ANALYSE-METIER.md`                                              | Acteurs, parcours, périmètre, entités — le _quoi_                   |
+| `USER-STORIES.md`                                                     | Backlog (aussi sur Notion : page « Savely — Suivi de Projet »)      |
+| `docs/QUESTIONS-PROJET.md`                                            | Décisions de cadrage (CSV, doublons, B2C, images…)                  |
+| `docs/RBAC-PATTERN.md`, `docs/API-CONTRACT.md`, `docs/HEBERGEMENT.md` | Patterns transverses                                                |
+| `CLAUDE.md`                                                           | Guide historique — ⚠️ sections moteur/DDD obsolètes depuis le pivot |
 
 ## 9. Équipe (ownership)
 

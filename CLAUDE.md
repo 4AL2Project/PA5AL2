@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Savely** helps pharmacies recover the cash tied up in **dormant stock** (slow-moving parapharmacy/cosmetic products), by turning their LGO stock/sales exports into prioritized actions: B2C resale, charity donation (with Cerfa tax receipt), or no action. It uses a 3-level classification (critical/high/safe).
 
-> **Pivot (2026):** Savely originally targeted product *expiry* (DLP), but real LGO exports don't contain expiry dates. The product pivoted to **dormant-stock detection** (`days_of_cover`). See `docs/adr/0001-pivot-stock-dormant.md`. New agents should read **`AGENT.md`** first.
+> **Pivot (2026):** Savely originally targeted product _expiry_ (DLP), but real LGO exports don't contain expiry dates. The product pivoted to **dormant-stock detection** (`days_of_cover`). See `docs/adr/0001-pivot-stock-dormant.md`. New agents should read **`AGENT.md`** first.
 
 ## Architecture
 

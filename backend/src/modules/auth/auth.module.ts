@@ -5,6 +5,7 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { CompanySearchService } from './company-search.service';
 import { EmailService } from './email.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
@@ -21,6 +22,7 @@ import { MagicLinkService } from './magic-link.service';
     InvitationService,
     MagicLinkService,
     AdminService,
+    CompanySearchService,
     EmailService,
     JwtAuthGuard,
     RolesGuard,

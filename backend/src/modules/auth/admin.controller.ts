@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -17,9 +18,11 @@ import {
 } from '@nestjs/swagger';
 
 import { AdminService } from './admin.service';
+import { CompanySearchService } from './company-search.service';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { Roles } from './decorators/roles.decorator';
 import { CreatePharmacyDto, CreatePharmacyResponseDto } from './dto/admin.dto';
+import { CompanySuggestionDto } from './dto/company.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { UserRole } from './roles.enum';
@@ -30,7 +33,10 @@ import { UserRole } from './roles.enum';
 @Roles(UserRole.ADMIN_SAVELY)
 @Controller('api/admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly companySearch: CompanySearchService
+  ) {}
 
   @Get('pharmacies')
   @ApiOperation({
@@ -60,5 +66,16 @@ export class AdminController {
       dto.titulaire,
       user.role
     );
+  }
+
+  @Get('companies')
+  @ApiOperation({
+    summary:
+      'Recherche d’officines via recherche-entreprises.api.gouv.fr pour pré-remplir le formulaire (ADMIN_SAVELY uniquement)',
+  })
+  @ApiOkResponse({ type: [CompanySuggestionDto] })
+  @ApiForbiddenResponse({ description: 'Reserve aux administrateurs Savely' })
+  searchCompanies(@Query('q') q: string) {
+    return this.companySearch.search(q ?? '');
   }
 }

@@ -1,10 +1,9 @@
-import { Building2, MailCheck, Plus, Send } from 'lucide-react';
-import Link from 'next/link';
+import { Building2, MailCheck, Send } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
+import { AddPharmacyDrawer } from '@/components/admin/add-pharmacy-drawer';
 import { AdminShell } from '@/components/admin/admin-shell';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -71,14 +70,7 @@ export default async function AdminHomePage() {
           : `${pharmacies.length} officine${pharmacies.length > 1 ? 's' : ''} inscrite${pharmacies.length > 1 ? 's' : ''}.`
       }
       adminEmail={session.claims.email}
-      actions={
-        <Button asChild>
-          <Link href="/admin/pharmacies/new">
-            <Plus className="h-3.5 w-3.5" />
-            Inviter une officine
-          </Link>
-        </Button>
-      }
+      actions={<AddPharmacyDrawer />}
     >
       {pharmacies.length === 0 ? (
         <div className="rounded-xl border bg-card p-12 text-center">
@@ -92,12 +84,7 @@ export default async function AdminHomePage() {
             Créez la première officine pour démarrer. Un email d’activation sera
             envoyé à son titulaire.
           </p>
-          <Button asChild className="mt-5">
-            <Link href="/admin/pharmacies/new">
-              <Plus className="h-3.5 w-3.5" />
-              Inviter une officine
-            </Link>
-          </Button>
+          <AddPharmacyDrawer className="mt-5" />
         </div>
       ) : (
         <div className="rounded-xl border bg-card overflow-hidden">

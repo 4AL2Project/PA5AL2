@@ -2,6 +2,7 @@
  * US-11 — Déduplication des ventes (bug critique)
  * Clé de dédup : product_id + sale_date + quantity_sold
  */
+import { ActionsService } from '../actions/actions.service';
 import { AnalysisService } from '../analysis/analysis.service';
 import { UploadService } from './upload.service';
 
@@ -45,7 +46,7 @@ describe('UploadService — déduplication des ventes (US-11)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    analysisMock = new AnalysisService() as jest.Mocked<AnalysisService>;
+    analysisMock = new AnalysisService({} as ActionsService) as jest.Mocked<AnalysisService>;
     analysisMock.analyzeAllForPharmacy = jest
       .fn()
       .mockResolvedValue({ succeeded: 0, failed: 0, total: 0 });

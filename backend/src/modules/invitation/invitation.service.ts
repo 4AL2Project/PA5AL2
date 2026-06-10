@@ -3,9 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
-import { JwtPayload } from './auth.service';
-import { UserRole } from './roles.enum';
-import { hashToken } from './token.util';
+import { JwtPayload } from '../auth/jwt-payload';
+import { UserRole } from '../auth/roles.enum';
+import { hashToken } from '../auth/token.util';
 
 @Injectable()
 export class InvitationService {

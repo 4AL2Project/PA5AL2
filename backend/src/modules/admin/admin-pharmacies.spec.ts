@@ -3,9 +3,9 @@
  */
 import { ConflictException, ForbiddenException } from '@nestjs/common';
 
+import { UserRole } from '../auth/roles.enum';
+import { EmailService } from '../email/email.service';
 import { AdminService } from './admin.service';
-import { EmailService } from './email.service';
-import { UserRole } from './roles.enum';
 
 // --- Mocks -------------------------------------------------------------------
 jest.mock('../../database/client', () => ({

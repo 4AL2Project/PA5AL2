@@ -7,7 +7,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-import { PharmacyInputDto, TitulaireInputDto } from './admin.dto';
+import { PharmacyInputDto, TitulaireInputDto } from '../../admin/dto/admin.dto';
 
 export class AcceptInvitationTitulaireDto {
   @ApiProperty({ example: 'Marie' })

@@ -17,15 +17,15 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { UserRole } from '../auth/roles.enum';
+import { CompanySearchService } from '../company/company-search.service';
+import { CompanySuggestionDto } from '../company/dto/company.dto';
 import { AdminService } from './admin.service';
-import { CompanySearchService } from './company-search.service';
-import { CurrentUser } from './decorators/current-user.decorator';
-import { Roles } from './decorators/roles.decorator';
 import { CreatePharmacyDto, CreatePharmacyResponseDto } from './dto/admin.dto';
-import { CompanySuggestionDto } from './dto/company.dto';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { RolesGuard } from './guards/roles.guard';
-import { UserRole } from './roles.enum';
 
 @ApiTags('admin')
 @ApiBearerAuth()

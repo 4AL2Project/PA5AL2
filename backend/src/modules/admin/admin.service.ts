@@ -6,9 +6,9 @@ import {
 
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
-import { EmailService } from './email.service';
-import { UserRole } from './roles.enum';
-import { generateToken, hashToken } from './token.util';
+import { UserRole } from '../auth/roles.enum';
+import { generateToken, hashToken } from '../auth/token.util';
+import { EmailService } from '../email/email.service';
 
 export interface PharmacyListItem {
   pharmacy_id: string;

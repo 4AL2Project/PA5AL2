@@ -30,7 +30,7 @@ PA5AL2/
 └── data/       # CSV d'exemple pour tests
 ```
 
-- ✅ **Le vrai code backend est dans `backend/src/modules/`** (`analysis`, `upload`, `product`, `dashboard`).
+- ✅ **Le vrai code backend est dans `backend/src/modules/`** (`auth`, `analysis`, `upload`, `product`, `dashboard`).
 - ❌ **Ignore `backend/dist/contexts/`** : vestige compilé d'une migration DDD **abandonnée** (c'était un test). Ne pas s'en inspirer, ne pas le réactiver.
 
 ## 4. Setup & commandes (depuis la racine)
@@ -63,34 +63,37 @@ Schéma Prisma : `backend/src/database/prisma/schema.prisma` (passer `--schema` 
 - **En-tête de fichier** : chaque fichier source porte le nom du développeur + numéro de version (exigence école).
 - **GitFlow** : `main` / `dev` / `feat/*`. Branche par dev. Ne jamais committer/pusher sans demande explicite.
 - **TDD attendu** sur le backend (Jest). Le moteur de dormance (US-20) doit être couvert de tests (cas limites : velocity=0, stock=0, cost_price absent).
-- **Multi-tenant** : aujourd'hui via `?pharmacy_id=<uuid>` en query. ⚠️ **Pas encore d'auth réelle** (JWT/RBAC = US-03/US-04, non faits) → isolation non sécurisée pour l'instant.
+- **Auth & multi-tenant** : JWT + RBAC (`TITULAIRE`/`PREPARATEUR`/`ADMIN_SAVELY`) **faits & mergés** dans `src/modules/auth/` (guards `jwt-auth`/`roles`/`tenant`, interceptor `mask-financial`). Le `pharmacy_id` vient du **token** (`TenantGuard`). ⚠️ Quelques endpoints de lecture historiques acceptent encore `?pharmacy_id=` — à vérifier au cas par cas.
 
 ## 6. Modèle de domaine (réf. rapide)
 
-Entités actuelles : `Pharmacy`, `Product`, `Sale`, `RiskAnalysis`.
+Entités actuelles : `Pharmacy`, `User`, `AuthToken`, `Product`, `Sale`, `RiskAnalysis`.
+`Product.external_sku` est **déjà requis**, `lot_number` présent, `Sale` dédupliqué par `(product_id, sale_date, quantity_sold)`.
 Cible post-pivot (cf. `docs/ANALYSE-METIER.md`) :
 
 - Renommer `RiskAnalysis` → `StockAnalysis` (`days_of_cover`, `capital_immobilise`).
 - Nouvelles : `Action`, `Association`, `Donation` (V1) ; `Offer`, `Order`, `ClientB2C` (V2 click & collect).
-- `Product.external_sku` doit devenir **obligatoire** ; `expiry_date` optionnel/déprécié ; `lot_number` optionnel.
+- Rendre `expiry_date` optionnel/déprécié (reste à faire — US-02).
 
 ## 7. Dette & pièges connus
 
-- 🐛 **Déduplication des ventes** : `upload.service.ts` fait un `create` sec sur les ventes → ré-importer un fichier **double les ventes** et fausse la vélocité (US-11). Le plus impactant.
+- ⚠️ **Moteur non pivoté** : `risk-calculator.ts` calcule encore sur `days_to_expiry` ; cible `days_of_cover` (US-20).
 - ⚠️ **Vérité du stock** (tension non tranchée) : la source de vérité est l'export LGO ré-importé, mais le click & collect (V2) pose des _holds_ vivants entre deux imports. Décision d'archi à acter (futur ADR 0002).
-- **Pas de tests** sur le code existant malgré l'exigence TDD.
+- ⚠️ **Endpoints `?pharmacy_id=` historiques** : certains précèdent le `TenantGuard` — vérifier l'isolation par controller.
 - **Périmètre** : V1 = Détection + Don + Admin minimal ; V2 feature-flaggé = Click & Collect. Ne pas démarrer du V2 sans confirmation.
+
+_Faits (plus de la dette) : dédup ventes (US-11), Jest + 73 tests + CI (US-06), auth JWT/RBAC/Swagger (US-03/04/05), walking skeleton (US-07)._
 
 ## 8. Documents de référence
 
-| Doc                                                                   | Contenu                                                             |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| `docs/adr/0001-pivot-stock-dormant.md`                                | Le _pourquoi_ du pivot (décision d'archi)                           |
-| `docs/ANALYSE-METIER.md`                                              | Acteurs, parcours, périmètre, entités — le _quoi_                   |
-| `USER-STORIES.md`                                                     | Backlog (aussi sur Notion : page « Savely — Suivi de Projet »)      |
-| `docs/QUESTIONS-PROJET.md`                                            | Décisions de cadrage (CSV, doublons, B2C, images…)                  |
-| `docs/RBAC-PATTERN.md`, `docs/API-CONTRACT.md`, `docs/HEBERGEMENT.md` | Patterns transverses                                                |
-| `CLAUDE.md`                                                           | Guide historique — ⚠️ sections moteur/DDD obsolètes depuis le pivot |
+| Doc                                                                   | Contenu                                                          |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `docs/adr/0001-pivot-stock-dormant.md`                                | Le _pourquoi_ du pivot (décision d'archi)                        |
+| `docs/ANALYSE-METIER.md`                                              | Acteurs, parcours, périmètre, entités — le _quoi_                |
+| `USER-STORIES.md`                                                     | Backlog (aussi sur Notion : page « Savely — Suivi de Projet »)   |
+| `docs/QUESTIONS-PROJET.md`                                            | Décisions de cadrage (CSV, doublons, B2C, images…)               |
+| `docs/RBAC-PATTERN.md`, `docs/API-CONTRACT.md`, `docs/HEBERGEMENT.md` | Patterns transverses                                             |
+| `CLAUDE.md`                                                           | Guide Claude Code — aligné sur le pivot (pointe vers ce fichier) |
 
 ## 9. Équipe (ownership)
 

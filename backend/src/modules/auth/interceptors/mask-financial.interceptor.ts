@@ -8,7 +8,7 @@ import { Request } from 'express';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
-import { JwtPayload } from '../auth.service';
+import { JwtPayload } from '../jwt-payload';
 import { FINANCIAL_FIELDS, UserRole } from '../roles.enum';
 
 const FIELDS_TO_MASK = new Set<string>(FINANCIAL_FIELDS);

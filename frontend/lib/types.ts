@@ -6,9 +6,9 @@ export interface Product {
   sku: string;
   category: string;
   riskLevel: RiskLevel;
-  riskScore: number;
+  daysOfCover: number;
+  capitalLocked: number;
   stock: number;
-  expirationDate: string;
   recoveryValue: number;
   action: string;
   lastUpdated: string;
@@ -19,6 +19,7 @@ export interface AnalysisStats {
   criticalProducts: number;
   highProducts: number;
   safeProducts: number;
+  totalCapitalLocked: number;
   totalRecoveryValue: number;
   lastAnalysisDate: string;
 }

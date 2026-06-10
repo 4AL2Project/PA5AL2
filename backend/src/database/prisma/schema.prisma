@@ -100,13 +100,10 @@ model RiskAnalysis {
   pharmacy_id        String
   analysis_date      DateTime @default(now())
 
-  days_to_expiry     Int
+  days_of_cover      Float
   sales_velocity_30d Float
-  expected_sales     Float
-  excess_stock       Int
-  risk_score         Float
+  capital_locked     Float
   risk_level         String
-
   suggested_action   String
   recoverable_value  Float
   potential_loss     Float

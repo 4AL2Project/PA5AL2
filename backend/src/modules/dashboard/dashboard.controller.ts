@@ -47,13 +47,17 @@ export class DashboardController {
       summary: {
         total_products: analyses.length,
         by_risk_level: byLevel,
+        total_capital_locked: analyses.reduce(
+          (s, a) => s + a.capital_locked,
+          0,
+        ),
         total_recoverable: analyses.reduce(
           (s, a) => s + a.recoverable_value,
-          0
+          0,
         ),
         total_potential_loss: analyses.reduce(
           (s, a) => s + a.potential_loss,
-          0
+          0,
         ),
       },
     };

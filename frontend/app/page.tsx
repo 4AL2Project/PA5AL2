@@ -1,8 +1,8 @@
 import {
   AlertTriangle,
   ArrowRight,
-  Euro,
   Package,
+  TrendingDown,
   TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -80,10 +80,10 @@ export default async function DashboardPage() {
             iconClassName="bg-risk-high/10 text-risk-high"
           />
           <StatsCard
-            title="Valeur Recuperable"
-            value={formatCurrency(stats.totalRecoveryValue)}
-            description="Potentiel de recuperation"
-            icon={Euro}
+            title="Capital immobilise"
+            value={formatCurrency(stats.totalCapitalLocked)}
+            description="Stock dormant valorise"
+            icon={TrendingDown}
             iconClassName="bg-risk-low/10 text-risk-low"
           />
         </div>

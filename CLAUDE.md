@@ -21,9 +21,9 @@ PA5AL2/                # pnpm workspace (monorepo)
 └── docker-compose.yml # PostgreSQL (root)
 ```
 
-**Multi-tenant design**: API endpoints currently require `?pharmacy_id=<uuid>` (no real auth yet — see Known Technical Debt).
+**Auth & multi-tenant**: JWT + RBAC (`TITULAIRE`/`PREPARATEUR`/`ADMIN_SAVELY`) implemented in `src/modules/auth/` (guards: `jwt-auth`, `roles`, `tenant`; `mask-financial` interceptor). `pharmacy_id` is derived from the token (`TenantGuard`). ⚠️ Some legacy read endpoints still accept `?pharmacy_id=` — verify per controller.
 
-**Where the real code lives**: `backend/src/modules/` (`analysis`, `upload`, `product`, `dashboard`). **Ignore `backend/dist/contexts/`** — stale build of an abandoned DDD experiment.
+**Where the real code lives**: `backend/src/modules/` (`auth`, `analysis`, `upload`, `product`, `dashboard`). **Ignore `backend/dist/contexts/`** — stale build of an abandoned DDD experiment.
 
 ## Development Commands
 
@@ -95,13 +95,15 @@ A daily cron job (2 AM) recalculates risk for all pharmacies.
 ## Data Models (Prisma)
 
 - **Pharmacy**: Multi-tenant anchor (email, subscription_tier)
-- **Product**: SKU, stock, expiry_date, prices (linked to Pharmacy)
+- **User**: belongs to a Pharmacy; role (TITULAIRE/PREPARATEUR/ADMIN_SAVELY), bcrypt password, status
+- **AuthToken**: magic-link / refresh tokens (hashed)
+- **Product**: `external_sku` (**required**), `lot_number`, stock, expiry_date, prices
 - **Sale**: Historical sales for velocity calculation
 - **RiskAnalysis**: Computed risk scores per product per day
 
-Products are upserted by `(pharmacy_id, external_sku)`. Sales are created (not deduplicated — known bug).
+Products are upserted by `(pharmacy_id, external_sku)`. Sales are upserted (deduplicated) by `(product_id, sale_date, quantity_sold)` — US-11 done.
 
-**Post-pivot target** (see `docs/ANALYSE-METIER.md`): rename `RiskAnalysis` → `StockAnalysis` (`days_of_cover`, `capital_locked`); add `Action`, `Association`, `Donation` (V1) and `Offer`, `Order`, `ClientB2C` (V2 click & collect); make `external_sku` required and `expiry_date` optional/deprecated.
+**Post-pivot target** (see `docs/ANALYSE-METIER.md`): rename `RiskAnalysis` → `StockAnalysis` (`days_of_cover`, `capital_locked`); add `Action`, `Association`, `Donation` (V1) and `Offer`, `Order`, `ClientB2C` (V2 click & collect). `external_sku` is already required; still TODO: make `expiry_date` optional/deprecated (US-02).
 
 ## Environment Variables
 
@@ -117,11 +119,11 @@ Products are upserted by `(pharmacy_id, external_sku)`. Sales are created (not d
 
 ## Known Technical Debt
 
-1. **Sales deduplication**: Re-importing sales doubles records → skews velocity (US-11)
-2. **No test coverage**: Zero unit/integration tests despite the TDD requirement
-3. **No real auth**: Multi-tenant isolation only via query param (insecure — US-03/US-04)
-4. **Risk engine not yet pivoted**: code still uses `days_to_expiry`; target is `days_of_cover` (US-20)
-5. **Stock-truth tension**: LGO re-import is the source of truth, but click & collect (V2) holds live reservations between imports — unresolved (future ADR 0002)
+1. **Risk engine not yet pivoted**: code still uses `days_to_expiry`; target is `days_of_cover` (US-20)
+2. **Stock-truth tension**: LGO re-import is the source of truth, but click & collect (V2) holds live reservations between imports — unresolved (future ADR 0002)
+3. **Legacy `?pharmacy_id=` endpoints**: some read endpoints predate the `TenantGuard` — verify isolation per controller
+
+_Resolved (no longer debt): sales dedup (US-11), test harness + CI (US-06), JWT auth + RBAC + Swagger (US-03/04/05)._
 
 ## File Upload Format
 
@@ -140,3 +142,5 @@ An earlier Domain-Driven Design migration (bounded contexts under `src/contexts/
 - `docs/ANALYSE-METIER.md` — actors, journeys, scope, target entities
 - `USER-STORIES.md` — backlog (mirrored in Notion)
 - `docs/QUESTIONS-PROJET.md` — scoping decisions
+- `docs/WALKING-SKELETON.md` — end-to-end reference flow (US-07)
+- `docs/TESTING.md` — how to write & run tests

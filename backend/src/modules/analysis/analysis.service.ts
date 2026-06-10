@@ -84,6 +84,10 @@ export class AnalysisService {
       critical: analyses.filter((a) => a.risk_level === 'critical').length,
       high: analyses.filter((a) => a.risk_level === 'high').length,
       safe: analyses.filter((a) => a.risk_level === 'safe').length,
+      total_capital_locked: analyses.reduce(
+        (sum, a) => sum + a.capital_locked,
+        0,
+      ),
       recoverable: analyses.reduce((sum, a) => sum + a.recoverable_value, 0),
       potential_loss: analyses.reduce((sum, a) => sum + a.potential_loss, 0),
     };

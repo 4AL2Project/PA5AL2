@@ -368,14 +368,19 @@ export class AdminService {
     }
     const titulaire = pharmacy.users[0];
     if (!titulaire) {
-      throw new BadRequestException('Aucun gerant a inviter pour cette officine');
+      throw new BadRequestException(
+        'Aucun gerant a inviter pour cette officine'
+      );
     }
     if (titulaire.status === 'ACTIVE') {
       throw new BadRequestException('Le gerant a deja active son compte');
     }
 
     await this.issueInvitation(titulaire.user_id, titulaire.email);
-    return { titulaire_email: titulaire.email, titulaire_status: titulaire.status };
+    return {
+      titulaire_email: titulaire.email,
+      titulaire_status: titulaire.status,
+    };
   }
 
   // ─── Preparateurs ────────────────────────────────────────────────────────────

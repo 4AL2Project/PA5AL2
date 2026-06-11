@@ -1,57 +1,18 @@
-import { Building2, MailCheck, Send } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 import { redirect } from 'next/navigation';
 
 import { AddPharmacyDrawer } from '@/components/admin/add-pharmacy-drawer';
 import { AdminShell } from '@/components/admin/admin-shell';
-import { Badge } from '@/components/ui/badge';
+import { PharmacyRow } from '@/components/admin/pharmacy-row';
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { PharmacyListItem } from '@/lib/auth';
+import { fetchPharmacies } from '@/lib/admin';
 import { getSession } from '@/lib/session';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
-
-async function fetchPharmacies(
-  accessToken: string
-): Promise<PharmacyListItem[]> {
-  const res = await fetch(`${API_BASE}/api/admin/pharmacies`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    cache: 'no-store',
-  });
-  if (!res.ok) return [];
-  const payload = (await res.json()) as
-    | { success: true; data: { pharmacies?: PharmacyListItem[] } }
-    | { success: false; error: unknown }
-    | { pharmacies?: PharmacyListItem[] };
-  const data =
-    'success' in payload && payload.success
-      ? payload.data
-      : 'pharmacies' in payload
-        ? payload
-        : { pharmacies: [] };
-  return data.pharmacies ?? [];
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
-
-function titulaireName(item: PharmacyListItem): string {
-  if (!item.titulaire) return '—';
-  const { first_name, last_name } = item.titulaire;
-  const full = [first_name, last_name].filter(Boolean).join(' ').trim();
-  return full || item.titulaire.email;
-}
 
 export default async function AdminHomePage() {
   const session = await getSession();
@@ -103,41 +64,7 @@ export default async function AdminHomePage() {
             </TableHeader>
             <TableBody>
               {pharmacies.map((p) => (
-                <TableRow key={p.pharmacy_id}>
-                  <TableCell className="text-xs font-medium">
-                    <div className="flex flex-col">
-                      <span>{p.name}</span>
-                      {p.address && (
-                        <span className="text-[10px] text-muted-foreground">
-                          {p.address}
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground font-mono">
-                    {p.siret ?? '—'}
-                  </TableCell>
-                  <TableCell className="text-xs">{titulaireName(p)}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {p.titulaire?.email ?? '—'}
-                  </TableCell>
-                  <TableCell>
-                    {p.titulaire?.status === 'ACTIVE' ? (
-                      <Badge variant="secondary" className="gap-1 text-[10px]">
-                        <MailCheck className="h-3 w-3" />
-                        Actif
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="gap-1 text-[10px]">
-                        <Send className="h-3 w-3" />
-                        Invité
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-xs text-muted-foreground text-right">
-                    {formatDate(p.created_at)}
-                  </TableCell>
-                </TableRow>
+                <PharmacyRow key={p.pharmacy_id} item={p} />
               ))}
             </TableBody>
           </Table>

@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import {
   ApiGoneResponse,
   ApiOkResponse,
@@ -22,9 +14,7 @@ import {
   RegisterDto,
   RegisteredUserDto,
 } from './dto/auth.dto';
-import { AcceptInvitationDto, InvitationInfoDto } from './dto/invitation.dto';
 import { MagicLinkRequestDto, MagicLinkVerifyDto } from './dto/magic-link.dto';
-import { InvitationService } from './invitation.service';
 import { MagicLinkService } from './magic-link.service';
 
 @ApiTags('auth')
@@ -32,7 +22,6 @@ import { MagicLinkService } from './magic-link.service';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly invitationService: InvitationService,
     private readonly magicLinkService: MagicLinkService
   ) {}
 
@@ -67,32 +56,6 @@ export class AuthController {
   @ApiOkResponse({ type: AuthTokensDto })
   refresh(@Body() dto: RefreshDto) {
     return this.authService.refresh(dto.refresh_token);
-  }
-
-  // ─── Invitation flow ──────────────────────────────────────────────────────
-
-  @Get('invitations/:token')
-  @ApiOperation({
-    summary: "Recuperer les infos pre-remplies d'une invitation",
-  })
-  @ApiOkResponse({ type: InvitationInfoDto })
-  @ApiGoneResponse({ description: 'Token expire ou deja consomme' })
-  getInvitation(@Param('token') token: string) {
-    return this.invitationService.getByToken(token);
-  }
-
-  @Post('invitations/:token/accept')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary: 'Finaliser le compte et retourner une paire de tokens JWT',
-  })
-  @ApiOkResponse({ type: AuthTokensDto })
-  @ApiGoneResponse({ description: 'Token expire ou deja consomme' })
-  acceptInvitation(
-    @Param('token') token: string,
-    @Body() dto: AcceptInvitationDto
-  ) {
-    return this.invitationService.accept(token, dto);
   }
 
   // ─── Magic link flow ──────────────────────────────────────────────────────

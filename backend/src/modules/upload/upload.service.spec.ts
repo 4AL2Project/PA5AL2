@@ -46,7 +46,9 @@ describe('UploadService — déduplication des ventes (US-11)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    analysisMock = new AnalysisService({} as ActionsService) as jest.Mocked<AnalysisService>;
+    analysisMock = new AnalysisService(
+      {} as ActionsService
+    ) as jest.Mocked<AnalysisService>;
     analysisMock.analyzeAllForPharmacy = jest
       .fn()
       .mockResolvedValue({ succeeded: 0, failed: 0, total: 0 });

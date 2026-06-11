@@ -43,11 +43,16 @@ export class AnalysisService {
       await this.actionsService.removeIfExists(productId);
     } else {
       const type = result.risk_level === 'critical' ? 'DON' : 'B2C';
-      await this.actionsService.upsertFromAnalysis(productId, pharmacyId, type, {
-        days_of_cover: result.days_of_cover,
-        capital_locked: result.capital_locked,
-        recoverable_value: result.recoverable_value,
-      });
+      await this.actionsService.upsertFromAnalysis(
+        productId,
+        pharmacyId,
+        type,
+        {
+          days_of_cover: result.days_of_cover,
+          capital_locked: result.capital_locked,
+          recoverable_value: result.recoverable_value,
+        }
+      );
     }
 
     return analysis;

@@ -13,6 +13,7 @@ model Pharmacy {
   email             String    @unique
   address           String?
   siret             String?
+  status            String    @default("ACTIVE")
   created_at        DateTime  @default(now())
   last_upload_at    DateTime?
   subscription_tier String    @default("free")

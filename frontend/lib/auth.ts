@@ -53,19 +53,35 @@ export interface CreatePharmacyResponse {
   titulaire_status: string;
 }
 
+export interface TitulaireSummary {
+  first_name: string | null;
+  last_name: string | null;
+  email: string;
+  phone: string | null;
+  status: 'PENDING' | 'ACTIVE' | string;
+}
+
 export interface PharmacyListItem {
   pharmacy_id: string;
   name: string;
   address: string | null;
   siret: string | null;
+  status: 'ACTIVE' | 'INACTIVE' | string;
   created_at: string;
-  titulaire: {
-    first_name: string | null;
-    last_name: string | null;
-    email: string;
-    phone: string | null;
-    status: 'PENDING' | 'ACTIVE' | string;
-  } | null;
+  titulaire: TitulaireSummary | null;
+}
+
+export interface Preparateur {
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string;
+  phone: string | null;
+  status: 'PENDING' | 'ACTIVE' | string;
+}
+
+export interface PharmacyDetail extends PharmacyListItem {
+  preparateurs: Preparateur[];
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';

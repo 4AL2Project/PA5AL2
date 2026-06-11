@@ -70,7 +70,10 @@ export class AdminController {
   @ApiOkResponse({ type: PharmacyDetailDto })
   @ApiForbiddenResponse({ description: 'Reserve aux administrateurs Savely' })
   @ApiNotFoundResponse({ description: 'Officine introuvable' })
-  getPharmacy(@Param('id') id: string, @CurrentUser() user: { role: UserRole }) {
+  getPharmacy(
+    @Param('id') id: string,
+    @CurrentUser() user: { role: UserRole }
+  ) {
     return this.adminService.getPharmacy(id, user.role);
   }
 
@@ -144,7 +147,7 @@ export class AdminController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary:
-      "Ajouter un preparateur de commande a une officine (ADMIN_SAVELY uniquement)",
+      'Ajouter un preparateur de commande a une officine (ADMIN_SAVELY uniquement)',
   })
   @ApiCreatedResponse({ type: PreparateurDto })
   @ApiForbiddenResponse({ description: 'Reserve aux administrateurs Savely' })

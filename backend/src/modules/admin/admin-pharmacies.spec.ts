@@ -251,9 +251,9 @@ describe('AdminService.getPharmacy', () => {
   });
 
   it('leve ForbiddenException si le role acteur nest pas ADMIN_SAVELY', async () => {
-    await expect(
-      service.getPharmacy('p1', UserRole.TITULAIRE)
-    ).rejects.toThrow(ForbiddenException);
+    await expect(service.getPharmacy('p1', UserRole.TITULAIRE)).rejects.toThrow(
+      ForbiddenException
+    );
     expect(prisma.pharmacy.findUnique).not.toHaveBeenCalled();
   });
 
@@ -431,9 +431,7 @@ describe('AdminService.resendInvitation', () => {
   it('regenere un token et renvoie le mail pour un gerant PENDING', async () => {
     prisma.pharmacy.findUnique.mockResolvedValue({
       pharmacy_id: 'p1',
-      users: [
-        { user_id: 'u1', email: 'marie@a.fr', status: 'PENDING' },
-      ],
+      users: [{ user_id: 'u1', email: 'marie@a.fr', status: 'PENDING' }],
     });
 
     await service.resendInvitation('p1', UserRole.ADMIN_SAVELY);

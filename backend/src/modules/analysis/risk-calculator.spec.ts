@@ -4,7 +4,7 @@ import { calculateRisk, DormanceResult, RiskLevel } from './risk-calculator';
 
 function makeSales(
   quantityPerDay: number,
-  days = 30,
+  days = 30
 ): { sale_date: Date; quantity_sold: number }[] {
   return Array.from({ length: days }, (_, i) => {
     const d = new Date();
@@ -39,7 +39,7 @@ describe('calculateRisk — stock dormant (US-20)', () => {
       // velocity ≈ 0.1/j → cover = 60/0.1 = 600j
       const result = calculateRisk(
         { ...BASE_PRODUCT, stock_quantity: 60 },
-        makeSales(0.1),
+        makeSales(0.1)
       );
       expect(result.risk_level).toBe<RiskLevel>('critical');
     });
@@ -56,7 +56,7 @@ describe('calculateRisk — stock dormant (US-20)', () => {
     it('stock = 0, velocity > 0 → safe (cover = 0)', () => {
       const result = calculateRisk(
         { ...BASE_PRODUCT, stock_quantity: 0 },
-        makeSales(1),
+        makeSales(1)
       );
       expect(result.days_of_cover).toBe(0);
       expect(result.risk_level).toBe<RiskLevel>('safe');
@@ -65,7 +65,7 @@ describe('calculateRisk — stock dormant (US-20)', () => {
     it('cost_price absent → utilise unit_price pour capital_locked', () => {
       const result = calculateRisk(
         { stock_quantity: 10, unit_price: 20, cost_price: null },
-        [],
+        []
       );
       expect(result.capital_locked).toBeCloseTo(200, 2);
     });
@@ -85,7 +85,7 @@ describe('calculateRisk — stock dormant (US-20)', () => {
       const result = calculateRisk(BASE_PRODUCT, []);
       expect(result.recoverable_value).toBeCloseTo(
         BASE_PRODUCT.stock_quantity * BASE_PRODUCT.unit_price * 0.5,
-        2,
+        2
       );
     });
 
@@ -98,17 +98,17 @@ describe('calculateRisk — stock dormant (US-20)', () => {
   describe('actions suggérées', () => {
     it('safe → Aucune action', () => {
       expect(calculateRisk(BASE_PRODUCT, makeSales(2)).suggested_action).toBe(
-        'Aucune action',
+        'Aucune action'
       );
     });
     it('high → Mise en vente B2C', () => {
-      expect(
-        calculateRisk(BASE_PRODUCT, makeSales(0.5)).suggested_action,
-      ).toBe('Mise en vente B2C');
+      expect(calculateRisk(BASE_PRODUCT, makeSales(0.5)).suggested_action).toBe(
+        'Mise en vente B2C'
+      );
     });
     it('critical → Don associatif', () => {
       expect(calculateRisk(BASE_PRODUCT, []).suggested_action).toBe(
-        'Don associatif',
+        'Don associatif'
       );
     });
   });

@@ -441,7 +441,9 @@ function calculateRisk(
     capital_locked: capitalLocked,
     risk_level: level,
     suggested_action: deriveAction(level),
-    recoverable_value: parseFloat((stock * unitPrice * recoveryRate).toFixed(2)),
+    recoverable_value: parseFloat(
+      (stock * unitPrice * recoveryRate).toFixed(2)
+    ),
     potential_loss: capitalLocked,
   };
 }

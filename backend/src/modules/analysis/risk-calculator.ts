@@ -57,7 +57,7 @@ export function calculateRisk(product: Product, sales: Sale[]): DormanceResult {
 
   const costPerUnit = product.cost_price ?? product.unit_price;
   const capitalLocked = parseFloat(
-    (product.stock_quantity * costPerUnit).toFixed(2),
+    (product.stock_quantity * costPerUnit).toFixed(2)
   );
 
   const level = classify(velocity, daysOfCover);
@@ -65,7 +65,7 @@ export function calculateRisk(product: Product, sales: Sale[]): DormanceResult {
   // 50 % du prix de vente estimé récupérable en vente B2C soldée ou don
   const recoveryRate = level === 'safe' ? 0 : 0.5;
   const recoverableValue = parseFloat(
-    (product.stock_quantity * product.unit_price * recoveryRate).toFixed(2),
+    (product.stock_quantity * product.unit_price * recoveryRate).toFixed(2)
   );
 
   return {

@@ -20,7 +20,10 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { UserRole } from '../auth/roles.enum';
-import { AssociationsService, CreateAssociationDto } from './associations.service';
+import {
+  AssociationsService,
+  CreateAssociationDto,
+} from './associations.service';
 
 @ApiTags('associations')
 @ApiBearerAuth('access-token')
@@ -31,7 +34,9 @@ export class AssociationsController {
 
   @Get()
   @Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR, UserRole.ADMIN_SAVELY)
-  @ApiOperation({ summary: 'Lister les associations (optionnel: filtre géoloc)' })
+  @ApiOperation({
+    summary: 'Lister les associations (optionnel: filtre géoloc)',
+  })
   @ApiQuery({ name: 'lat', required: false, type: Number })
   @ApiQuery({ name: 'lng', required: false, type: Number })
   @ApiQuery({ name: 'radius', required: false, type: Number })
@@ -52,7 +57,7 @@ export class AssociationsController {
 
   @Get(':id')
   @Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR, UserRole.ADMIN_SAVELY)
-  @ApiOperation({ summary: 'Détail d\'une association' })
+  @ApiOperation({ summary: "Détail d'une association" })
   findOne(@Param('id') id: string) {
     return this.associationsService.findOne(id);
   }

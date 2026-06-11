@@ -8,7 +8,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import { Roles } from '../auth/decorators/roles.decorator';
 import { TenantPharmacyId } from '../auth/decorators/tenant-pharmacy.decorator';
@@ -16,7 +21,11 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { UserRole } from '../auth/roles.enum';
-import { CreateDonationDto, DonationStatus, DonationsService } from './donations.service';
+import {
+  CreateDonationDto,
+  DonationsService,
+  DonationStatus,
+} from './donations.service';
 
 @ApiTags('donations')
 @ApiBearerAuth('access-token')
@@ -33,7 +42,10 @@ export class DonationsController {
     @TenantPharmacyId() pharmacyId: string,
     @Query('status') status?: string
   ) {
-    return this.donationsService.listForPharmacy(pharmacyId, status as DonationStatus | undefined);
+    return this.donationsService.listForPharmacy(
+      pharmacyId,
+      status as DonationStatus | undefined
+    );
   }
 
   @Post()
@@ -47,19 +59,13 @@ export class DonationsController {
 
   @Patch(':id/accept')
   @ApiOperation({ summary: 'Association accepte le don' })
-  accept(
-    @Param('id') id: string,
-    @TenantPharmacyId() pharmacyId: string
-  ) {
+  accept(@Param('id') id: string, @TenantPharmacyId() pharmacyId: string) {
     return this.donationsService.accept(id, pharmacyId);
   }
 
   @Patch(':id/refuse')
   @ApiOperation({ summary: 'Association refuse le don' })
-  refuse(
-    @Param('id') id: string,
-    @TenantPharmacyId() pharmacyId: string
-  ) {
+  refuse(@Param('id') id: string, @TenantPharmacyId() pharmacyId: string) {
     return this.donationsService.refuse(id, pharmacyId);
   }
 
@@ -67,10 +73,7 @@ export class DonationsController {
   @ApiOperation({
     summary: 'Marquer le don comme retiré — génère le numéro Cerfa',
   })
-  withdraw(
-    @Param('id') id: string,
-    @TenantPharmacyId() pharmacyId: string
-  ) {
+  withdraw(@Param('id') id: string, @TenantPharmacyId() pharmacyId: string) {
     return this.donationsService.withdraw(id, pharmacyId);
   }
 }

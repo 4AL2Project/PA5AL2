@@ -39,7 +39,9 @@ const PRODUCT_ID = 'prod-uuid-1';
 const ASSOCIATION_ID = 'asso-uuid-1';
 const DONATION_ID = 'don-uuid-1';
 
-function makeProduct(overrides: Partial<{ stock_quantity: number; unit_price: number }> = {}) {
+function makeProduct(
+  overrides: Partial<{ stock_quantity: number; unit_price: number }> = {}
+) {
   return {
     product_id: PRODUCT_ID,
     pharmacy_id: PHARMACY_ID,
@@ -84,7 +86,9 @@ describe('DonationsService — create (US-30)', () => {
   });
 
   it('crée un don PROPOSEE avec la valeur estimée correcte (quantité × prix unitaire)', async () => {
-    prisma.product.findFirst.mockResolvedValue(makeProduct({ unit_price: 5.5 }));
+    prisma.product.findFirst.mockResolvedValue(
+      makeProduct({ unit_price: 5.5 })
+    );
     prisma.association.findUnique.mockResolvedValue(makeAssociation());
     prisma.donation.create.mockResolvedValue({
       ...makeDonation('PROPOSEE'),
@@ -136,7 +140,9 @@ describe('DonationsService — create (US-30)', () => {
   });
 
   it('lève BadRequestException si la quantité est 0', async () => {
-    prisma.product.findFirst.mockResolvedValue(makeProduct({ stock_quantity: 10 }));
+    prisma.product.findFirst.mockResolvedValue(
+      makeProduct({ stock_quantity: 10 })
+    );
     prisma.association.findUnique.mockResolvedValue(makeAssociation());
 
     await expect(
@@ -149,7 +155,9 @@ describe('DonationsService — create (US-30)', () => {
   });
 
   it('lève BadRequestException si la quantité dépasse le stock disponible', async () => {
-    prisma.product.findFirst.mockResolvedValue(makeProduct({ stock_quantity: 5 }));
+    prisma.product.findFirst.mockResolvedValue(
+      makeProduct({ stock_quantity: 5 })
+    );
     prisma.association.findUnique.mockResolvedValue(makeAssociation());
 
     await expect(
@@ -162,9 +170,13 @@ describe('DonationsService — create (US-30)', () => {
   });
 
   it('accepte une quantité égale au stock total (cas limite)', async () => {
-    prisma.product.findFirst.mockResolvedValue(makeProduct({ stock_quantity: 5 }));
+    prisma.product.findFirst.mockResolvedValue(
+      makeProduct({ stock_quantity: 5 })
+    );
     prisma.association.findUnique.mockResolvedValue(makeAssociation());
-    prisma.donation.create.mockResolvedValue(makeDonation('PROPOSEE', { quantity: 5 }));
+    prisma.donation.create.mockResolvedValue(
+      makeDonation('PROPOSEE', { quantity: 5 })
+    );
 
     await expect(
       service.create(PHARMACY_ID, {
@@ -203,13 +215,17 @@ describe('DonationsService — machine à états (US-30)', () => {
   it("lève BadRequestException si on tente d'accepter un don déjà ACCEPTEE", async () => {
     prisma.donation.findFirst.mockResolvedValue(makeDonation('ACCEPTEE'));
 
-    await expect(service.accept(DONATION_ID, PHARMACY_ID)).rejects.toThrow(BadRequestException);
+    await expect(service.accept(DONATION_ID, PHARMACY_ID)).rejects.toThrow(
+      BadRequestException
+    );
   });
 
   it("lève BadRequestException si on tente d'accepter un don REFUSEE", async () => {
     prisma.donation.findFirst.mockResolvedValue(makeDonation('REFUSEE'));
 
-    await expect(service.accept(DONATION_ID, PHARMACY_ID)).rejects.toThrow(BadRequestException);
+    await expect(service.accept(DONATION_ID, PHARMACY_ID)).rejects.toThrow(
+      BadRequestException
+    );
   });
 
   it('refuse un don PROPOSEE → statut passe à REFUSEE', async () => {
@@ -220,17 +236,21 @@ describe('DonationsService — machine à états (US-30)', () => {
     expect(result.status).toBe('REFUSEE');
   });
 
-  it("lève BadRequestException si on tente de refuser un don ACCEPTEE", async () => {
+  it('lève BadRequestException si on tente de refuser un don ACCEPTEE', async () => {
     prisma.donation.findFirst.mockResolvedValue(makeDonation('ACCEPTEE'));
 
-    await expect(service.refuse(DONATION_ID, PHARMACY_ID)).rejects.toThrow(BadRequestException);
+    await expect(service.refuse(DONATION_ID, PHARMACY_ID)).rejects.toThrow(
+      BadRequestException
+    );
   });
 
   it('marque un don ACCEPTEE → RETIREE et génère un numéro Cerfa non vide', async () => {
     prisma.donation.findFirst.mockResolvedValue(makeDonation('ACCEPTEE'));
     prisma.donation.update.mockImplementation(
       ({ data }: { data: Record<string, unknown> }) =>
-        Promise.resolve(makeDonation('RETIREE', { cerfa_number: data['cerfa_number'] }))
+        Promise.resolve(
+          makeDonation('RETIREE', { cerfa_number: data['cerfa_number'] })
+        )
     );
 
     const result = await service.withdraw(DONATION_ID, PHARMACY_ID);
@@ -238,22 +258,28 @@ describe('DonationsService — machine à états (US-30)', () => {
     expect(result.cerfa_number).toBeTruthy();
   });
 
-  it("lève BadRequestException si on tente de retirer un don PROPOSEE (pas encore accepté)", async () => {
+  it('lève BadRequestException si on tente de retirer un don PROPOSEE (pas encore accepté)', async () => {
     prisma.donation.findFirst.mockResolvedValue(makeDonation('PROPOSEE'));
 
-    await expect(service.withdraw(DONATION_ID, PHARMACY_ID)).rejects.toThrow(BadRequestException);
+    await expect(service.withdraw(DONATION_ID, PHARMACY_ID)).rejects.toThrow(
+      BadRequestException
+    );
   });
 
-  it("lève BadRequestException si on tente de retirer un don déjà RETIREE", async () => {
+  it('lève BadRequestException si on tente de retirer un don déjà RETIREE', async () => {
     prisma.donation.findFirst.mockResolvedValue(makeDonation('RETIREE'));
 
-    await expect(service.withdraw(DONATION_ID, PHARMACY_ID)).rejects.toThrow(BadRequestException);
+    await expect(service.withdraw(DONATION_ID, PHARMACY_ID)).rejects.toThrow(
+      BadRequestException
+    );
   });
 
-  it("lève NotFoundException si la pharmacie ne possède pas le don (isolation tenant)", async () => {
+  it('lève NotFoundException si la pharmacie ne possède pas le don (isolation tenant)', async () => {
     prisma.donation.findFirst.mockResolvedValue(null);
 
-    await expect(service.accept(DONATION_ID, OTHER_PHARMACY_ID)).rejects.toThrow(NotFoundException);
+    await expect(
+      service.accept(DONATION_ID, OTHER_PHARMACY_ID)
+    ).rejects.toThrow(NotFoundException);
   });
 });
 
@@ -331,9 +357,24 @@ describe('DonationsService — getBilan (US-30)', () => {
 
   it('calcule total_value_donated uniquement sur les dons RETIREE', async () => {
     prisma.donation.findMany.mockResolvedValue([
-      { status: 'RETIREE', estimated_value: 100, association_id: 'asso-1', product_id: 'prod-1' },
-      { status: 'RETIREE', estimated_value: 250, association_id: 'asso-2', product_id: 'prod-2' },
-      { status: 'PROPOSEE', estimated_value: 999, association_id: 'asso-3', product_id: 'prod-3' },
+      {
+        status: 'RETIREE',
+        estimated_value: 100,
+        association_id: 'asso-1',
+        product_id: 'prod-1',
+      },
+      {
+        status: 'RETIREE',
+        estimated_value: 250,
+        association_id: 'asso-2',
+        product_id: 'prod-2',
+      },
+      {
+        status: 'PROPOSEE',
+        estimated_value: 999,
+        association_id: 'asso-3',
+        product_id: 'prod-3',
+      },
     ]);
 
     const bilan = await service.getBilan(PHARMACY_ID);
@@ -346,9 +387,24 @@ describe('DonationsService — getBilan (US-30)', () => {
 
   it('déduplique les associations et produits dans les totaux RSE', async () => {
     prisma.donation.findMany.mockResolvedValue([
-      { status: 'RETIREE', estimated_value: 50, association_id: 'asso-1', product_id: 'prod-1' },
-      { status: 'RETIREE', estimated_value: 75, association_id: 'asso-1', product_id: 'prod-1' },
-      { status: 'RETIREE', estimated_value: 30, association_id: 'asso-2', product_id: 'prod-2' },
+      {
+        status: 'RETIREE',
+        estimated_value: 50,
+        association_id: 'asso-1',
+        product_id: 'prod-1',
+      },
+      {
+        status: 'RETIREE',
+        estimated_value: 75,
+        association_id: 'asso-1',
+        product_id: 'prod-1',
+      },
+      {
+        status: 'RETIREE',
+        estimated_value: 30,
+        association_id: 'asso-2',
+        product_id: 'prod-2',
+      },
     ]);
 
     const bilan = await service.getBilan(PHARMACY_ID);
@@ -359,10 +415,30 @@ describe('DonationsService — getBilan (US-30)', () => {
 
   it('compte tous les statuts dans donations_by_status', async () => {
     prisma.donation.findMany.mockResolvedValue([
-      { status: 'PROPOSEE', estimated_value: 10, association_id: 'a1', product_id: 'p1' },
-      { status: 'ACCEPTEE', estimated_value: 20, association_id: 'a2', product_id: 'p2' },
-      { status: 'RETIREE', estimated_value: 30, association_id: 'a3', product_id: 'p3' },
-      { status: 'REFUSEE', estimated_value: 40, association_id: 'a4', product_id: 'p4' },
+      {
+        status: 'PROPOSEE',
+        estimated_value: 10,
+        association_id: 'a1',
+        product_id: 'p1',
+      },
+      {
+        status: 'ACCEPTEE',
+        estimated_value: 20,
+        association_id: 'a2',
+        product_id: 'p2',
+      },
+      {
+        status: 'RETIREE',
+        estimated_value: 30,
+        association_id: 'a3',
+        product_id: 'p3',
+      },
+      {
+        status: 'REFUSEE',
+        estimated_value: 40,
+        association_id: 'a4',
+        product_id: 'p4',
+      },
     ]);
 
     const bilan = await service.getBilan(PHARMACY_ID);

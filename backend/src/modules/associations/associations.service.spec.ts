@@ -64,14 +64,14 @@ describe('AssociationsService — findNearby (US-30)', () => {
     service = new AssociationsService();
   });
 
-  it("retourne une asso à 0 km (même point GPS que la pharmacie)", async () => {
+  it('retourne une asso à 0 km (même point GPS que la pharmacie)', async () => {
     prisma.association.findMany.mockResolvedValue([makeAsso()]);
 
     const results = await service.findNearby(PARIS_LAT, PARIS_LNG);
     expect(results).toHaveLength(1);
   });
 
-  it("retourne une asso à ~45 km (Versailles → Paris)", async () => {
+  it('retourne une asso à ~45 km (Versailles → Paris)', async () => {
     // Versailles : 48.8044, 2.1204 → ~20 km de Paris, dans le rayon 50 km
     prisma.association.findMany.mockResolvedValue([
       makeAsso({ lat: 48.8044, lng: 2.1204, city: 'Versailles' }),
@@ -81,7 +81,7 @@ describe('AssociationsService — findNearby (US-30)', () => {
     expect(results).toHaveLength(1);
   });
 
-  it("exclut une asso à plus de 50 km (Lyon ~400 km de Paris)", async () => {
+  it('exclut une asso à plus de 50 km (Lyon ~400 km de Paris)', async () => {
     // Lyon : 45.7640, 4.8357 → ~400 km de Paris
     prisma.association.findMany.mockResolvedValue([
       makeAsso({ lat: 45.764, lng: 4.8357, city: 'Lyon' }),
@@ -91,7 +91,7 @@ describe('AssociationsService — findNearby (US-30)', () => {
     expect(results).toHaveLength(0);
   });
 
-  it("exclut les assos sans coordonnées GPS", async () => {
+  it('exclut les assos sans coordonnées GPS', async () => {
     prisma.association.findMany.mockResolvedValue([
       makeAsso({ lat: null, lng: null }),
     ]);
@@ -100,11 +100,26 @@ describe('AssociationsService — findNearby (US-30)', () => {
     expect(results).toHaveLength(0);
   });
 
-  it("trie et retourne uniquement les assos dans le rayon parmi plusieurs", async () => {
+  it('trie et retourne uniquement les assos dans le rayon parmi plusieurs', async () => {
     prisma.association.findMany.mockResolvedValue([
-      makeAsso({ association_id: 'a1', lat: PARIS_LAT, lng: PARIS_LNG, city: 'Paris' }),      // ~0 km ✓
-      makeAsso({ association_id: 'a2', lat: 48.8044, lng: 2.1204, city: 'Versailles' }),        // ~20 km ✓
-      makeAsso({ association_id: 'a3', lat: 45.764, lng: 4.8357, city: 'Lyon' }),               // ~400 km ✗
+      makeAsso({
+        association_id: 'a1',
+        lat: PARIS_LAT,
+        lng: PARIS_LNG,
+        city: 'Paris',
+      }), // ~0 km ✓
+      makeAsso({
+        association_id: 'a2',
+        lat: 48.8044,
+        lng: 2.1204,
+        city: 'Versailles',
+      }), // ~20 km ✓
+      makeAsso({
+        association_id: 'a3',
+        lat: 45.764,
+        lng: 4.8357,
+        city: 'Lyon',
+      }), // ~400 km ✗
     ]);
 
     const results = await service.findNearby(PARIS_LAT, PARIS_LNG);
@@ -112,7 +127,7 @@ describe('AssociationsService — findNearby (US-30)', () => {
     expect(results.map((a) => a.association_id)).toEqual(['a1', 'a2']);
   });
 
-  it("respecte un rayon personnalisé (ex: 10 km)", async () => {
+  it('respecte un rayon personnalisé (ex: 10 km)', async () => {
     // Versailles ~20 km → hors rayon 10 km
     prisma.association.findMany.mockResolvedValue([
       makeAsso({ lat: 48.8044, lng: 2.1204, city: 'Versailles' }),
@@ -122,7 +137,7 @@ describe('AssociationsService — findNearby (US-30)', () => {
     expect(results).toHaveLength(0);
   });
 
-  it("retourne une liste vide si aucune association active", async () => {
+  it('retourne une liste vide si aucune association active', async () => {
     prisma.association.findMany.mockResolvedValue([]);
 
     const results = await service.findNearby(PARIS_LAT, PARIS_LNG);
@@ -162,7 +177,9 @@ describe('AssociationsService — CRUD (US-30)', () => {
   it("lève NotFoundException si l'association est introuvable", async () => {
     prisma.association.findUnique.mockResolvedValue(null);
 
-    await expect(service.findOne('unknown-id')).rejects.toThrow(NotFoundException);
+    await expect(service.findOne('unknown-id')).rejects.toThrow(
+      NotFoundException
+    );
   });
 
   it('désactive une association (soft delete)', async () => {

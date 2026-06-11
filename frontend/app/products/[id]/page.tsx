@@ -1,10 +1,8 @@
 'use client';
 
 import {
-  AlertTriangle,
   ArrowLeft,
   Boxes,
-  Calendar,
   ChevronRight,
   Clock,
   Euro,
@@ -26,7 +24,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { fetchLatestAnalysis } from '@/lib/api';
 import { Product } from '@/lib/types';
@@ -101,10 +98,9 @@ export default function ProductDetailPage({
       year: 'numeric',
     });
 
-  const daysLeft = Math.ceil(
-    (new Date(product.expirationDate).getTime() - Date.now()) /
-      (1000 * 60 * 60 * 24)
-  );
+  const formatDaysOfCover = (days: number) => {
+    return days >= 9999 ? '∞' : `${Math.round(days)} j`;
+  };
 
   return (
     <DashboardLayout title={product.name} description={`SKU: ${product.sku}`}>
@@ -153,8 +149,8 @@ export default function ProductDetailPage({
           <Card className="border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-medium">
-                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-                Score de risque
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                Couverture stock
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -163,15 +159,13 @@ export default function ProductDetailPage({
                   <span
                     className={`text-4xl font-bold ${riskColors[product.riskLevel]}`}
                   >
-                    {product.riskScore}
+                    {formatDaysOfCover(product.daysOfCover)}
                   </span>
-                  <span className="text-muted-foreground">/ 100</span>
                 </div>
-                <Progress value={product.riskScore} className="h-2" />
                 <p className="text-sm text-muted-foreground">
-                  {product.riskScore >= 70
+                  {product.daysOfCover <= 30
                     ? 'Stock critique — don associatif recommande'
-                    : product.riskScore >= 30
+                    : product.daysOfCover <= 90
                       ? 'Ecoulement insuffisant — mise en vente B2C'
                       : 'Ventes suffisantes — aucune action requise'}
                 </p>
@@ -182,29 +176,20 @@ export default function ProductDetailPage({
           <Card className="border-border/50">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-base font-medium">
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-                Date d&apos;expiration
+                <TrendingDown className="h-4 w-4 text-muted-foreground" />
+                Capital immobilise
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-baseline gap-2">
-                  <span
-                    className={`text-4xl font-bold ${daysLeft <= 7 ? 'text-risk-critical' : daysLeft <= 14 ? 'text-risk-high' : 'text-foreground'}`}
-                  >
-                    {daysLeft}
+                  <span className="text-4xl font-bold text-risk-critical">
+                    {formatCurrency(product.capitalLocked)}
                   </span>
-                  <span className="text-muted-foreground">jours restants</span>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Expire le {formatDate(product.expirationDate)}
+                  Capital bloque dans le stock dormant
                 </p>
-                {daysLeft <= 7 && (
-                  <div className="flex items-center gap-2 text-sm text-risk-critical">
-                    <AlertTriangle className="h-4 w-4" />
-                    Expiration imminente
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -234,7 +219,7 @@ export default function ProductDetailPage({
                 Action recommandee
               </CardTitle>
               <CardDescription>
-                Basee sur l&apos;analyse du risque et la date d&apos;expiration
+                Basee sur l&apos;analyse du stock dormant et la couverture
               </CardDescription>
             </CardHeader>
             <CardContent>

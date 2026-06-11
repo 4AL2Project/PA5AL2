@@ -406,9 +406,11 @@ function computeVelocity(saleDates: Date[], quantities: number[]): number {
   return total / 30;
 }
 
-function classifyRisk(score: number): string {
-  if (score > 0.7) return 'safe';
-  if (score > 0.3) return 'high';
+// US-20 : classification basée sur days_of_cover (pivot stock dormant)
+function classifyDormance(velocity: number, daysOfCover: number): string {
+  if (velocity === 0) return 'critical';
+  if (daysOfCover < 60) return 'safe';
+  if (daysOfCover < 180) return 'high';
   return 'critical';
 }
 
@@ -422,34 +424,27 @@ function calculateRisk(
   stock: number,
   unitPrice: number,
   costPrice: number,
-  expiryDate: Date,
+  _expiryDate: Date,
   saleDates: Date[],
   quantities: number[]
 ) {
   const velocity = computeVelocity(saleDates, quantities);
-  const now = new Date();
-  const days = Math.max(
-    0,
-    Math.ceil((expiryDate.getTime() - now.getTime()) / 86400000)
-  );
-  const expected = velocity * days;
-  const excess = Math.max(0, stock - expected);
-  const score = stock > 0 ? Math.min(1, expected / stock) : 0;
-  const level = classifyRisk(score);
+  const rawCover = velocity > 0 ? stock / velocity : 9999;
+  const daysOfCover = parseFloat(Math.min(rawCover, 9999).toFixed(1));
+  const capitalLocked = parseFloat((stock * costPrice).toFixed(2));
+  const level = classifyDormance(velocity, daysOfCover);
   const recoveryRate = level === 'safe' ? 0 : 0.5;
 
   return {
-    days_to_expiry: days,
-    sales_velocity_30d: velocity,
-    expected_sales: expected,
-    excess_stock: Math.round(excess),
-    risk_score: parseFloat(score.toFixed(4)),
+    days_of_cover: daysOfCover,
+    sales_velocity_30d: parseFloat(velocity.toFixed(4)),
+    capital_locked: capitalLocked,
     risk_level: level,
     suggested_action: deriveAction(level),
     recoverable_value: parseFloat(
-      (excess * unitPrice * recoveryRate).toFixed(2)
+      (stock * unitPrice * recoveryRate).toFixed(2)
     ),
-    potential_loss: parseFloat((excess * costPrice).toFixed(2)),
+    potential_loss: capitalLocked,
   };
 }
 

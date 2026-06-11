@@ -1,3 +1,5 @@
+// Roger — v1.0
+// Controller dons médicamenteux — US-30 Don associatif
 import {
   Body,
   Controller,
@@ -46,6 +48,12 @@ export class DonationsController {
       pharmacyId,
       status as DonationStatus | undefined
     );
+  }
+
+  @Get('bilan')
+  @ApiOperation({ summary: 'Bilan RSE des dons de la pharmacie' })
+  getBilan(@TenantPharmacyId() pharmacyId: string) {
+    return this.donationsService.getBilan(pharmacyId);
   }
 
   @Post()

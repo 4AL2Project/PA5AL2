@@ -451,4 +451,34 @@ describe('DonationsService — getBilan (US-30)', () => {
       REFUSEE: 1,
     });
   });
+
+  it('ne compte que les dons RETIREE dans les totaux RSE', async () => {
+    prisma.donation.findMany.mockResolvedValue([
+      {
+        status: 'PROPOSEE',
+        estimated_value: 500,
+        association_id: 'asso-1',
+        product_id: 'prod-1',
+      },
+      {
+        status: 'ACCEPTEE',
+        estimated_value: 300,
+        association_id: 'asso-2',
+        product_id: 'prod-2',
+      },
+      {
+        status: 'REFUSEE',
+        estimated_value: 200,
+        association_id: 'asso-3',
+        product_id: 'prod-3',
+      },
+    ]);
+
+    const bilan = await service.getBilan(PHARMACY_ID);
+
+    expect(bilan.total_withdrawn).toBe(0);
+    expect(bilan.total_value_donated).toBe(0);
+    expect(bilan.total_associations).toBe(0);
+    expect(bilan.total_products_donated).toBe(0);
+  });
 });

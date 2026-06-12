@@ -76,4 +76,10 @@ export class DonationsController {
   withdraw(@Param('id') id: string, @TenantPharmacyId() pharmacyId: string) {
     return this.donationsService.withdraw(id, pharmacyId);
   }
+
+  @Get('bilan')
+  @ApiOperation({ summary: 'Bilan RSE des dons de la pharmacie' })
+  bilan(@TenantPharmacyId() pharmacyId: string) {
+    return this.donationsService.getBilan(pharmacyId);
+  }
 }

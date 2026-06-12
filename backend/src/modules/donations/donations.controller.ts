@@ -60,7 +60,7 @@ export class DonationsController {
 
   @Get('bilan')
   @ApiOperation({ summary: 'Bilan RSE des dons de la pharmacie' })
-  bilan(@TenantPharmacyId() pharmacyId: string) {
+  getBilan(@TenantPharmacyId() pharmacyId: string) {
     return this.donationsService.getBilan(pharmacyId);
   }
 

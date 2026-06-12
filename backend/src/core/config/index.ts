@@ -18,10 +18,7 @@ export const config = {
     magicLinkRateLimitWindowMs: 15 * 60 * 1000, // 15min window
   },
   email: {
-    host: process.env.SMTP_HOST || 'localhost',
-    port: parseInt(process.env.SMTP_PORT || '1025', 10),
-    user: process.env.SMTP_USER || '',
-    pass: process.env.SMTP_PASS || '',
+    apiKey: process.env.RESEND_API_KEY || '',
     from: process.env.EMAIL_FROM || 'noreply@savely.fr',
   },
   frontUrl: process.env.FRONT_URL || 'http://localhost:3000',

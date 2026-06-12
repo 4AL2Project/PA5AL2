@@ -93,6 +93,42 @@ export class DonationsService {
     });
   }
 
+  async getBilan(pharmacyId: string) {
+    const donations = await prisma.donation.findMany({
+      where: { pharmacy_id: pharmacyId },
+      select: {
+        status: true,
+        estimated_value: true,
+        association_id: true,
+        product_id: true,
+      },
+    });
+
+    const withdrawn = donations.filter((d) => d.status === 'RETIREE');
+
+    const donations_by_status = {
+      PROPOSEE: 0,
+      ACCEPTEE: 0,
+      RETIREE: 0,
+      REFUSEE: 0,
+    };
+    for (const d of donations) {
+      donations_by_status[d.status as DonationStatus]++;
+    }
+
+    return {
+      total_donations: donations.length,
+      total_withdrawn: withdrawn.length,
+      total_value_donated: withdrawn.reduce(
+        (sum, d) => sum + d.estimated_value,
+        0
+      ),
+      total_associations: new Set(withdrawn.map((d) => d.association_id)).size,
+      total_products_donated: new Set(withdrawn.map((d) => d.product_id)).size,
+      donations_by_status,
+    };
+  }
+
   private async assertOwner(
     donationId: string,
     pharmacyId: string,

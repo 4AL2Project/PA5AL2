@@ -65,7 +65,7 @@ model Product {
   name           String
   category       String?
   brand          String?
-  expiry_date    DateTime
+  expiry_date    DateTime?
   stock_quantity Int
   unit_price     Float
   cost_price     Float?

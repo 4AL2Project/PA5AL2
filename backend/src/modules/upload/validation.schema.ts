@@ -6,7 +6,7 @@ export interface ProductRow {
   name: string;
   category?: string;
   brand?: string;
-  expiry_date: string;
+  expiry_date?: string;
   stock_quantity: number;
   unit_price: number;
   cost_price?: number;
@@ -34,8 +34,8 @@ export function validateProductRow(row: RawRow, index: number): ProductRow {
 
   if (!row.external_sku) errors.push(`Row ${index}: missing external_sku`);
   if (!row.name) errors.push(`Row ${index}: missing product name`);
-  if (!row.expiry_date || !isValidDate(String(row.expiry_date)))
-    errors.push(`Row ${index}: invalid or missing expiry_date`);
+  if (row.expiry_date && !isValidDate(String(row.expiry_date)))
+    errors.push(`Row ${index}: invalid expiry_date format`);
 
   const stock = parseInt(String(row.stock_quantity ?? ''), 10);
   if (isNaN(stock) || stock < 0)
@@ -53,7 +53,7 @@ export function validateProductRow(row: RawRow, index: number): ProductRow {
     name: String(row.name),
     category: row.category ? String(row.category) : undefined,
     brand: row.brand ? String(row.brand) : undefined,
-    expiry_date: String(row.expiry_date),
+    expiry_date: row.expiry_date ? String(row.expiry_date) : undefined,
     stock_quantity: stock,
     unit_price: price,
     cost_price: row.cost_price ? parseFloat(String(row.cost_price)) : undefined,

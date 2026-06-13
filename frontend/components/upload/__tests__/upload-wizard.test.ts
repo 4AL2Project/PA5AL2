@@ -64,7 +64,13 @@ describe('detectLgo — Critère : détection format LGO', () => {
 
   describe('Format générique Savely', () => {
     it('retourne lgo=null pour les colonnes standard Savely', () => {
-      const headers = ['external_sku', 'name', 'expiry_date', 'stock_quantity', 'unit_price'];
+      const headers = [
+        'external_sku',
+        'name',
+        'expiry_date',
+        'stock_quantity',
+        'unit_price',
+      ];
       const result = detectLgo(headers);
       expect(result.lgo).toBeNull();
     });
@@ -82,7 +88,9 @@ describe('detectLgo — Critère : détection format LGO', () => {
       const headers = ['col_inconnue', 'autre_colonne'];
       const result = detectLgo(headers);
       expect(result.lgo).toBeNull();
-      expect(result.unknownHeaders).toEqual(expect.arrayContaining(['col_inconnue', 'autre_colonne']));
+      expect(result.unknownHeaders).toEqual(
+        expect.arrayContaining(['col_inconnue', 'autre_colonne'])
+      );
     });
   });
 });
@@ -106,7 +114,7 @@ describe('UploadWizard — Critère : import en 3 étapes guidées', () => {
       expect(true).toBe(true);
     });
 
-    it('rejette les fichiers non-CSV/XLSX et affiche un message d\'erreur', () => {
+    it("rejette les fichiers non-CSV/XLSX et affiche un message d'erreur", () => {
       // render(<UploadWizard />)
       // const input = screen.getByLabelText('Sélectionner un fichier')
       // fireEvent.change(input, { target: { files: [new File([''], 'doc.pdf', { type: 'application/pdf' })] } })
@@ -145,7 +153,7 @@ describe('UploadWizard — Critère : import en 3 étapes guidées', () => {
       expect(true).toBe(true);
     });
 
-    it('mappe et affiche les colonnes source → cible dans l\'en-tête du tableau', async () => {
+    it("mappe et affiche les colonnes source → cible dans l'en-tête du tableau", async () => {
       // CSV Pharmagest → colonne "Code CIP" doit afficher "→ external_sku"
       // await waitFor(() => expect(screen.getByText('→ external_sku')).toBeInTheDocument())
       expect(true).toBe(true);
@@ -159,21 +167,21 @@ describe('UploadWizard — Critère : import en 3 étapes guidées', () => {
   });
 
   describe('Step 3 — Import & résultat', () => {
-    it('affiche une barre de progression pendant l\'upload', async () => {
+    it("affiche une barre de progression pendant l'upload", async () => {
       // Mock uploadFile → pending
       // fireEvent.click(screen.getByRole('button', { name: 'Importer' }))
       // expect(screen.getByRole('progressbar')).toBeInTheDocument()
       expect(true).toBe(true);
     });
 
-    it('affiche le résumé d\'import (insérés / mis à jour) après succès', async () => {
+    it("affiche le résumé d'import (insérés / mis à jour) après succès", async () => {
       // Mock uploadFile → { products: { inserted: 20, updated: 5 } }
       // await waitFor(() => expect(screen.getByText('20 insérés')).toBeInTheDocument())
       // expect(screen.getByText('5 mis à jour')).toBeInTheDocument()
       expect(true).toBe(true);
     });
 
-    it('affiche un message d\'erreur en cas d\'échec de l\'API', async () => {
+    it("affiche un message d'erreur en cas d'échec de l'API", async () => {
       // Mock uploadFile → throw Error('API 500')
       // await waitFor(() => expect(screen.getByText(/Erreur d'import/)).toBeInTheDocument())
       expect(true).toBe(true);

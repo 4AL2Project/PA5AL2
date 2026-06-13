@@ -71,7 +71,9 @@ export default function UploadPage() {
                     <FileText className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-medium">{upload.name}</p>
+                    <p className="truncate text-sm font-medium">
+                      {upload.name}
+                    </p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
                       {formatDate(upload.date)}

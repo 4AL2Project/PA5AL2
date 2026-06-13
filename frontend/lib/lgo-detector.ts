@@ -94,7 +94,7 @@ const LGO_PROFILES: LgoProfile[] = [
       'prix unitaire': 'unit_price',
       'prix de vente ht': 'unit_price',
       'cout unitaire': 'cost_price',
-      'dlp': 'expiry_date',
+      dlp: 'expiry_date',
       'date limite peremption': 'expiry_date',
       rayon: 'category',
       labo: 'brand',

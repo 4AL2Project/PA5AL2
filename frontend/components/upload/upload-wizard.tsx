@@ -15,8 +15,8 @@ import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { uploadFile } from '@/lib/api';
-import { ParsedPreview,previewFile } from '@/lib/file-preview';
-import { DetectionResult,detectLgo } from '@/lib/lgo-detector';
+import { ParsedPreview, previewFile } from '@/lib/file-preview';
+import { DetectionResult, detectLgo } from '@/lib/lgo-detector';
 import { cn } from '@/lib/utils';
 
 type WizardStep = 1 | 2 | 3;
@@ -38,7 +38,11 @@ interface WizardState {
   uploadProgress: number;
   uploadStatus: 'idle' | 'uploading' | 'success' | 'error';
   uploadError: string | null;
-  uploadResult: { inserted?: number; updated?: number; skipped?: number } | null;
+  uploadResult: {
+    inserted?: number;
+    updated?: number;
+    skipped?: number;
+  } | null;
 }
 
 const INITIAL_STATE: WizardState = {
@@ -240,7 +244,14 @@ interface Step2Props {
   onConfirm: () => void;
 }
 
-function Step2({ file, preview, detection, fileType, onBack, onConfirm }: Step2Props) {
+function Step2({
+  file,
+  preview,
+  detection,
+  fileType,
+  onBack,
+  onConfirm,
+}: Step2Props) {
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -253,7 +264,9 @@ function Step2({ file, preview, detection, fileType, onBack, onConfirm }: Step2P
       : ['external_sku', 'sale_date', 'quantity_sold'];
 
   const mappedValues = Object.values(detection.mappedHeaders);
-  const missingRequired = requiredFields.filter((f) => !mappedValues.includes(f));
+  const missingRequired = requiredFields.filter(
+    (f) => !mappedValues.includes(f)
+  );
 
   return (
     <div className="space-y-4">
@@ -276,8 +289,7 @@ function Step2({ file, preview, detection, fileType, onBack, onConfirm }: Step2P
         <div className="flex items-start gap-2 rounded-md border border-amber-300/50 bg-amber-50/50 dark:bg-amber-950/20 p-3 text-sm text-amber-700 dark:text-amber-400">
           <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
           <span>
-            Colonnes manquantes :{' '}
-            <strong>{missingRequired.join(', ')}</strong>
+            Colonnes manquantes : <strong>{missingRequired.join(', ')}</strong>
           </span>
         </div>
       )}
@@ -285,7 +297,8 @@ function Step2({ file, preview, detection, fileType, onBack, onConfirm }: Step2P
       {/* Preview table */}
       <div>
         <p className="text-xs font-medium text-muted-foreground mb-2 uppercase tracking-wide">
-          Aperçu des données ({Math.min(preview.rows.length, 5)} premières lignes)
+          Aperçu des données ({Math.min(preview.rows.length, 5)} premières
+          lignes)
         </p>
         <div className="overflow-x-auto rounded-lg border border-border/60">
           <table className="w-full text-xs">
@@ -358,7 +371,15 @@ interface Step3Props {
   onSuccess?: () => void;
 }
 
-function Step3({ status, progress, file, result, error, onReset, onSuccess }: Step3Props) {
+function Step3({
+  status,
+  progress,
+  file,
+  result,
+  error,
+  onReset,
+  onSuccess,
+}: Step3Props) {
   return (
     <div className="space-y-4 min-h-[200px] flex flex-col items-center justify-center text-center">
       {status === 'uploading' && (
@@ -433,7 +454,10 @@ function Step3({ status, progress, file, result, error, onReset, onSuccess }: St
 
 // ─── Wizard ───────────────────────────────────────────────────────────────────
 
-export function UploadWizard({ defaultFileType = 'products', onSuccess }: UploadWizardProps) {
+export function UploadWizard({
+  defaultFileType = 'products',
+  onSuccess,
+}: UploadWizardProps) {
   const [state, setState] = useState<WizardState>({
     ...INITIAL_STATE,
     fileType: defaultFileType,
@@ -449,7 +473,9 @@ export function UploadWizard({ defaultFileType = 'products', onSuccess }: Upload
       const detection = detectLgo(preview.headers);
       update({ file, preview, detection, step: 2, parseError: null });
     } catch {
-      update({ parseError: 'Impossible de lire le fichier. Vérifiez le format.' });
+      update({
+        parseError: 'Impossible de lire le fichier. Vérifiez le format.',
+      });
     }
   }, []);
 
@@ -469,7 +495,11 @@ export function UploadWizard({ defaultFileType = 'products', onSuccess }: Upload
       clearInterval(timer);
       const result =
         (state.fileType === 'products' ? data.products : data.sales) ?? null;
-      update({ uploadStatus: 'success', uploadProgress: 100, uploadResult: result });
+      update({
+        uploadStatus: 'success',
+        uploadProgress: 100,
+        uploadResult: result,
+      });
     } catch (err) {
       clearInterval(timer);
       update({
@@ -502,7 +532,9 @@ export function UploadWizard({ defaultFileType = 'products', onSuccess }: Upload
           preview={state.preview}
           detection={state.detection}
           fileType={state.fileType}
-          onBack={() => update({ step: 1, file: null, preview: null, detection: null })}
+          onBack={() =>
+            update({ step: 1, file: null, preview: null, detection: null })
+          }
           onConfirm={handleConfirm}
         />
       )}

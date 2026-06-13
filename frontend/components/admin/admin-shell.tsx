@@ -43,7 +43,7 @@ export function AdminShell({
     <div className="flex min-h-svh bg-background">
       <aside className="flex w-56 flex-col border-r border-border/50 bg-card">
         <div className="flex h-14 items-center gap-2 px-4">
-          <SavelyLogo className="w-16 h-auto" />
+          <SavelyLogo className="w-24 h-auto" />
           <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
             Back-office
           </span>

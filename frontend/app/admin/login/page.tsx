@@ -78,7 +78,7 @@ export default function AdminLoginPage() {
             onBlur={() => setEmailTouched(true)}
             disabled={submitting}
             aria-invalid={emailError}
-            className="h-11 rounded-2xl border border-transparent bg-[rgba(64,64,64,0.08)] px-6 text-sm placeholder:text-[#C0C3C3] focus-visible:ring-0 focus-visible:ring-offset-0 aria-invalid:border-destructive aria-invalid:bg-destructive/5"
+            className="h-11 rounded-2xl border border-transparent bg-[rgba(64,64,64,0.08)] px-6 text-sm placeholder:text-[#C0C3C3] aria-invalid:border-destructive aria-invalid:bg-destructive/5"
           />
           {emailError && (
             <p className="text-xs text-destructive pl-1" role="alert">
@@ -98,7 +98,7 @@ export default function AdminLoginPage() {
               onBlur={() => setPasswordTouched(true)}
               disabled={submitting}
               aria-invalid={passwordError}
-              className="h-11 rounded-2xl border border-transparent bg-[rgba(64,64,64,0.08)] px-6 pr-12 text-sm placeholder:text-[#C0C3C3] focus-visible:ring-0 focus-visible:ring-offset-0 aria-invalid:border-destructive aria-invalid:bg-destructive/5"
+              className="h-11 rounded-2xl border border-transparent bg-[rgba(64,64,64,0.08)] px-6 pr-12 text-sm placeholder:text-[#C0C3C3] aria-invalid:border-destructive aria-invalid:bg-destructive/5"
             />
             <button
               type="button"

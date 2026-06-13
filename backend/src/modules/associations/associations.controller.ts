@@ -35,24 +35,28 @@ export class AssociationsController {
   @Get()
   @Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR, UserRole.ADMIN_SAVELY)
   @ApiOperation({
-    summary: 'Lister les associations (optionnel: filtre géoloc)',
+    summary: 'Lister les associations (optionnel: filtre géoloc / catégorie)',
   })
   @ApiQuery({ name: 'lat', required: false, type: Number })
   @ApiQuery({ name: 'lng', required: false, type: Number })
   @ApiQuery({ name: 'radius', required: false, type: Number })
+  @ApiQuery({ name: 'category', required: false, type: String })
   find(
     @Query('lat') lat?: string,
     @Query('lng') lng?: string,
-    @Query('radius') radius?: string
+    @Query('radius') radius?: string,
+    @Query('category') category?: string
   ) {
+    const opts = { category };
     if (lat && lng) {
       return this.associationsService.findNearby(
         parseFloat(lat),
         parseFloat(lng),
-        radius ? parseFloat(radius) : 50
+        radius ? parseFloat(radius) : 50,
+        opts
       );
     }
-    return this.associationsService.findAll();
+    return this.associationsService.findAll(opts);
   }
 
   @Get(':id')

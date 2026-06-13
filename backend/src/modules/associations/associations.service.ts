@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { prisma } from '../../database/client';
+import { GeocodingService } from './geocoding.service';
 
 export interface CreateAssociationDto {
   name: string;
@@ -14,18 +15,45 @@ export interface CreateAssociationDto {
   contact_phone?: string;
 }
 
+export interface FindAllOptions {
+  category?: string;
+}
+
 @Injectable()
 export class AssociationsService {
+  constructor(private readonly geocoding: GeocodingService) {}
+
   async create(dto: CreateAssociationDto) {
-    return prisma.association.create({ data: dto });
+    let { lat, lng } = dto;
+    if (lat == null || lng == null) {
+      const coords = await this.geocoding.geocode(
+        dto.address,
+        dto.postal_code,
+        dto.city
+      );
+      if (coords) {
+        lat = coords.lat;
+        lng = coords.lng;
+      }
+    }
+    return prisma.association.create({ data: { ...dto, lat, lng } });
   }
 
-  async findAll() {
-    return prisma.association.findMany({ where: { active: true } });
+  async findAll(opts: FindAllOptions = {}) {
+    const where: Record<string, unknown> = { active: true };
+    if (opts.category) where.categories = { hasSome: [opts.category] };
+    return prisma.association.findMany({ where });
   }
 
-  async findNearby(lat: number, lng: number, radiusKm = 50) {
-    const all = await prisma.association.findMany({ where: { active: true } });
+  async findNearby(
+    lat: number,
+    lng: number,
+    radiusKm = 50,
+    opts: FindAllOptions = {}
+  ) {
+    const where: Record<string, unknown> = { active: true };
+    if (opts.category) where.categories = { hasSome: [opts.category] };
+    const all = await prisma.association.findMany({ where });
     return all.filter((a) => {
       if (a.lat == null || a.lng == null) return false;
       return haversineKm(lat, lng, a.lat, a.lng) <= radiusKm;

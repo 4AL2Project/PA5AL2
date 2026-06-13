@@ -9,21 +9,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { requestMagicLink } from '@/lib/auth';
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export default function LoginPage() {
   const [email, setEmail] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'sent'>('idle');
-  const [error, setError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+
+  const emailValid = EMAIL_RE.test(email);
+  const emailError = emailTouched && !emailValid;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    if (!emailValid) return;
+    setServerError(null);
     setStatus('submitting');
     try {
       await requestMagicLink(email);
       setStatus('sent');
     } catch {
-      setError(
-        'Impossible d’envoyer le lien pour le moment. Réessayez dans un instant.'
+      setServerError(
+        "Impossible d'envoyer le lien pour le moment. Réessayez dans un instant."
       );
       setStatus('idle');
     }
@@ -61,6 +68,7 @@ export default function LoginPage() {
           onClick={() => {
             setStatus('idle');
             setEmail('');
+            setEmailTouched(false);
           }}
         >
           Renvoyer avec une autre adresse
@@ -84,25 +92,33 @@ export default function LoginPage() {
       }
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-5">
-        <Input
-          id="email"
-          type="email"
-          required
-          autoComplete="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={status === 'submitting'}
-          className="h-11 rounded-2xl border-none bg-[rgba(64,64,64,0.08)] px-6 text-sm placeholder:text-[#C0C3C3] focus-visible:ring-0 focus-visible:ring-offset-0"
-        />
-        {error && (
+        <div className="flex flex-col gap-1.5">
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onBlur={() => setEmailTouched(true)}
+            disabled={status === 'submitting'}
+            aria-invalid={emailError}
+            className="h-11 rounded-2xl border border-transparent bg-[rgba(64,64,64,0.08)] px-6 text-sm placeholder:text-[#C0C3C3] focus-visible:ring-0 focus-visible:ring-offset-0 aria-invalid:border-destructive aria-invalid:bg-destructive/5"
+          />
+          {emailError && (
+            <p className="text-xs text-destructive pl-1" role="alert">
+              Adresse email invalide
+            </p>
+          )}
+        </div>
+        {serverError && (
           <p className="text-xs text-destructive" role="alert">
-            {error}
+            {serverError}
           </p>
         )}
         <Button
           type="submit"
-          disabled={status === 'submitting' || !email}
+          disabled={status === 'submitting' || !emailValid}
           className="w-full h-[34px] rounded-[14px] bg-[#0F766E] text-white text-sm font-medium hover:bg-[#0d6560] disabled:opacity-50"
         >
           {status === 'submitting' ? (

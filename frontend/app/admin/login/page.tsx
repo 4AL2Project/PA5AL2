@@ -78,7 +78,7 @@ export default function AdminLoginPage() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={submitting}
-            className="h-11 rounded-2xl border-none bg-[rgba(64,64,64,0.08)] px-6 pr-12 text-sm placeholder:text-[#C0C3C3] focus-visible:ring-0 focus-visible:ring-offset-0"
+            className="h-11 rounded-2xl border-none bg-neutral-50 px-6 pr-12 text-sm placeholder:text-[#C0C3C3] focus-visible:ring-0 focus-visible:ring-offset-0"
           />
           <button
             type="button"

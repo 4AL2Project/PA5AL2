@@ -1,18 +1,11 @@
 'use client';
 
-import {
-  AlertTriangle,
-  Building2,
-  Home,
-  LogOut,
-  UserCircle,
-  Users,
-} from 'lucide-react';
+import { Building2, Home, LogOut, UserCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
-import { Button } from '@/components/ui/button';
 import { SavelyLogo } from '@/components/savely-logo';
+import { Button } from '@/components/ui/button';
 import { endSession } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 

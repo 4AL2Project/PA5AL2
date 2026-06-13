@@ -1,5 +1,3 @@
-import { AlertTriangle } from 'lucide-react';
-
 import { SavelyLogo } from '@/components/savely-logo';
 
 interface SplitSide {

@@ -14,11 +14,12 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [emailTouched, setEmailTouched] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
   const [status, setStatus] = useState<'idle' | 'submitting' | 'sent'>('idle');
   const [serverError, setServerError] = useState<string | null>(null);
 
   const emailValid = EMAIL_RE.test(email);
-  const emailError = emailTouched && !emailValid;
+  const emailError = emailTouched && !emailValid && !emailFocused;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +70,7 @@ export default function LoginPage() {
             setStatus('idle');
             setEmail('');
             setEmailTouched(false);
+            setEmailFocused(false);
           }}
         >
           Renvoyer avec une autre adresse
@@ -100,7 +102,8 @@ export default function LoginPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onBlur={() => setEmailTouched(true)}
+            onFocus={() => setEmailFocused(true)}
+            onBlur={() => { setEmailTouched(true); setEmailFocused(false); }}
             disabled={status === 'submitting'}
             aria-invalid={emailError}
             className="h-11 rounded-2xl border border-transparent bg-[rgba(64,64,64,0.08)] px-6 text-sm placeholder:text-[#C0C3C3] aria-invalid:border-destructive aria-invalid:bg-destructive/5"

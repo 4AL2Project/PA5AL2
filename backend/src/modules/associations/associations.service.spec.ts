@@ -1,10 +1,11 @@
 // Roger — v1.0
-// Cahier de tests US-30 : Matching géoloc associations
-// Couvre : CRUD associations, filtre géoloc Haversine ≤ 50 km
+// Cahier de tests US-30 / US-63 : CRUD annuaire associations + matching géoloc
+// Couvre : CRUD associations, filtre géoloc Haversine ≤ 50 km, filtre catégorie, géocodage
 
 import { NotFoundException } from '@nestjs/common';
 
 import { AssociationsService } from './associations.service';
+import { GeocodingService } from './geocoding.service';
 
 jest.mock('../../database/client', () => ({
   prisma: {
@@ -53,6 +54,15 @@ function makeAsso(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function makeService(
+  geocodeResult: { lat: number; lng: number } | null = null
+) {
+  const mockGeocoding = {
+    geocode: jest.fn().mockResolvedValue(geocodeResult),
+  } as unknown as GeocodingService;
+  return new AssociationsService(mockGeocoding);
+}
+
 // ---------------------------------------------------------------------------
 // BLOC 1 — Matching géoloc (Haversine ≤ 50 km) — critère clé US-30
 // ---------------------------------------------------------------------------
@@ -61,7 +71,7 @@ describe('AssociationsService — findNearby (US-30)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AssociationsService();
+    service = makeService();
   });
 
   it('retourne une asso à 0 km (même point GPS que la pharmacie)', async () => {
@@ -153,7 +163,7 @@ describe('AssociationsService — CRUD (US-30)', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AssociationsService();
+    service = makeService();
   });
 
   it('retourne toutes les associations actives via findAll', async () => {
@@ -193,5 +203,284 @@ describe('AssociationsService — CRUD (US-30)', () => {
         data: { active: false },
       })
     );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BLOC 3 — US-63 : create & update (CRUD complet)
+// ---------------------------------------------------------------------------
+describe('AssociationsService — create & update (US-63)', () => {
+  let service: AssociationsService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    service = makeService({ lat: PARIS_LAT, lng: PARIS_LNG });
+  });
+
+  it('crée une association avec tous les champs obligatoires', async () => {
+    const dto = {
+      name: 'Croix Bleue',
+      address: '1 rue de la Paix',
+      city: 'Paris',
+      postal_code: '75001',
+      categories: ['medicaments'],
+      contact_email: 'contact@croix-bleue.fr',
+    };
+    prisma.association.create.mockResolvedValue(makeAsso());
+
+    const result = await service.create(dto);
+
+    expect(prisma.association.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ name: dto.name }),
+      })
+    );
+    expect(result.association_id).toBeDefined();
+  });
+
+  it('crée une association avec géocodage automatique si lat/lng absents', async () => {
+    const dto = {
+      name: 'Croix Bleue',
+      address: '1 rue de la Paix',
+      city: 'Paris',
+      postal_code: '75001',
+    };
+    // La creation doit géocoder l'adresse et stocker lat/lng
+    prisma.association.create.mockResolvedValue(
+      makeAsso({ lat: PARIS_LAT, lng: PARIS_LNG })
+    );
+
+    const result = await service.create(dto);
+
+    expect(result.lat).not.toBeNull();
+    expect(result.lng).not.toBeNull();
+  });
+
+  it('conserve les lat/lng fournis sans appeler le géocodeur', async () => {
+    const dto = {
+      name: 'Croix Bleue',
+      address: '1 rue de la Paix',
+      city: 'Paris',
+      postal_code: '75001',
+      lat: 48.9,
+      lng: 2.4,
+    };
+    prisma.association.create.mockResolvedValue(
+      makeAsso({ lat: 48.9, lng: 2.4 })
+    );
+
+    const result = await service.create(dto);
+
+    expect(prisma.association.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ lat: 48.9, lng: 2.4 }),
+      })
+    );
+    expect(result.lat).toBe(48.9);
+  });
+
+  it("met à jour le nom et le contact d'une association existante", async () => {
+    const updated = makeAsso({
+      name: 'Nouveau Nom',
+      contact_email: 'new@asso.fr',
+    });
+    prisma.association.findUnique.mockResolvedValue(makeAsso());
+    prisma.association.update.mockResolvedValue(updated);
+
+    const result = await service.update(ASSO_ID, {
+      name: 'Nouveau Nom',
+      contact_email: 'new@asso.fr',
+    });
+
+    expect(result.name).toBe('Nouveau Nom');
+    expect(result.contact_email).toBe('new@asso.fr');
+    expect(prisma.association.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { association_id: ASSO_ID },
+        data: expect.objectContaining({ name: 'Nouveau Nom' }),
+      })
+    );
+  });
+
+  it("lève NotFoundException en update si l'association est inconnue", async () => {
+    prisma.association.findUnique.mockResolvedValue(null);
+
+    await expect(service.update('unknown-id', { name: 'X' })).rejects.toThrow(
+      NotFoundException
+    );
+    expect(prisma.association.update).not.toHaveBeenCalled();
+  });
+
+  it('met à jour les catégories acceptées', async () => {
+    const updated = makeAsso({ categories: ['medicaments', 'cosmetiques'] });
+    prisma.association.findUnique.mockResolvedValue(makeAsso());
+    prisma.association.update.mockResolvedValue(updated);
+
+    const result = await service.update(ASSO_ID, {
+      categories: ['medicaments', 'cosmetiques'],
+    });
+
+    expect(result.categories).toEqual(['medicaments', 'cosmetiques']);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BLOC 4 — US-63 : filtre par catégorie
+// ---------------------------------------------------------------------------
+describe('AssociationsService — filtre catégorie (US-63)', () => {
+  let service: AssociationsService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    service = makeService();
+  });
+
+  it('retourne uniquement les associations acceptant la catégorie demandée', async () => {
+    // Prisma filtre au niveau DB — le mock simule le résultat déjà filtré
+    const filtered = [
+      makeAsso({ association_id: 'a1', categories: ['medicaments'] }),
+      makeAsso({
+        association_id: 'a3',
+        categories: ['medicaments', 'cosmetiques'],
+      }),
+    ];
+    prisma.association.findMany.mockResolvedValue(filtered);
+
+    const results = await service.findAll({ category: 'medicaments' });
+
+    expect(prisma.association.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          active: true,
+          categories: { hasSome: ['medicaments'] },
+        }),
+      })
+    );
+    expect(results).toHaveLength(2);
+  });
+
+  it('retourne toutes les associations actives si aucune catégorie spécifiée', async () => {
+    const assos = [
+      makeAsso({ association_id: 'a1', categories: ['medicaments'] }),
+      makeAsso({ association_id: 'a2', categories: ['cosmetiques'] }),
+    ];
+    prisma.association.findMany.mockResolvedValue(assos);
+
+    const results = await service.findAll();
+
+    expect(prisma.association.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { active: true } })
+    );
+    expect(results).toHaveLength(2);
+  });
+
+  it('retourne une liste vide si aucune asso ne correspond à la catégorie', async () => {
+    prisma.association.findMany.mockResolvedValue([]);
+
+    const results = await service.findAll({ category: 'medicaments' });
+
+    expect(prisma.association.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          categories: { hasSome: ['medicaments'] },
+        }),
+      })
+    );
+    expect(results).toHaveLength(0);
+  });
+
+  it('filtre par catégorie ET zone géographique (findNearby)', async () => {
+    // Prisma retourne déjà les assos de la bonne catégorie, Haversine filtre par distance
+    const assos = [
+      makeAsso({
+        association_id: 'a1',
+        categories: ['medicaments'],
+        lat: PARIS_LAT,
+        lng: PARIS_LNG,
+      }),
+    ];
+    prisma.association.findMany.mockResolvedValue(assos);
+
+    const results = await service.findNearby(PARIS_LAT, PARIS_LNG, 50, {
+      category: 'medicaments',
+    });
+
+    expect(prisma.association.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          categories: { hasSome: ['medicaments'] },
+        }),
+      })
+    );
+    expect(results.map((a) => a.association_id)).toEqual(['a1']);
+  });
+
+  it('filtre géoloc + catégorie : exclut les assos hors rayon même si bonne catégorie', async () => {
+    prisma.association.findMany.mockResolvedValue([
+      // Lyon : hors rayon 50 km depuis Paris
+      makeAsso({
+        lat: 45.764,
+        lng: 4.8357,
+        city: 'Lyon',
+        categories: ['medicaments'],
+      }),
+    ]);
+
+    const results = await service.findNearby(PARIS_LAT, PARIS_LNG, 50, {
+      category: 'medicaments',
+    });
+
+    expect(results).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// BLOC 5 — US-63 : association inactive exclue du matching
+// ---------------------------------------------------------------------------
+describe('AssociationsService — associations inactives (US-63)', () => {
+  let service: AssociationsService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    service = makeService();
+  });
+
+  it('findAll ne retourne pas les associations inactives', async () => {
+    // findMany est mocké pour ne retourner que des actives (active: true en where)
+    prisma.association.findMany.mockResolvedValue([makeAsso({ active: true })]);
+
+    await service.findAll();
+
+    expect(prisma.association.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ active: true }),
+      })
+    );
+  });
+
+  it('findNearby ne retourne pas les associations inactives', async () => {
+    // La requête Prisma filtre active: true, donc le mock retourne vide
+    prisma.association.findMany.mockResolvedValue([]);
+
+    const results = await service.findNearby(PARIS_LAT, PARIS_LNG);
+
+    expect(results).toHaveLength(0);
+    expect(prisma.association.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ active: true }),
+      })
+    );
+  });
+
+  it("une association désactivée n'est plus proposée au matching", async () => {
+    // Après deactivate, findAll ne la retourne plus (filtre active: true)
+    prisma.association.findUnique.mockResolvedValue(makeAsso());
+    prisma.association.update.mockResolvedValue(makeAsso({ active: false }));
+    prisma.association.findMany.mockResolvedValue([]); // liste vide post-désactivation
+
+    await service.deactivate(ASSO_ID);
+    const results = await service.findAll();
+
+    expect(results).toHaveLength(0);
   });
 });

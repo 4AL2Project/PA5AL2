@@ -1,6 +1,13 @@
 'use client';
 
-import { Building2, Home, LogOut, UserCircle, Users } from 'lucide-react';
+import {
+  Building2,
+  Heart,
+  Home,
+  LogOut,
+  UserCircle,
+  Users,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -21,6 +28,7 @@ const NAV = [
   { href: '/admin/accueil', label: 'Accueil', icon: Home },
   { href: '/admin', label: 'Officines', icon: Building2 },
   { href: '/admin/utilisateurs', label: 'Utilisateurs', icon: Users },
+  { href: '/admin/associations', label: 'Associations', icon: Heart },
   { href: '/admin/compte', label: 'Compte', icon: UserCircle },
 ];
 

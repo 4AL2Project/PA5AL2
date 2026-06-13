@@ -1,32 +1,16 @@
-/**
- * EmailService -- envoi d'emails transactionnels via SMTP (nodemailer).
- *
- * Provider choisi : SMTP generique (Mailpit en dev, tout serveur SMTP en prod).
- * Pour utiliser Resend, remplacer le transport par :
- *   createTransport({ host: 'smtp.resend.com', port: 465, auth: { user: 'resend', pass: RESEND_API_KEY } })
- *
- * Variables d'environnement :
- *   SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, EMAIL_FROM
- */
+// Roger — v1.0
 import { Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
 import { config } from '../../core/config';
 
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-
-  private readonly transporter = nodemailer.createTransport({
-    host: config.email.host,
-    port: config.email.port,
-    auth: config.email.user
-      ? { user: config.email.user, pass: config.email.pass }
-      : undefined,
-  });
+  private readonly resend = new Resend(config.email.apiKey);
 
   async sendInvitationEmail(to: string, link: string): Promise<void> {
-    await this.transporter.sendMail({
+    await this.resend.emails.send({
       from: config.email.from,
       to,
       subject: 'Bienvenue sur Savely -- Finalisez votre compte',
@@ -42,7 +26,7 @@ export class EmailService {
   }
 
   async sendMagicLinkEmail(to: string, link: string): Promise<void> {
-    await this.transporter.sendMail({
+    await this.resend.emails.send({
       from: config.email.from,
       to,
       subject: 'Savely -- Votre lien de connexion',

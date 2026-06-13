@@ -1,5 +1,8 @@
+// US-20 — Pivot stock dormant : days_of_cover remplace days_to_expiry
+// Kani — v1
+import { computeVelocity } from './sales-velocity';
+
 interface Product {
-  expiry_date: Date;
   stock_quantity: number;
   unit_price: number;
   cost_price?: number | null;
@@ -10,43 +13,28 @@ interface Sale {
   quantity_sold: number;
 }
 
-import { computeVelocity } from './sales-velocity';
-
 export type RiskLevel = 'critical' | 'high' | 'safe';
 
-export interface RiskResult {
-  days_to_expiry: number;
+export interface DormanceResult {
+  days_of_cover: number;
   sales_velocity_30d: number;
-  expected_sales: number;
-  excess_stock: number;
-  risk_score: number;
+  capital_locked: number;
   risk_level: RiskLevel;
   suggested_action: string;
   recoverable_value: number;
   potential_loss: number;
 }
 
-function daysToExpiry(product: Product): number {
-  const now = new Date();
-  const expiry = new Date(product.expiry_date);
-  const diff = expiry.getTime() - now.getTime();
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-}
+// Couverture < 60j → stock sain, 60–179j → excédentaire, ≥ 180j → dormant
+const COVER_SAFE_MAX = 60;
+const COVER_HIGH_MAX = 180;
+// Valeur sentinelle pour velocity == 0 (stock ne tourne pas)
+const INFINITE_COVER = 9999;
 
-/**
- * Classifie en 3 niveaux :
- * - safe     : les ventes couvrent le stock → aucune action
- * - high     : stock excédentaire mais il reste du temps → mise en vente B2C
- * - critical : le stock ne s'écoulera pas avant péremption → don associatif
- *
- * Seuils :
- *   score > 0.70  → safe
- *   score > 0.30  → high
- *   score ≤ 0.30  → critical
- */
-function classify(score: number): RiskLevel {
-  if (score > 0.7) return 'safe';
-  if (score > 0.3) return 'high';
+function classify(velocity: number, daysOfCover: number): RiskLevel {
+  if (velocity === 0) return 'critical';
+  if (daysOfCover < COVER_SAFE_MAX) return 'safe';
+  if (daysOfCover < COVER_HIGH_MAX) return 'high';
   return 'critical';
 }
 
@@ -61,35 +49,32 @@ function deriveAction(level: RiskLevel): string {
   }
 }
 
-export function calculateRisk(product: Product, sales: Sale[]): RiskResult {
+export function calculateRisk(product: Product, sales: Sale[]): DormanceResult {
   const velocity = computeVelocity(sales);
-  const days = daysToExpiry(product);
+  const rawCover =
+    velocity > 0 ? product.stock_quantity / velocity : INFINITE_COVER;
+  const daysOfCover = parseFloat(Math.min(rawCover, INFINITE_COVER).toFixed(1));
 
-  const expected = velocity * days;
-  const excess = Math.max(0, product.stock_quantity - expected);
+  const costPerUnit = product.cost_price ?? product.unit_price;
+  const capitalLocked = parseFloat(
+    (product.stock_quantity * costPerUnit).toFixed(2)
+  );
 
-  const score =
-    product.stock_quantity > 0
-      ? Math.min(1, expected / product.stock_quantity)
-      : 0;
+  const level = classify(velocity, daysOfCover);
 
-  const level = classify(score);
-  const potentialLoss = excess * (product.cost_price ?? product.unit_price);
-
-  // La valeur récupérable est estimée à 50 % du prix de vente de l'excédent
-  // pour les niveaux high et critical (don ou vente B2C soldée)
+  // 50 % du prix de vente estimé récupérable en vente B2C soldée ou don
   const recoveryRate = level === 'safe' ? 0 : 0.5;
-  const recoverableValue = excess * product.unit_price * recoveryRate;
+  const recoverableValue = parseFloat(
+    (product.stock_quantity * product.unit_price * recoveryRate).toFixed(2)
+  );
 
   return {
-    days_to_expiry: days,
-    sales_velocity_30d: velocity,
-    expected_sales: expected,
-    excess_stock: Math.round(excess),
-    risk_score: parseFloat(score.toFixed(4)),
+    days_of_cover: daysOfCover,
+    sales_velocity_30d: parseFloat(velocity.toFixed(4)),
+    capital_locked: capitalLocked,
     risk_level: level,
     suggested_action: deriveAction(level),
-    recoverable_value: parseFloat(recoverableValue.toFixed(2)),
-    potential_loss: parseFloat(potentialLoss.toFixed(2)),
+    recoverable_value: recoverableValue,
+    potential_loss: capitalLocked,
   };
 }

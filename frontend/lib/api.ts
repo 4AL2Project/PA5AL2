@@ -25,7 +25,8 @@ interface RawProduct {
 interface RawRiskAnalysis {
   product_id: string;
   product: RawProduct;
-  risk_score: number;
+  days_of_cover: number;
+  capital_locked: number;
   risk_level: string;
   recoverable_value: number;
   suggested_action?: string | null;
@@ -35,6 +36,7 @@ interface RawRiskAnalysis {
 interface RawSummary {
   by_risk_level?: { critical?: number; high?: number; safe?: number };
   total_products?: number;
+  total_capital_locked?: number;
   total_recoverable?: number;
   recoverable?: number;
   last_upload_at?: string;
@@ -64,11 +66,10 @@ function adaptRiskAnalysis(raw: RawRiskAnalysis): Product {
     name: raw.product.name,
     sku: raw.product.external_sku ?? '',
     category: raw.product.category ?? '',
-    // backend: 0.0 = critique, 1.0 = sûr → inversion pour affichage (100 = risque max)
-    riskScore: Math.round((1 - raw.risk_score) * 100),
+    daysOfCover: raw.days_of_cover,
+    capitalLocked: raw.capital_locked,
     riskLevel: raw.risk_level as RiskLevel,
     stock: raw.product.stock_quantity,
-    expirationDate: raw.product.expiry_date,
     recoveryValue: raw.recoverable_value,
     action: raw.suggested_action ?? '',
     lastUpdated: raw.analysis_date,
@@ -82,6 +83,7 @@ function adaptStats(summary: RawSummary): AnalysisStats {
     criticalProducts: s.critical ?? 0,
     highProducts: s.high ?? 0,
     safeProducts: s.safe ?? 0,
+    totalCapitalLocked: summary.total_capital_locked ?? 0,
     totalRecoveryValue: summary.total_recoverable ?? summary.recoverable ?? 0,
     lastAnalysisDate: summary.last_upload_at ?? new Date().toISOString(),
   };

@@ -1,21 +1,31 @@
 external_sku,name,category,brand,expiry_date,stock_quantity,unit_price,cost_price
-CRE-HYD-50,Creme Hydratante Visage 50ml,Soins visage,Vichy,2026-04-10,180,12.90,8.50
-SER-VIT-C,Serum Eclat Vitamine C 30ml,Soins visage,La Roche-Posay,2026-04-12,95,24.90,16.00
-MIC-EAU-400,Eau Micellaire Sensitive 400ml,Soins visage,Bioderma,2026-04-15,200,9.90,6.20
-BB-CREAM-30,BB Cream SPF15 30ml,Maquillage,Garnier,2026-04-17,130,8.50,5.00
-FOND-TEINT-30,Fond de Teint Fluide 30ml,Maquillage,Maybelline,2026-04-19,160,14.90,9.50
-CREME-CORP-200,Creme Corps Nourrissante 200ml,Soins corps,Nuxe,2026-04-26,110,15.90,10.00
-MASQ-ARG-75,Masque Purifiant Argile 75ml,Soins visage,Caudalie,2026-04-22,75,18.50,12.00
-GEL-DOUCHE-250,Gel Douche Surgras 250ml,Soins corps,Avene,2026-04-28,45,7.90,4.80
-HUILE-SEC-100,Huile Seche Corps 100ml,Soins corps,Nuxe,2026-04-30,55,22.90,14.50
-SHA-REP-250,Shampooing Reparateur 250ml,Cheveux,Kerastase,2026-05-15,60,28.90,18.00
-COND-LISS-200,Apres-Shampooing Lissant 200ml,Cheveux,L Oreal,2026-05-21,85,11.90,7.50
-ROUGE-LEV-3G,Rouge a Levres Satin 3g,Maquillage,Bourjois,2026-05-10,40,10.90,6.50
-MASCARA-BLK,Mascara Volume Noir 9ml,Maquillage,Maybelline,2026-05-03,35,12.90,8.00
-CREME-SOL-50,Creme Solaire SPF50 50ml,Solaire,La Roche-Posay,2026-06-16,70,19.90,12.50
-TONER-ROSE-150,Lotion Tonique Rose 150ml,Soins visage,Caudalie,2026-06-02,55,16.90,10.50
-EAU-PARF-50,Eau de Parfum Florale 50ml,Parfumerie,Clarins,2026-07-11,120,45.90,28.00
-CREME-NUIT-50,Creme de Nuit Anti-Age 50ml,Soins visage,Vichy,2026-07-26,45,34.90,22.00
-BAUME-LEV-15,Baume Levres Hydratant 15ml,Soins levres,Nuxe,2026-08-16,80,9.90,5.80
-CONTOUR-YEU-15,Contour des Yeux 15ml,Soins visage,Clarins,2026-09-02,60,38.90,24.00
-GOMMAGE-100,Gommage Corps Sucre 100ml,Soins corps,Garnier,2026-08-21,90,8.90,5.20
+DOLI-500-60,Doliprane 500mg x60 cp,Médicaments OTC,Sanofi,2026-06-25,320,4.9,2.8
+IBU-400-30,Ibuprofène 400mg x30 cp,Médicaments OTC,Générique,2026-07-01,280,3.5,1.9
+VIT-C-1G,Vitamine C 1g effervescent x20,Compléments,Bayer,2026-07-05,450,6.2,3.4
+OMEPRA-20-14,Oméprazole 20mg x14 gél,Médicaments OTC,Générique,2026-06-23,190,5.8,3.2
+MUC-SIRO-200,Mucolytique sirop 200ml,Pédiatrie,UPSA,2026-07-11,160,7.4,4.1
+BIAFINE-93G,Biafine émulsion 93g,Dermatologie,Johnson & Johnson,2026-06-28,240,9.8,5.5
+CETA-500-16,Cétirizine 10mg x7 cp,Médicaments OTC,Générique,2026-06-21,300,4.2,2.3
+ZINC-GEL-50,Gel zinc 50ml,Dermatologie,A-Derma,2026-07-08,180,8.3,4.6
+SMAR-CREME-40,Crème Smarty 40ml SPF20,Solaire,La Roche-Posay,2026-08-12,90,18.5,11.0
+XYLO-SPRAY,Xylocaïne spray 10% 50ml,Médicaments OTC,AstraZeneca,2026-08-27,55,12.9,7.5
+LAXATIF-BIS,Bisacodyl 5mg x30 cp,Médicaments OTC,Générique,2026-08-02,120,3.8,2.1
+MAG-B6-60,Magnésium + B6 x60 cp,Compléments,Arkopharma,2026-09-01,85,9.9,5.8
+AQUA-GEL-50,Aquagel hydratant 50ml,Dermatologie,Bioderma,2026-08-07,110,14.9,8.8
+PROBIOTIC-30,Probiotiques Lactibiane x30,Compléments,Pileje,2026-09-11,70,19.9,12.0
+MELATONIN-1,Mélatonine 1mg x30 cp,Compléments,Natrol,2026-08-17,95,7.5,4.2
+SPF50-CREME,Crème solaire SPF50 100ml,Solaire,Avène,2026-07-31,60,22.5,14.0
+OMEGA3-90,Oméga-3 EPA DHA x90 gél,Compléments,Pileje,2026-08-22,75,24.9,15.5
+NOSE-SPRAY,Spray nasal décongestionnant,Pédiatrie,Pédiatrie+,2026-08-10,80,6.8,3.8
+SER-VEGAN-30,Sérum vegan acide hyaluronique,Cosmétique,The Ordinary,2026-12-30,45,16.9,9.5
+CRE-VISAGE-50,Crème visage anti-âge 50ml,Cosmétique,Clarins,2026-12-10,30,42.0,26.0
+SHAMPO-REP-250,Shampooing réparateur 250ml,Capillaire,Kérastase,2027-06-13,50,28.9,18.0
+SERUM-RETINOL,Sérum Rétinol 0.3% 30ml,Cosmétique,Vichy,2027-02-08,35,29.9,18.5
+COND-LISS-200,Après-shampoing lissant 200ml,Capillaire,L'Oréal,2027-07-18,55,11.9,7.5
+FOND-TEINT-30,Fond de teint fluide 30ml,Maquillage,Maybelline,2027-04-09,40,14.9,9.5
+CONTOUR-YEU,Contour des yeux 15ml,Cosmétique,Clarins,2027-03-10,25,38.9,24.0
+PARFUM-EDP50,Eau de parfum florale 50ml,Parfumerie,Lancôme,2028-06-12,80,75.0,42.0
+MASCARA-VOL,Mascara volume noir 9ml,Maquillage,Maybelline,2027-01-09,60,12.9,8.0
+GOMMAGE-100,Gommage corps sucré 100ml,Cosmétique,Garnier,2026-11-10,45,8.9,5.2
+BAUME-LEV-15,Baume lèvres hydratant 15ml,Cosmétique,Nuxe,2027-10-26,70,9.9,5.8
+HUILE-SEC-100,Huile sèche corps 100ml,Cosmétique,Nuxe,2027-04-29,35,22.9,14.5

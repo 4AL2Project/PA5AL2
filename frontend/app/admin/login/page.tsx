@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -8,13 +8,13 @@ import { useState } from 'react';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { adminLogin, decodeJwt, startSession } from '@/lib/auth';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -44,45 +44,59 @@ export default function AdminLoginPage() {
 
   return (
     <AuthShell
-      title="Back-office Savely"
-      description="Connexion réservée aux administrateurs."
+      split={{ title: 'Connection', subtitle: 'Espace\nAdmin' }}
+      title="Connection"
+      description="Connecter vous pour gérer des officines"
       footer={
         <>
-          Vous êtes titulaire d’une officine ?{' '}
-          <Link href="/login" className="text-primary hover:underline">
+          Vous êtes titulaire d&apos;une officine ?{' '}
+          <Link href="/login" className="font-bold text-[#0F766E]">
             Connectez-vous ici
           </Link>
         </>
       }
     >
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="admin-email" className="text-xs">
-            Email
-          </Label>
-          <Input
-            id="admin-email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={submitting}
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="admin-password" className="text-xs">
-            Mot de passe
-          </Label>
+      <form onSubmit={onSubmit} className="flex flex-col gap-3">
+        <Input
+          id="admin-email"
+          type="email"
+          required
+          autoComplete="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={submitting}
+          className="h-11 rounded-2xl border-none bg-[rgba(64,64,64,0.08)] px-6 text-sm placeholder:text-[#C0C3C3] focus-visible:ring-0 focus-visible:ring-offset-0"
+        />
+        <div className="relative">
           <Input
             id="admin-password"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             required
             autoComplete="current-password"
+            placeholder="Mot de passe"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             disabled={submitting}
+            className="h-11 rounded-2xl border-none bg-[rgba(64,64,64,0.08)] px-6 pr-12 text-sm placeholder:text-[#C0C3C3] focus-visible:ring-0 focus-visible:ring-offset-0"
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#C0C3C3] hover:text-[#6B7280]"
+            tabIndex={-1}
+            aria-label={
+              showPassword
+                ? 'Masquer le mot de passe'
+                : 'Afficher le mot de passe'
+            }
+          >
+            {showPassword ? (
+              <EyeOff className="h-5 w-5" />
+            ) : (
+              <Eye className="h-5 w-5" />
+            )}
+          </button>
         </div>
         {error && (
           <p className="text-xs text-destructive" role="alert">
@@ -91,15 +105,14 @@ export default function AdminLoginPage() {
         )}
         <Button
           type="submit"
-          className="w-full"
           disabled={submitting || !email || !password}
+          className="mt-2 w-full h-[34px] rounded-[14px] bg-[#0F766E] text-white text-sm font-medium hover:bg-[#0d6560] disabled:opacity-50"
         >
           {submitting ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           ) : (
-            <ShieldCheck className="h-3.5 w-3.5" />
+            'Se connecter'
           )}
-          Se connecter
         </Button>
       </form>
     </AuthShell>

@@ -127,6 +127,22 @@ export class AdminController {
     return this.adminService.setPharmacyStatus(id, user.role, dto.status);
   }
 
+  @Delete('pharmacies/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Supprimer définitivement une officine désactivée (ADMIN_SAVELY uniquement)',
+  })
+  @ApiOkResponse({ description: 'Officine supprimée' })
+  @ApiForbiddenResponse({ description: 'Reserve aux administrateurs Savely' })
+  @ApiNotFoundResponse({ description: 'Officine introuvable' })
+  deletePharmacy(
+    @Param('id') id: string,
+    @CurrentUser() user: { role: UserRole }
+  ) {
+    return this.adminService.deletePharmacy(id, user.role);
+  }
+
   @Post('pharmacies/:id/resend-invitation')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

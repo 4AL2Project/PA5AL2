@@ -1,39 +1,33 @@
 'use client';
 
 import { CheckCircle2, Clock, FileText } from 'lucide-react';
-import { useState } from 'react';
 
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { UploadDropzone } from '@/components/upload/upload-dropzone';
+import { UploadWizard } from '@/components/upload/upload-wizard';
 
 const recentUploads = [
   {
     id: '1',
     name: 'inventaire_mars_2026.csv',
     date: '2026-03-28T14:30:00',
-    status: 'success',
     records: 1250,
   },
   {
     id: '2',
     name: 'stock_update_26.csv',
     date: '2026-03-25T09:15:00',
-    status: 'success',
     records: 450,
   },
   {
     id: '3',
     name: 'produits_frais.xlsx',
     date: '2026-03-20T16:45:00',
-    status: 'success',
     records: 320,
   },
 ];
 
 export default function UploadPage() {
-  const [fileType, setFileType] = useState<'products' | 'sales'>('products');
-
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -45,60 +39,18 @@ export default function UploadPage() {
 
   return (
     <DashboardLayout
-      title="Import de Donnees"
-      description="Importez vos fichiers d'inventaire pour analyse"
+      title="Import de Données"
+      description="Importez vos fichiers d'inventaire en 3 étapes guidées"
     >
       <div className="grid gap-2.5 lg:grid-cols-3">
-        {/* Upload Area */}
+        {/* Upload Wizard */}
         <div className="lg:col-span-2">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle>Importer un Fichier</CardTitle>
+              <CardTitle>Assistant d&apos;import</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {/* File type selector */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setFileType('products')}
-                  className={`flex-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
-                    fileType === 'products'
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border text-muted-foreground hover:border-primary/50'
-                  }`}
-                >
-                  Fichier produits
-                </button>
-                <button
-                  onClick={() => setFileType('sales')}
-                  className={`flex-1 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
-                    fileType === 'sales'
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border text-muted-foreground hover:border-primary/50'
-                  }`}
-                >
-                  Fichier ventes
-                </button>
-              </div>
-
-              <UploadDropzone fileType={fileType} />
-
-              <div className="rounded-md bg-muted/50 p-3">
-                <h4 className="mb-2 text-sm font-medium">Format attendu</h4>
-                <p className="text-sm text-muted-foreground">
-                  {fileType === 'products'
-                    ? 'Colonnes requises: external_sku, name, expiry_date, stock_quantity, unit_price. Optionnel: lot_number, category, brand, cost_price'
-                    : 'Colonnes requises: external_sku, sale_date, quantity_sold. Optionnel: unit_price_sold'}
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <a href="#" className="text-sm text-primary hover:underline">
-                    Telecharger le modele CSV
-                  </a>
-                  <span className="text-muted-foreground">|</span>
-                  <a href="#" className="text-sm text-primary hover:underline">
-                    Documentation
-                  </a>
-                </div>
-              </div>
+            <CardContent>
+              <UploadWizard />
             </CardContent>
           </Card>
         </div>
@@ -107,7 +59,7 @@ export default function UploadPage() {
         <div className="lg:col-span-1">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle>Imports Recents</CardTitle>
+              <CardTitle>Imports Récents</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {recentUploads.map((upload) => (
@@ -119,9 +71,7 @@ export default function UploadPage() {
                     <FileText className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-medium">
-                      {upload.name}
-                    </p>
+                    <p className="truncate text-sm font-medium">{upload.name}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3 w-3" />
                       {formatDate(upload.date)}

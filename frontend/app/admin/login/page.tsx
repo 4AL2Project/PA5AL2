@@ -16,16 +16,18 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [emailTouched, setEmailTouched] = useState(false);
+  const [emailFocused, setEmailFocused] = useState(false);
   const [password, setPassword] = useState('');
   const [passwordTouched, setPasswordTouched] = useState(false);
+  const [passwordFocused, setPasswordFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const emailValid = EMAIL_RE.test(email);
   const passwordValid = password.length > 0;
-  const emailError = emailTouched && !emailValid;
-  const passwordError = passwordTouched && !passwordValid;
+  const emailError = emailTouched && !emailValid && !emailFocused;
+  const passwordError = passwordTouched && !passwordValid && !passwordFocused;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +77,8 @@ export default function AdminLoginPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            onBlur={() => setEmailTouched(true)}
+            onFocus={() => setEmailFocused(true)}
+            onBlur={() => { setEmailTouched(true); setEmailFocused(false); }}
             disabled={submitting}
             aria-invalid={emailError}
             className="h-11 rounded-2xl border border-transparent bg-[rgba(64,64,64,0.08)] px-6 text-sm placeholder:text-[#C0C3C3] aria-invalid:border-destructive aria-invalid:bg-destructive/5"
@@ -95,7 +98,8 @@ export default function AdminLoginPage() {
               placeholder="Mot de passe"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              onBlur={() => setPasswordTouched(true)}
+              onFocus={() => setPasswordFocused(true)}
+              onBlur={() => { setPasswordTouched(true); setPasswordFocused(false); }}
               disabled={submitting}
               aria-invalid={passwordError}
               className="h-11 rounded-2xl border border-transparent bg-[rgba(64,64,64,0.08)] px-6 pr-12 text-sm placeholder:text-[#C0C3C3] aria-invalid:border-destructive aria-invalid:bg-destructive/5"

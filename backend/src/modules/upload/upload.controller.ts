@@ -1,21 +1,34 @@
 import {
-  BadRequestException,
   Controller,
   HttpCode,
   HttpStatus,
   Post,
-  Query,
   UploadedFiles,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 
+import { Roles } from '../auth/decorators/roles.decorator';
+import { TenantPharmacyId } from '../auth/decorators/tenant-pharmacy.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { TenantGuard } from '../auth/guards/tenant.guard';
+import { UserRole } from '../auth/roles.enum';
 import { UploadService } from './upload.service';
 
 @ApiTags('upload')
+@ApiBearerAuth('access-token')
 @Controller('api/upload')
+@UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
+@Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR)
 export class UploadController {
   constructor(private readonly uploadService: UploadService) {}
 
@@ -25,11 +38,6 @@ export class UploadController {
     summary: 'Import CSV / Excel products + sales for a pharmacy',
   })
   @ApiConsumes('multipart/form-data')
-  @ApiQuery({
-    name: 'pharmacy_id',
-    required: true,
-    schema: { type: 'string', format: 'uuid' },
-  })
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -40,14 +48,13 @@ export class UploadController {
     )
   )
   async upload(
-    @Query('pharmacy_id') pharmacyId: string,
+    @TenantPharmacyId() pharmacyId: string,
     @UploadedFiles()
     files: {
       products?: Express.Multer.File[];
       sales?: Express.Multer.File[];
     }
   ) {
-    if (!pharmacyId) throw new BadRequestException('pharmacy_id is required');
     return this.uploadService.processUpload(
       pharmacyId,
       files.products?.[0],

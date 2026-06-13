@@ -10,7 +10,7 @@ export const config = {
       process.env.JWT_ACCESS_SECRET || 'dev-access-secret-change-me',
     refreshSecret:
       process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-change-me',
-    accessTtl: '15m',
+    accessTtl: '24h',
     refreshTtl: '7d',
     invitationTtlMs: 48 * 60 * 60 * 1000, // 48h
     magicLinkTtlMs: 15 * 60 * 1000, // 15min

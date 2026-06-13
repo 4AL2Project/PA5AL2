@@ -1,5 +1,7 @@
 import { AlertTriangle } from 'lucide-react';
 
+import { SavelyLogo } from '@/components/savely-logo';
+
 interface SplitSide {
   title: string;
   subtitle: string;
@@ -26,9 +28,7 @@ export function AuthShell({
         {/* Left panel */}
         <div className="hidden md:flex flex-1 flex-col items-center justify-center bg-[#0F766E]">
           <div className="flex flex-col gap-1">
-            <span className="text-white font-semibold text-[36px] leading-none font-sans">
-              Savely
-            </span>
+            <SavelyLogo className="text-white w-24 h-auto" />
             <span className="text-white font-extrabold text-[64px] leading-tight whitespace-pre-line font-sans">
               {split.subtitle}
             </span>
@@ -57,11 +57,8 @@ export function AuthShell({
   return (
     <div className="min-h-svh bg-background flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-6">
-        <div className="flex items-center justify-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary">
-            <AlertTriangle className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <span className="text-base font-semibold">Savely</span>
+        <div className="flex items-center justify-center">
+          <SavelyLogo className="w-20 h-auto" />
         </div>
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="mb-5 space-y-1.5">

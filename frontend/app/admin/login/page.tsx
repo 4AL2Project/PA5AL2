@@ -78,7 +78,10 @@ export default function AdminLoginPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             onFocus={() => setEmailFocused(true)}
-            onBlur={() => { setEmailTouched(true); setEmailFocused(false); }}
+            onBlur={() => {
+              setEmailTouched(true);
+              setEmailFocused(false);
+            }}
             disabled={submitting}
             aria-invalid={emailError}
             className="h-11 rounded-2xl border border-transparent bg-[rgba(64,64,64,0.08)] px-6 text-sm placeholder:text-[#C0C3C3] aria-invalid:border-destructive aria-invalid:bg-destructive/5"
@@ -99,7 +102,10 @@ export default function AdminLoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onFocus={() => setPasswordFocused(true)}
-              onBlur={() => { setPasswordTouched(true); setPasswordFocused(false); }}
+              onBlur={() => {
+                setPasswordTouched(true);
+                setPasswordFocused(false);
+              }}
               disabled={submitting}
               aria-invalid={passwordError}
               className="h-11 rounded-2xl border border-transparent bg-[rgba(64,64,64,0.08)] px-6 pr-12 text-sm placeholder:text-[#C0C3C3] aria-invalid:border-destructive aria-invalid:bg-destructive/5"

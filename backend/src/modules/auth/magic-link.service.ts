@@ -3,8 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
-import { JwtPayload } from './auth.service';
-import { EmailService } from './email.service';
+import { EmailService } from '../email/email.service';
+import { JwtPayload } from './jwt-payload';
 import { UserRole } from './roles.enum';
 import { generateToken, hashToken } from './token.util';
 

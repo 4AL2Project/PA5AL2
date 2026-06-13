@@ -45,12 +45,8 @@ export function RiskTable({
     }).format(value);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
+  const formatDaysOfCover = (days: number) => {
+    return days >= 9999 ? '∞' : `${Math.round(days)} j`;
   };
 
   return (
@@ -69,7 +65,7 @@ export function RiskTable({
             <TableHead className="text-muted-foreground text-right">
               Stock
             </TableHead>
-            <TableHead className="text-muted-foreground">Expiration</TableHead>
+            <TableHead className="text-muted-foreground">Couverture</TableHead>
             <TableHead className="text-muted-foreground text-right">
               Valeur
             </TableHead>
@@ -104,7 +100,7 @@ export function RiskTable({
                 {product.stock}
               </TableCell>
               <TableCell className="tabular-nums">
-                {formatDate(product.expirationDate)}
+                {formatDaysOfCover(product.daysOfCover)}
               </TableCell>
               <TableCell className="text-right tabular-nums">
                 {formatCurrency(product.recoveryValue)}

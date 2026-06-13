@@ -43,7 +43,7 @@ export function UploadModal({
         )}
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="w-[90vw] max-w-4xl sm:max-w-[80vw]">
         <DialogHeader>
           <DialogTitle>Assistant d&apos;import</DialogTitle>
         </DialogHeader>

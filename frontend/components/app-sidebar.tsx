@@ -11,6 +11,7 @@ import {
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
+import { SavelyLogo } from '@/components/savely-logo';
 import { Button } from '@/components/ui/button';
 import {
   Sidebar,
@@ -55,15 +56,7 @@ export function AppSidebar() {
       <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
-              <AlertTriangle className="h-4 w-4 text-primary-foreground" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-semibold">RiskAnalyzer</span>
-              <span className="text-xs text-sidebar-foreground/60">
-                Gestion des risques
-              </span>
-            </div>
+            <SavelyLogo className="w-16 h-auto" />
           </Link>
           <Button
             variant="ghost"

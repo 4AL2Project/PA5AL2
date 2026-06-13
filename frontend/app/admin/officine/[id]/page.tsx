@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 
 import { AdminShell } from '@/components/admin/admin-shell';
 import { DeactivateOfficineButton } from '@/components/admin/deactivate-officine-button';
+import { DeleteOfficineButton } from '@/components/admin/delete-officine-button';
 import { OfficineDetail } from '@/components/admin/officine-detail';
 import { Button } from '@/components/ui/button';
 import { fetchPharmacy } from '@/lib/admin';
@@ -57,10 +58,15 @@ export default async function OfficineDetailPage({
       title={pharmacy.name}
       adminEmail={session.claims.email}
       actions={
-        <DeactivateOfficineButton
-          pharmacyId={pharmacy.pharmacy_id}
-          status={pharmacy.status}
-        />
+        <div className="flex items-center gap-2">
+          {isInactive && (
+            <DeleteOfficineButton pharmacyId={pharmacy.pharmacy_id} />
+          )}
+          <DeactivateOfficineButton
+            pharmacyId={pharmacy.pharmacy_id}
+            status={pharmacy.status}
+          />
+        </div>
       }
     >
       {isInactive && (

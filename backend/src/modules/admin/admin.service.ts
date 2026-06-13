@@ -467,6 +467,40 @@ export class AdminService {
     });
   }
 
+  async deletePharmacy(
+    pharmacyId: string,
+    actorRole: UserRole
+  ): Promise<{ deleted: true }> {
+    this.assertAdmin(actorRole);
+    const pharmacy = await prisma.pharmacy.findUnique({
+      where: { pharmacy_id: pharmacyId },
+      select: { pharmacy_id: true, status: true },
+    });
+    if (!pharmacy) {
+      throw new NotFoundException('Officine introuvable');
+    }
+    if (pharmacy.status !== 'INACTIVE') {
+      throw new BadRequestException(
+        "L'officine doit \u00eatre d\u00e9sactiv\u00e9e avant d'\u00eatre supprim\u00e9e"
+      );
+    }
+
+    await prisma.$transaction([
+      prisma.donation.deleteMany({ where: { pharmacy_id: pharmacyId } }),
+      prisma.action.deleteMany({ where: { pharmacy_id: pharmacyId } }),
+      prisma.riskAnalysis.deleteMany({ where: { pharmacy_id: pharmacyId } }),
+      prisma.sale.deleteMany({ where: { pharmacy_id: pharmacyId } }),
+      prisma.authToken.deleteMany({
+        where: { user: { pharmacy_id: pharmacyId } },
+      }),
+      prisma.user.deleteMany({ where: { pharmacy_id: pharmacyId } }),
+      prisma.product.deleteMany({ where: { pharmacy_id: pharmacyId } }),
+      prisma.pharmacy.delete({ where: { pharmacy_id: pharmacyId } }),
+    ]);
+
+    return { deleted: true };
+  }
+
   async deletePreparateur(
     pharmacyId: string,
     actorRole: UserRole,

@@ -19,5 +19,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  return proxyAdmin('DELETE', `/api/admin/pharmacies/${encodeURIComponent(id)}`);
+  return proxyAdmin(
+    'DELETE',
+    `/api/admin/pharmacies/${encodeURIComponent(id)}`
+  );
 }

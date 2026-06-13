@@ -168,7 +168,6 @@ describe('EmailService — sendMagicLinkEmail (US-67)', () => {
   });
 });
 
-
 describe('EmailService — sendInvitationEmail (US-67)', () => {
   let service: EmailService;
 

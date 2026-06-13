@@ -1,5 +1,4 @@
 import { DashboardLayout } from '@/components/dashboard-layout';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,22 +19,6 @@ export default function SettingsPage() {
       description="Configurez les preferences de l'application"
     >
       <div className="max-w-2xl space-y-3">
-        {/* Appearance */}
-        <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle>Apparence</CardTitle>
-            <CardDescription>
-              Choisissez le theme de l&apos;interface
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label>Theme</Label>
-              <ThemeToggle />
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Notifications */}
         <Card className="border-border/50">
           <CardHeader>

@@ -1,16 +1,10 @@
 'use client';
 
-import {
-  AlertTriangle,
-  Building2,
-  Home,
-  LogOut,
-  UserCircle,
-  Users,
-} from 'lucide-react';
+import { Building2, Home, LogOut, UserCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
+import { SavelyLogo } from '@/components/savely-logo';
 import { Button } from '@/components/ui/button';
 import { endSession } from '@/lib/auth';
 import { cn } from '@/lib/utils';
@@ -49,15 +43,10 @@ export function AdminShell({
     <div className="flex min-h-svh bg-background">
       <aside className="flex w-56 flex-col border-r border-border/50 bg-card">
         <div className="flex h-14 items-center gap-2 px-4">
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary">
-            <AlertTriangle className="h-4 w-4 text-primary-foreground" />
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-sm font-semibold">Savely</span>
-            <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-              Back-office
-            </span>
-          </div>
+          <SavelyLogo className="w-24 h-auto" />
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            Back-office
+          </span>
         </div>
 
         <nav className="flex-1 space-y-1 px-3 py-4">

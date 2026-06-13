@@ -6,7 +6,7 @@
 import { GoneException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
-import { EmailService } from './email.service';
+import { EmailService } from '../email/email.service';
 import { MagicLinkService } from './magic-link.service';
 
 // --- Mocks -------------------------------------------------------------------

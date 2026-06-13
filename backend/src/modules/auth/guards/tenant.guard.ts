@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Request } from 'express';
 
-import { JwtPayload } from '../auth.service';
+import { JwtPayload } from '../jwt-payload';
 import { UserRole } from '../roles.enum';
 
 /**

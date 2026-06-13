@@ -9,6 +9,11 @@ on:
     paths:
       - 'backend/**'
       - '.github/workflows/deploy.yml'
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy.yml'
 
 jobs:
   ci:
@@ -42,9 +47,13 @@ jobs:
       - name: Typecheck
         run: pnpm --filter backend run typecheck
 
+      - name: Test
+        run: pnpm --filter backend run test
+
   deploy:
     name: Deploy to Render (${{ github.ref == 'refs/heads/main' && 'production' || 'dev' }})
     needs: ci
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'dev' }}
 

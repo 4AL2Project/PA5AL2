@@ -13,6 +13,7 @@ model Pharmacy {
   email             String    @unique
   address           String?
   siret             String?
+  status            String    @default("ACTIVE")
   created_at        DateTime  @default(now())
   last_upload_at    DateTime?
   subscription_tier String    @default("free")
@@ -21,6 +22,8 @@ model Pharmacy {
   sales             Sale[]
   analyses          RiskAnalysis[]
   users             User[]
+  actions           Action[]
+  donations         Donation[]
 }
 
 model User {
@@ -62,7 +65,7 @@ model Product {
   name           String
   category       String?
   brand          String?
-  expiry_date    DateTime
+  expiry_date    DateTime?
   stock_quantity Int
   unit_price     Float
   cost_price     Float?
@@ -72,6 +75,8 @@ model Product {
   pharmacy       Pharmacy      @relation(fields: [pharmacy_id], references: [pharmacy_id])
   sales          Sale[]
   analyses       RiskAnalysis[]
+  action         Action?
+  donations      Donation[]
 
   @@unique([pharmacy_id, external_sku])
   @@index([pharmacy_id, expiry_date])
@@ -89,6 +94,7 @@ model Sale {
   product         Product  @relation(fields: [product_id], references: [product_id])
   pharmacy        Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
 
+  @@unique([product_id, sale_date, quantity_sold])
   @@index([product_id, sale_date])
 }
 
@@ -98,13 +104,10 @@ model RiskAnalysis {
   pharmacy_id        String
   analysis_date      DateTime @default(now())
 
-  days_to_expiry     Int
+  days_of_cover      Float
   sales_velocity_30d Float
-  expected_sales     Float
-  excess_stock       Int
-  risk_score         Float
+  capital_locked     Float
   risk_level         String
-
   suggested_action   String
   recoverable_value  Float
   potential_loss     Float
@@ -113,4 +116,69 @@ model RiskAnalysis {
   pharmacy           Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
 
   @@unique([product_id, analysis_date])
+}
+
+// Centre d'actions : une action de remédiation par produit dormant
+model Action {
+  action_id         String    @id @default(uuid())
+  product_id        String    @unique
+  pharmacy_id       String
+  type              String    // 'B2C' | 'DON'
+  status            String    @default("EN_ATTENTE") // EN_ATTENTE|VALIDEE|IGNOREE|SNOOZEE
+  snooze_until      DateTime?
+  days_of_cover     Float
+  capital_locked    Float
+  recoverable_value Float
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  product           Product   @relation(fields: [product_id], references: [product_id])
+  pharmacy          Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  donations         Donation[]
+
+  @@index([pharmacy_id, status])
+}
+
+// Associations bénéficiaires de dons médicamenteux
+model Association {
+  association_id String   @id @default(uuid())
+  name           String
+  address        String
+  city           String
+  postal_code    String
+  lat            Float?
+  lng            Float?
+  categories     String[]
+  contact_email  String?
+  contact_phone  String?
+  active         Boolean  @default(true)
+  created_at     DateTime @default(now())
+
+  donations      Donation[]
+}
+
+// Don médicamenteux : machine à états PROPOSEE→ACCEPTEE→RETIREE|REFUSEE
+model Donation {
+  donation_id     String    @id @default(uuid())
+  product_id      String
+  pharmacy_id     String
+  association_id  String
+  action_id       String?
+  quantity        Int
+  status          String    @default("PROPOSEE") // PROPOSEE|ACCEPTEE|RETIREE|REFUSEE
+  estimated_value Float
+  cerfa_number    String?
+  cerfa_pdf_url   String?
+  proposed_at     DateTime  @default(now())
+  accepted_at     DateTime?
+  withdrawn_at    DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  product         Product     @relation(fields: [product_id], references: [product_id])
+  pharmacy        Pharmacy    @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  association     Association @relation(fields: [association_id], references: [association_id])
+  action          Action?     @relation(fields: [action_id], references: [action_id])
+
+  @@index([pharmacy_id, status])
 }

@@ -1,6 +1,12 @@
 'use client';
 
-import { Inbox, LayoutDashboard, LogOut, Package, Settings } from 'lucide-react';
+import {
+  Inbox,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  Settings,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 

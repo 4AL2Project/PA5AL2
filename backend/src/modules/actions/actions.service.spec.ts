@@ -31,10 +31,7 @@ const OTHER_PHARMACY_ID = 'pharma-uuid-2';
 const ACTION_ID = 'action-uuid-1';
 const PRODUCT_ID = 'prod-uuid-1';
 
-function makeAction(
-  status: string,
-  overrides: Record<string, unknown> = {}
-) {
+function makeAction(status: string, overrides: Record<string, unknown> = {}) {
   return {
     action_id: ACTION_ID,
     product_id: PRODUCT_ID,
@@ -182,7 +179,7 @@ describe('ActionsService — ignore (US-42)', () => {
     service = new ActionsService();
   });
 
-  it("ignore une action EN_ATTENTE → statut passe à IGNOREE (produit sort de la liste principale)", async () => {
+  it('ignore une action EN_ATTENTE → statut passe à IGNOREE (produit sort de la liste principale)', async () => {
     prisma.action.findFirst.mockResolvedValue(makeAction('EN_ATTENTE'));
     prisma.action.update.mockResolvedValue(makeAction('IGNOREE'));
 
@@ -193,9 +190,9 @@ describe('ActionsService — ignore (US-42)', () => {
   it("lève NotFoundException si l'action n'appartient pas à la pharmacie", async () => {
     prisma.action.findFirst.mockResolvedValue(null);
 
-    await expect(
-      service.ignore(ACTION_ID, OTHER_PHARMACY_ID)
-    ).rejects.toThrow(NotFoundException);
+    await expect(service.ignore(ACTION_ID, OTHER_PHARMACY_ID)).rejects.toThrow(
+      NotFoundException
+    );
   });
 
   it('lève BadRequestException si la transition VALIDEE → IGNOREE est tentée directement', async () => {
@@ -222,7 +219,9 @@ describe('ActionsService — snooze (US-42)', () => {
     prisma.action.findFirst.mockResolvedValue(makeAction('EN_ATTENTE'));
     prisma.action.update.mockImplementation(
       ({ data }: { data: Record<string, unknown> }) =>
-        Promise.resolve(makeAction('SNOOZEE', { snooze_until: data['snooze_until'] }))
+        Promise.resolve(
+          makeAction('SNOOZEE', { snooze_until: data['snooze_until'] })
+        )
     );
 
     const before = new Date();
@@ -231,8 +230,7 @@ describe('ActionsService — snooze (US-42)', () => {
 
     expect(result.status).toBe('SNOOZEE');
     const snoozeUntil = result.snooze_until as Date;
-    const diffHours =
-      (snoozeUntil.getTime() - before.getTime()) / 1000 / 3600;
+    const diffHours = (snoozeUntil.getTime() - before.getTime()) / 1000 / 3600;
     expect(diffHours).toBeGreaterThanOrEqual(47.9);
     expect(diffHours).toBeLessThanOrEqual(48.1);
     expect(snoozeUntil.getTime()).toBeLessThanOrEqual(
@@ -243,9 +241,9 @@ describe('ActionsService — snooze (US-42)', () => {
   it("lève NotFoundException si l'action n'appartient pas à la pharmacie", async () => {
     prisma.action.findFirst.mockResolvedValue(null);
 
-    await expect(
-      service.snooze(ACTION_ID, OTHER_PHARMACY_ID)
-    ).rejects.toThrow(NotFoundException);
+    await expect(service.snooze(ACTION_ID, OTHER_PHARMACY_ID)).rejects.toThrow(
+      NotFoundException
+    );
   });
 
   it('lève BadRequestException si la transition VALIDEE → SNOOZEE est tentée', async () => {

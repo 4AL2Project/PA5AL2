@@ -90,8 +90,8 @@ export class ActionsService {
     });
   }
 
-  async validate(actionId: string, pharmacyId: string) {
-    return this.transition(actionId, pharmacyId, 'VALIDEE');
+  async validate(actionId: string, pharmacyId: string, type?: ActionType) {
+    return this.transition(actionId, pharmacyId, 'VALIDEE', undefined, type);
   }
 
   async ignore(actionId: string, pharmacyId: string) {
@@ -112,7 +112,8 @@ export class ActionsService {
     actionId: string,
     pharmacyId: string,
     status: ActionStatus,
-    snoozeUntil?: Date
+    snoozeUntil?: Date,
+    type?: ActionType
   ) {
     const action = await prisma.action.findFirst({
       where: { action_id: actionId, pharmacy_id: pharmacyId },
@@ -135,7 +136,11 @@ export class ActionsService {
 
     return prisma.action.update({
       where: { action_id: actionId },
-      data: { status, snooze_until: snoozeUntil ?? null },
+      data: {
+        status,
+        snooze_until: snoozeUntil ?? null,
+        ...(type ? { type } : {}),
+      },
     });
   }
 }

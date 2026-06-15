@@ -4,7 +4,11 @@ import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { ActionRow, EmptyActions, RoiSummary } from '@/components/actions/action-row';
+import {
+  ActionRow,
+  EmptyActions,
+  RoiSummary,
+} from '@/components/actions/action-row';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import {
   Select,
@@ -63,23 +67,21 @@ export default function ActionsPage() {
   }, [actions, filter]);
 
   const handleValidate = useCallback(
-    async (id: string) => {
-      const action = actions.find((a) => a.id === id);
-      if (!action) return;
-      // DON type is handled by navigation in ActionRow; for B2C we call API directly
-      if (action.type === 'DON') return;
+    async (id: string, type: DormantAction['type']) => {
+      // Pour DON : la navigation vers /donations/new est gérée par le lien dans ActionRow.
+      // On appelle quand même l'API pour passer l'action en VALIDEE avec le bon type.
       setMutating(true);
       try {
-        await validateAction(id);
-        toast.success('Action validée');
+        await validateAction(id, type);
         setActions((prev) => prev.filter((a) => a.id !== id));
+        if (type === 'B2C') toast.success('Action validée — offre B2C à publier (V2)');
       } catch {
         toast.error('Impossible de valider cette action');
       } finally {
         setMutating(false);
       }
     },
-    [actions]
+    []
   );
 
   const handleIgnore = useCallback(async (id: string) => {

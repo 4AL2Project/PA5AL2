@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   Param,
@@ -9,6 +10,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
   ApiOperation,
   ApiQuery,
   ApiTags,
@@ -42,9 +44,17 @@ export class ActionsController {
 
   @Patch(':id/validate')
   @Roles(UserRole.TITULAIRE)
-  @ApiOperation({ summary: 'Valider une action (action prise en compte)' })
-  validate(@Param('id') id: string, @TenantPharmacyId() pharmacyId: string) {
-    return this.actionsService.validate(id, pharmacyId);
+  @ApiOperation({ summary: 'Valider une action (avec type optionnel)' })
+  @ApiBody({
+    required: false,
+    schema: { type: 'object', properties: { type: { type: 'string', enum: ['B2C', 'DON'] } } },
+  })
+  validate(
+    @Param('id') id: string,
+    @TenantPharmacyId() pharmacyId: string,
+    @Body('type') type?: 'B2C' | 'DON'
+  ) {
+    return this.actionsService.validate(id, pharmacyId, type);
   }
 
   @Patch(':id/ignore')

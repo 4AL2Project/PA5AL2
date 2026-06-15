@@ -1,6 +1,13 @@
 'use client';
 
-import { AlertCircle, CheckCircle2, Clock, EyeOff, Heart, ShoppingBag } from 'lucide-react';
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  EyeOff,
+  Heart,
+  ShoppingBag,
+} from 'lucide-react';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
@@ -32,7 +39,8 @@ function ValidateButtons({
   loading,
 }: Pick<ActionRowProps, 'action' | 'onValidate' | 'loading'>) {
   const suggested = action.type;
-  const alternative: DormantAction['type'] = suggested === 'DON' ? 'B2C' : 'DON';
+  const alternative: DormantAction['type'] =
+    suggested === 'DON' ? 'B2C' : 'DON';
   const SuggestedIcon = suggested === 'DON' ? Heart : ShoppingBag;
   const AltIcon = alternative === 'DON' ? Heart : ShoppingBag;
 
@@ -99,11 +107,13 @@ export function ActionRow({
     <div className="flex items-center gap-4 rounded-lg border border-border/60 bg-card p-4">
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm font-medium truncate">{action.productName}</span>
+          <span className="text-sm font-medium truncate">
+            {action.productName}
+          </span>
           <Badge
             className={cn(
               'border text-[10px] font-medium px-1.5 py-0',
-              TYPE_COLORS[action.type],
+              TYPE_COLORS[action.type]
             )}
             variant="outline"
           >
@@ -145,7 +155,11 @@ export function ActionRow({
       )}
 
       <div className="flex items-center gap-2 flex-shrink-0">
-        <ValidateButtons action={action} onValidate={onValidate} loading={loading} />
+        <ValidateButtons
+          action={action}
+          onValidate={onValidate}
+          loading={loading}
+        />
         <Button
           size="sm"
           variant="outline"
@@ -189,7 +203,10 @@ export function EmptyActions({ filtered }: { filtered: boolean }) {
 }
 
 export function RoiSummary({ actions }: { actions: DormantAction[] }) {
-  const totalCapital = actions.reduce((sum, a) => sum + (a.capitalLocked ?? 0), 0);
+  const totalCapital = actions.reduce(
+    (sum, a) => sum + (a.capitalLocked ?? 0),
+    0
+  );
 
   if (totalCapital === 0) return null;
 

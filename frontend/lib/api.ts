@@ -222,7 +222,10 @@ export async function fetchPendingActions(): Promise<DormantAction[]> {
   return data.map(adaptAction);
 }
 
-export async function validateAction(id: string, type?: 'B2C' | 'DON'): Promise<void> {
+export async function validateAction(
+  id: string,
+  type?: 'B2C' | 'DON'
+): Promise<void> {
   await apiFetch(`/api/actions/${id}/validate`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },

@@ -47,7 +47,10 @@ export class ActionsController {
   @ApiOperation({ summary: 'Valider une action (avec type optionnel)' })
   @ApiBody({
     required: false,
-    schema: { type: 'object', properties: { type: { type: 'string', enum: ['B2C', 'DON'] } } },
+    schema: {
+      type: 'object',
+      properties: { type: { type: 'string', enum: ['B2C', 'DON'] } },
+    },
   })
   validate(
     @Param('id') id: string,

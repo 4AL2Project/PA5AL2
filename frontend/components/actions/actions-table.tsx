@@ -63,15 +63,24 @@ export function ActionsTable({
               <TableHead className="text-muted-foreground">Produit</TableHead>
               <TableHead className="text-muted-foreground">SKU</TableHead>
               <TableHead className="text-muted-foreground">Catégorie</TableHead>
-              <TableHead className="text-muted-foreground text-right">Couverture</TableHead>
-              <TableHead className="text-muted-foreground text-right">Capital</TableHead>
-              <TableHead className="text-muted-foreground">Suggestion</TableHead>
+              <TableHead className="text-muted-foreground text-right">
+                Couverture
+              </TableHead>
+              <TableHead className="text-muted-foreground text-right">
+                Capital
+              </TableHead>
+              <TableHead className="text-muted-foreground">
+                Suggestion
+              </TableHead>
               <TableHead className="text-muted-foreground" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {slice.map((action) => (
-              <TableRow key={action.id} className="border-border/50 hover:bg-muted/30">
+              <TableRow
+                key={action.id}
+                className="border-border/50 hover:bg-muted/30"
+              >
                 <TableCell className="font-medium max-w-[160px] truncate">
                   {action.productName}
                 </TableCell>
@@ -82,7 +91,9 @@ export function ActionsTable({
                   {action.category || '—'}
                 </TableCell>
                 <TableCell className="text-right tabular-nums text-sm">
-                  {action.daysOfCover > 9999 ? '∞' : `${Math.round(action.daysOfCover)} j`}
+                  {action.daysOfCover > 9999
+                    ? '∞'
+                    : `${Math.round(action.daysOfCover)} j`}
                 </TableCell>
                 <TableCell className="text-right tabular-nums text-sm font-medium">
                   {action.capitalLocked != null
@@ -97,7 +108,7 @@ export function ActionsTable({
                   <Badge
                     className={cn(
                       'border text-[10px] font-medium px-1.5 py-0',
-                      TYPE_COLORS[action.type],
+                      TYPE_COLORS[action.type]
                     )}
                     variant="outline"
                   >
@@ -144,8 +155,8 @@ export function ActionsTable({
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, actions.length)} sur{' '}
-            {actions.length}
+            {(page - 1) * PAGE_SIZE + 1}–
+            {Math.min(page * PAGE_SIZE, actions.length)} sur {actions.length}
           </span>
           <Pagination className="w-auto mx-0 justify-end">
             <PaginationContent>
@@ -177,7 +188,7 @@ export function ActionsTable({
                       {p}
                     </PaginationLink>
                   </PaginationItem>
-                ),
+                )
               )}
               <PaginationItem>
                 <PaginationNext
@@ -186,7 +197,9 @@ export function ActionsTable({
                     e.preventDefault();
                     if (page < totalPages) onPageChange(page + 1);
                   }}
-                  className={cn(page === totalPages && 'pointer-events-none opacity-40')}
+                  className={cn(
+                    page === totalPages && 'pointer-events-none opacity-40'
+                  )}
                 />
               </PaginationItem>
             </PaginationContent>
@@ -201,7 +214,11 @@ function buildPageNumbers(current: number, total: number): (number | '...')[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const pages: (number | '...')[] = [1];
   if (current > 3) pages.push('...');
-  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) {
+  for (
+    let p = Math.max(2, current - 1);
+    p <= Math.min(total - 1, current + 1);
+    p++
+  ) {
     pages.push(p);
   }
   if (current < total - 2) pages.push('...');

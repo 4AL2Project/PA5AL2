@@ -1,15 +1,13 @@
 import {
   AlertTriangle,
   ArrowRight,
-  Package,
-  TrendingDown,
-  TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
 
+import { CapitalByLevelChart } from '@/components/dashboard/capital-by-level-chart';
+import { DormancyDonutChart } from '@/components/dashboard/dormancy-donut-chart';
 import { RiskChart } from '@/components/dashboard/risk-chart';
 import { RiskTable } from '@/components/dashboard/risk-table';
-import { StatsCard } from '@/components/dashboard/stats-card';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Button } from '@/components/ui/button';
 import { UploadModal } from '@/components/upload/upload-modal';
@@ -23,13 +21,6 @@ export default async function DashboardPage() {
     .filter((p) => p.riskLevel === 'critical' || p.riskLevel === 'high')
     .slice(0, 5);
   const riskDistribution = adaptToRiskDistribution(stats);
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0,
-    }).format(value);
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {
@@ -56,41 +47,17 @@ export default async function DashboardPage() {
       }
     >
       <div className="space-y-6">
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Produits Totaux"
-            value={stats.totalProducts.toLocaleString('fr-FR')}
-            description="Dans l'inventaire"
-            icon={Package}
-            iconClassName="bg-primary/10 text-primary"
-          />
-          <StatsCard
-            title="Don associatif"
-            value={stats.criticalProducts}
-            description="Action immediate requise"
-            icon={AlertTriangle}
-            iconClassName="bg-risk-critical/10 text-risk-critical"
-          />
-          <StatsCard
-            title="Vente B2C"
-            value={stats.highProducts}
-            description="A mettre en ligne"
-            icon={TrendingUp}
-            iconClassName="bg-risk-high/10 text-risk-high"
-          />
-          <StatsCard
-            title="Capital immobilise"
-            value={formatCurrency(stats.totalCapitalLocked)}
-            description="Stock dormant valorise"
-            icon={TrendingDown}
-            iconClassName="bg-risk-low/10 text-risk-low"
-          />
+        {/* Metrics charts */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <DormancyDonutChart stats={stats} />
+          <div className="lg:col-span-2">
+            <CapitalByLevelChart products={products} stats={stats} />
+          </div>
         </div>
 
         {/* Main Content Grid */}
         <div className="grid gap-4 lg:grid-cols-3">
-          {/* Critical Products Table */}
+          {/* Priority table */}
           <div className="lg:col-span-2 space-y-3">
             <div className="flex items-center justify-between">
               <div>
@@ -106,7 +73,14 @@ export default async function DashboardPage() {
                 </Link>
               </Button>
             </div>
-            <RiskTable products={topRiskProducts} compact />
+            {topRiskProducts.length > 0 ? (
+              <RiskTable products={topRiskProducts} compact />
+            ) : (
+              <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-card px-4 py-6 text-sm text-muted-foreground">
+                <AlertTriangle className="h-4 w-4 text-green-500" />
+                Aucun produit prioritaire — votre stock est sain.
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-1">

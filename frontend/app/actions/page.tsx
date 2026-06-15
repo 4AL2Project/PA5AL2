@@ -4,8 +4,8 @@ import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import { ActionsTable, PAGE_SIZE } from '@/components/actions/actions-table';
 import { EmptyActions, RoiSummary } from '@/components/actions/action-row';
+import { ActionsTable, PAGE_SIZE } from '@/components/actions/actions-table';
 import { ValidateActionDialog } from '@/components/actions/validate-action-dialog';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import {
@@ -37,7 +37,9 @@ export default function ActionsPage() {
   const [mutating, setMutating] = useState(false);
   const [filter, setFilter] = useState<FilterLevel>('all');
   const [page, setPage] = useState(1);
-  const [pendingAction, setPendingAction] = useState<DormantAction | null>(null);
+  const [pendingAction, setPendingAction] = useState<DormantAction | null>(
+    null
+  );
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -79,7 +81,7 @@ export default function ActionsPage() {
         return next;
       });
     },
-    [page],
+    [page]
   );
 
   const handleConfirmValidate = useCallback(
@@ -101,7 +103,7 @@ export default function ActionsPage() {
         setMutating(false);
       }
     },
-    [removeAction],
+    [removeAction]
   );
 
   const handleIgnore = useCallback(
@@ -117,7 +119,7 @@ export default function ActionsPage() {
         setMutating(false);
       }
     },
-    [removeAction],
+    [removeAction]
   );
 
   const handleSnooze = useCallback(
@@ -133,7 +135,7 @@ export default function ActionsPage() {
         setMutating(false);
       }
     },
-    [removeAction],
+    [removeAction]
   );
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
@@ -194,7 +196,9 @@ export default function ActionsPage() {
       <ValidateActionDialog
         action={pendingAction}
         open={pendingAction !== null}
-        onOpenChange={(open) => { if (!open) setPendingAction(null); }}
+        onOpenChange={(open) => {
+          if (!open) setPendingAction(null);
+        }}
         onConfirm={handleConfirmValidate}
         loading={mutating}
       />

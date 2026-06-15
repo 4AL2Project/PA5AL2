@@ -19,7 +19,11 @@ import {
 } from '@/components/ui/select';
 import { DormantAction } from '@/lib/types';
 
-const ACTION_OPTIONS: { value: DormantAction['type']; label: string; description: string }[] = [
+const ACTION_OPTIONS: {
+  value: DormantAction['type'];
+  label: string;
+  description: string;
+}[] = [
   {
     value: 'DON',
     label: 'Don associatif',
@@ -74,7 +78,9 @@ export function ValidateActionDialog({
         {action && (
           <div className="space-y-4 py-2">
             <div className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{action.productName}</span>
+              <span className="font-medium text-foreground">
+                {action.productName}
+              </span>
               {' — '}
               {action.daysOfCover > 9999
                 ? '∞ j. de couverture'
@@ -98,7 +104,9 @@ export function ValidateActionDialog({
               <label className="text-sm font-medium">Action à effectuer</label>
               <Select
                 value={selectedType}
-                onValueChange={(v) => setSelectedType(v as DormantAction['type'])}
+                onValueChange={(v) =>
+                  setSelectedType(v as DormantAction['type'])
+                }
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -114,14 +122,20 @@ export function ValidateActionDialog({
                 </SelectContent>
               </Select>
               {selected && (
-                <p className="text-xs text-muted-foreground">{selected.description}</p>
+                <p className="text-xs text-muted-foreground">
+                  {selected.description}
+                </p>
               )}
             </div>
           </div>
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Annuler
           </Button>
           <Button onClick={handleConfirm} disabled={loading}>

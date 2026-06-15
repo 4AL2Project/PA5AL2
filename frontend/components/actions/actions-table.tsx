@@ -1,7 +1,5 @@
 'use client';
 
-import { EyeOff } from 'lucide-react';
-
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -36,7 +34,6 @@ interface ActionsTableProps {
   page: number;
   onPageChange: (page: number) => void;
   onOpenValidate: (action: DormantAction) => void;
-  onIgnore: (id: string) => void;
   loading: boolean;
 }
 
@@ -45,7 +42,6 @@ export function ActionsTable({
   page,
   onPageChange,
   onOpenValidate,
-  onIgnore,
   loading,
 }: ActionsTableProps) {
   const totalPages = Math.ceil(actions.length / PAGE_SIZE);
@@ -114,26 +110,14 @@ export function ActionsTable({
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      disabled={loading}
-                      onClick={() => onOpenValidate(action)}
-                    >
-                      Valider
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={loading}
-                      onClick={() => onIgnore(action.id)}
-                      title="Ignorer"
-                      className="text-muted-foreground"
-                    >
-                      <EyeOff className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={loading}
+                    onClick={() => onOpenValidate(action)}
+                  >
+                    Gérer
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import { ActionsTable, PAGE_SIZE } from '@/components/actions/actions-table';
 import { EmptyActions, RoiSummary } from '@/components/actions/action-row';
+import { ValidateActionDialog } from '@/components/actions/validate-action-dialog';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import {
   Select,
@@ -36,6 +37,7 @@ export default function ActionsPage() {
   const [mutating, setMutating] = useState(false);
   const [filter, setFilter] = useState<FilterLevel>('all');
   const [page, setPage] = useState(1);
+  const [pendingAction, setPendingAction] = useState<DormantAction | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -63,61 +65,76 @@ export default function ActionsPage() {
     return actions.filter((a) => a.type === typeMap[filter]);
   }, [actions, filter]);
 
-  // Reset to page 1 when filter changes
   const handleFilterChange = (value: FilterLevel) => {
     setFilter(value);
     setPage(1);
   };
 
-  const handleValidate = useCallback(async (id: string, type: DormantAction['type']) => {
-    setMutating(true);
-    try {
-      await validateAction(id, type);
-      setActions((prev) => prev.filter((a) => a.id !== id));
-      if (type === 'B2C') toast.success('Action validée — offre B2C à publier (V2)');
-    } catch {
-      toast.error('Impossible de valider cette action');
-    } finally {
-      setMutating(false);
-    }
-  }, []);
-
-  const handleIgnore = useCallback(async (id: string) => {
-    setMutating(true);
-    try {
-      await ignoreAction(id);
-      toast.success('Produit ignoré');
-      setActions((prev) => {
-        const next = prev.filter((a) => a.id !== id);
-        // Stay on current page unless it's now empty
-        const maxPage = Math.max(1, Math.ceil(next.length / PAGE_SIZE));
-        if (page > maxPage) setPage(maxPage);
-        return next;
-      });
-    } catch {
-      toast.error("Impossible d'ignorer cette action");
-    } finally {
-      setMutating(false);
-    }
-  }, [page]);
-
-  const handleSnooze = useCallback(async (id: string) => {
-    setMutating(true);
-    try {
-      await snoozeAction(id);
-      toast.success('Reporté de 48 h');
+  const removeAction = useCallback(
+    (id: string) => {
       setActions((prev) => {
         const next = prev.filter((a) => a.id !== id);
         const maxPage = Math.max(1, Math.ceil(next.length / PAGE_SIZE));
         if (page > maxPage) setPage(maxPage);
         return next;
       });
-    } catch {
-      toast.error('Impossible de snoozer cette action');
-    } finally {
-      setMutating(false);
-    }
-  }, [page]);
+    },
+    [page],
+  );
+
+  const handleConfirmValidate = useCallback(
+    async (id: string, type: DormantAction['type']) => {
+      setMutating(true);
+      try {
+        await validateAction(id, type);
+        removeAction(id);
+        setPendingAction(null);
+        if (type === 'DON') {
+          // Naviguer vers le parcours don — le toast est géré par la page donations
+          window.location.href = `/donations/new?action=${id}`;
+        } else {
+          toast.success('Action validée — offre B2C à publier (V2)');
+        }
+      } catch {
+        toast.error('Impossible de valider cette action');
+      } finally {
+        setMutating(false);
+      }
+    },
+    [removeAction],
+  );
+
+  const handleIgnore = useCallback(
+    async (id: string) => {
+      setMutating(true);
+      try {
+        await ignoreAction(id);
+        toast.success('Produit ignoré');
+        removeAction(id);
+      } catch {
+        toast.error("Impossible d'ignorer cette action");
+      } finally {
+        setMutating(false);
+      }
+    },
+    [removeAction],
+  );
+
+  const handleSnooze = useCallback(
+    async (id: string) => {
+      setMutating(true);
+      try {
+        await snoozeAction(id);
+        toast.success('Reporté de 48 h');
+        removeAction(id);
+      } catch {
+        toast.error('Impossible de snoozer cette action');
+      } finally {
+        setMutating(false);
+      }
+    },
+    [removeAction],
+  );
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
@@ -158,7 +175,7 @@ export default function ActionsPage() {
             actions={filtered}
             page={page}
             onPageChange={setPage}
-            onValidate={handleValidate}
+            onOpenValidate={setPendingAction}
             onIgnore={handleIgnore}
             onSnooze={handleSnooze}
             loading={mutating}
@@ -167,12 +184,20 @@ export default function ActionsPage() {
           <EmptyActions filtered={filter !== 'all'} />
         )}
 
-        {!loading && filtered.length > 0 && (
+        {!loading && filtered.length > PAGE_SIZE && (
           <p className="text-xs text-muted-foreground text-center">
             Page {page} sur {totalPages} · {PAGE_SIZE} produits par page
           </p>
         )}
       </div>
+
+      <ValidateActionDialog
+        action={pendingAction}
+        open={pendingAction !== null}
+        onOpenChange={(open) => { if (!open) setPendingAction(null); }}
+        onConfirm={handleConfirmValidate}
+        loading={mutating}
+      />
     </DashboardLayout>
   );
 }

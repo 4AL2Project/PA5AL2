@@ -1,7 +1,6 @@
 'use client';
 
-import { Clock, EyeOff, Heart, ShoppingBag } from 'lucide-react';
-import Link from 'next/link';
+import { Clock, EyeOff } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,73 +31,11 @@ const TYPE_COLORS: Record<DormantAction['type'], string> = {
   B2C: 'bg-amber-50 text-amber-700 border-amber-200',
 };
 
-function ValidateCell({
-  action,
-  onValidate,
-  loading,
-}: {
-  action: DormantAction;
-  onValidate: (id: string, type: DormantAction['type']) => void;
-  loading: boolean;
-}) {
-  const suggested = action.type;
-  const alternative: DormantAction['type'] = suggested === 'DON' ? 'B2C' : 'DON';
-  const SuggestedIcon = suggested === 'DON' ? Heart : ShoppingBag;
-  const AltIcon = alternative === 'DON' ? Heart : ShoppingBag;
-  const altLabel = alternative === 'DON' ? 'Don' : 'B2C';
-
-  if (suggested === 'DON') {
-    return (
-      <div className="flex flex-col items-start gap-0.5">
-        <Button size="sm" variant="default" disabled={loading} asChild>
-          <Link
-            href={`/donations/new?action=${action.id}&product=${action.productId}`}
-            onClick={() => onValidate(action.id, 'DON')}
-          >
-            <SuggestedIcon className="h-3 w-3 mr-1" />
-            Don associatif
-          </Link>
-        </Button>
-        <button
-          disabled={loading}
-          onClick={() => onValidate(action.id, 'B2C')}
-          className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors disabled:opacity-50 pl-0.5"
-        >
-          <AltIcon className="h-2.5 w-2.5 inline mr-0.5" />
-          {altLabel} à la place
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col items-start gap-0.5">
-      <Button
-        size="sm"
-        variant="default"
-        disabled={loading}
-        onClick={() => onValidate(action.id, 'B2C')}
-      >
-        <SuggestedIcon className="h-3 w-3 mr-1" />
-        Vente B2C
-      </Button>
-      <button
-        disabled={loading}
-        onClick={() => onValidate(action.id, 'DON')}
-        className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors disabled:opacity-50 pl-0.5"
-      >
-        <AltIcon className="h-2.5 w-2.5 inline mr-0.5" />
-        {altLabel} à la place
-      </button>
-    </div>
-  );
-}
-
 interface ActionsTableProps {
   actions: DormantAction[];
   page: number;
   onPageChange: (page: number) => void;
-  onValidate: (id: string, type: DormantAction['type']) => void;
+  onOpenValidate: (action: DormantAction) => void;
   onIgnore: (id: string) => void;
   onSnooze: (id: string) => void;
   loading: boolean;
@@ -108,14 +45,13 @@ export function ActionsTable({
   actions,
   page,
   onPageChange,
-  onValidate,
+  onOpenValidate,
   onIgnore,
   onSnooze,
   loading,
 }: ActionsTableProps) {
   const totalPages = Math.ceil(actions.length / PAGE_SIZE);
   const slice = actions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
   const pages = buildPageNumbers(page, totalPages);
 
   return (
@@ -130,7 +66,6 @@ export function ActionsTable({
               <TableHead className="text-muted-foreground text-right">Couverture</TableHead>
               <TableHead className="text-muted-foreground text-right">Capital</TableHead>
               <TableHead className="text-muted-foreground">Suggestion</TableHead>
-              <TableHead className="text-muted-foreground">Valider</TableHead>
               <TableHead className="text-muted-foreground" />
             </TableRow>
           </TableHeader>
@@ -170,10 +105,15 @@ export function ActionsTable({
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <ValidateCell action={action} onValidate={onValidate} loading={loading} />
-                </TableCell>
-                <TableCell>
                   <div className="flex items-center gap-1">
+                    <Button
+                      size="sm"
+                      variant="default"
+                      disabled={loading}
+                      onClick={() => onOpenValidate(action)}
+                    >
+                      Valider
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"

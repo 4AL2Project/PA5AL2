@@ -27,6 +27,7 @@ interface RawRiskAnalysis {
   product_id: string;
   product: RawProduct;
   days_of_cover: number;
+  sales_velocity_30d: number;
   capital_locked: number;
   risk_level: string;
   recoverable_value: number;
@@ -72,6 +73,7 @@ function adaptRiskAnalysis(raw: RawRiskAnalysis): Product {
     riskLevel: raw.risk_level as RiskLevel,
     stock: raw.product.stock_quantity,
     recoveryValue: raw.recoverable_value,
+    salesVelocity30d: raw.sales_velocity_30d ?? 0,
     action: raw.suggested_action ?? '',
     lastUpdated: raw.analysis_date,
   };

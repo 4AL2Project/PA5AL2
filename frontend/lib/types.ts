@@ -28,6 +28,7 @@ export interface Product {
   capitalLocked: number;
   stock: number;
   recoveryValue: number;
+  salesVelocity30d: number;
   action: string;
   lastUpdated: string;
 }

@@ -178,7 +178,6 @@ export default function ActionsPage() {
             page={page}
             onPageChange={setPage}
             onOpenValidate={setPendingAction}
-            onIgnore={handleIgnore}
             loading={mutating}
           />
         ) : (
@@ -201,6 +200,10 @@ export default function ActionsPage() {
         onConfirm={handleConfirmValidate}
         onSnooze={(id) => {
           handleSnooze(id);
+          setPendingAction(null);
+        }}
+        onIgnore={(id) => {
+          handleIgnore(id);
           setPendingAction(null);
         }}
         loading={mutating}

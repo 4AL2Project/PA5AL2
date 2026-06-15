@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock } from 'lucide-react';
+import { Clock, EyeOff } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,7 @@ interface ValidateActionDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: (id: string, type: DormantAction['type']) => void;
   onSnooze: (id: string) => void;
+  onIgnore: (id: string) => void;
   loading: boolean;
 }
 
@@ -52,6 +53,7 @@ export function ValidateActionDialog({
   onOpenChange,
   onConfirm,
   onSnooze,
+  onIgnore,
   loading,
 }: ValidateActionDialogProps) {
   const [selectedType, setSelectedType] = useState<DormantAction['type']>(
@@ -134,6 +136,17 @@ export function ValidateActionDialog({
         )}
 
         <DialogFooter>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              if (action) onIgnore(action.id);
+            }}
+            disabled={loading}
+            className="mr-auto text-muted-foreground"
+          >
+            <EyeOff className="h-4 w-4 mr-1.5" />
+            Masquer
+          </Button>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}

@@ -142,7 +142,11 @@ describe('DashboardController — US-40', () => {
   describe('TC-05 — Top 10 produits dormants triés par capital desc', () => {
     it('renvoie au plus 10 produits (high + critical), triés par capital desc', async () => {
       const analyses = Array.from({ length: 12 }, (_, i) =>
-        makeAnalysis(`prod-${i}`, i % 3 === 0 ? 'critical' : 'high', (12 - i) * 100)
+        makeAnalysis(
+          `prod-${i}`,
+          i % 3 === 0 ? 'critical' : 'high',
+          (12 - i) * 100
+        )
       ).concat([makeAnalysis('prod-safe', 'safe', 9999)]);
 
       prisma.pharmacy.findUnique.mockResolvedValue(makePharmacy());
@@ -155,14 +159,14 @@ describe('DashboardController — US-40', () => {
       expect(result.top10_dormants).toHaveLength(10);
       // Trié par capital desc
       for (let i = 1; i < result.top10_dormants.length; i++) {
-        expect(result.top10_dormants[i - 1].capital_locked).toBeGreaterThanOrEqual(
-          result.top10_dormants[i].capital_locked
-        );
+        expect(
+          result.top10_dormants[i - 1].capital_locked
+        ).toBeGreaterThanOrEqual(result.top10_dormants[i].capital_locked);
       }
       // Pas de produits safe dans le top 10
-      expect(
-        result.top10_dormants.every((d) => d.risk_level !== 'safe')
-      ).toBe(true);
+      expect(result.top10_dormants.every((d) => d.risk_level !== 'safe')).toBe(
+        true
+      );
     });
 
     it('renvoie moins de 10 entrées si peu de produits dormants', async () => {

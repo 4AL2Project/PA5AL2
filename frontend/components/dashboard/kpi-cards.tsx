@@ -70,7 +70,10 @@ function KpiCard({
   );
 }
 
-export function KpiCards({ dashboard, financialMasked = false }: KpiCardsProps) {
+export function KpiCards({
+  dashboard,
+  financialMasked = false,
+}: KpiCardsProps) {
   const capitalValue = financialMasked
     ? MASKED
     : formatCurrency(dashboard.totalCapitalLocked);
@@ -108,7 +111,9 @@ export function KpiCards({ dashboard, financialMasked = false }: KpiCardsProps) 
         <CardContent>
           <div className="flex items-start justify-between">
             <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Actions en attente</p>
+              <p className="text-xs text-muted-foreground">
+                Actions en attente
+              </p>
               <p className="text-2xl font-semibold tracking-tight">
                 {dashboard.pendingActions}
               </p>

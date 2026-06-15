@@ -40,7 +40,10 @@ test.describe('US-40 — Dashboard KPIs (desktop)', () => {
 
     // Les 4 cards KPI doivent être présentes (cibler les titres des cards)
     await expect(
-      page.getByRole('paragraph').filter({ hasText: /^Capital immobilisé$/ }).first()
+      page
+        .getByRole('paragraph')
+        .filter({ hasText: /^Capital immobilisé$/ })
+        .first()
     ).toBeVisible();
     await expect(
       page.getByRole('paragraph').filter({ hasText: /^Produits dormants$/ })
@@ -62,7 +65,9 @@ test.describe('US-40 — Dashboard KPIs (desktop)', () => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
-    await expect(page.getByRole('heading', { name: 'Top 10 produits dormants' })).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Top 10 produits dormants' })
+    ).toBeVisible();
     await expect(
       page.getByText('Triés par capital immobilisé décroissant')
     ).toBeVisible();
@@ -73,15 +78,15 @@ test.describe('US-40 — Dashboard KPIs (desktop)', () => {
     });
   });
 
-  test('TC-06 — Bandeau alerte absent si données récentes', async ({ page }) => {
+  test('TC-06 — Bandeau alerte absent si données récentes', async ({
+    page,
+  }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
 
     // Si le dernier import est récent, pas de bandeau orange
     // On vérifie simplement que la page charge sans erreur
-    const alertBanner = page.locator(
-      'text=Données non mises à jour depuis'
-    );
+    const alertBanner = page.locator('text=Données non mises à jour depuis');
     // On screenshote dans tous les cas
     await page.screenshot({
       path: 'e2e/screenshots/us40-stale-alert-desktop.png',
@@ -130,7 +135,10 @@ test.describe('US-40 — Dashboard KPIs (mobile)', () => {
     await page.waitForLoadState('networkidle');
 
     await expect(
-      page.getByRole('paragraph').filter({ hasText: /^Capital immobilisé$/ }).first()
+      page
+        .getByRole('paragraph')
+        .filter({ hasText: /^Capital immobilisé$/ })
+        .first()
     ).toBeVisible();
     await expect(
       page.getByRole('paragraph').filter({ hasText: /^Produits dormants$/ })

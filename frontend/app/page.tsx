@@ -1,11 +1,9 @@
-import { AlertTriangle, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 import { CapitalByLevelChart } from '@/components/dashboard/capital-by-level-chart';
 import { DaysOfCoverChart } from '@/components/dashboard/days-of-cover-chart';
 import { DormancyDonutChart } from '@/components/dashboard/dormancy-donut-chart';
-import { KpiCards } from '@/components/dashboard/kpi-cards';
-import { RiskTable } from '@/components/dashboard/risk-table';
 import { SalesVelocityChart } from '@/components/dashboard/sales-velocity-chart';
 import { StaleDataAlert } from '@/components/dashboard/stale-data-alert';
 import { Top10DormantsTable } from '@/components/dashboard/top10-dormants-table';
@@ -26,9 +24,6 @@ export default async function DashboardPage() {
   const hasProducts = dashboard.totalProducts > 0;
 
   const criticalProducts = products.filter((p) => p.riskLevel === 'critical');
-  const topRiskProducts = products.filter(
-    (p) => p.riskLevel === 'critical' || p.riskLevel === 'high'
-  );
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {
@@ -70,9 +65,6 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        {/* KPI cards — toujours visibles même si hasProducts = false */}
-        <KpiCards dashboard={dashboard} financialMasked={financialMasked} />
-
         {hasProducts && (
           <>
             {/* Ligne 1 : répartition + capital */}
@@ -93,7 +85,9 @@ export default async function DashboardPage() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-medium">Top 10 produits dormants</h2>
+                  <h2 className="text-base font-medium">
+                    Top 10 produits dormants
+                  </h2>
                   <p className="text-xs text-muted-foreground">
                     Triés par capital immobilisé décroissant
                   </p>
@@ -109,26 +103,6 @@ export default async function DashboardPage() {
                 dormants={dashboard.top10Dormants}
                 financialMasked={financialMasked}
               />
-            </div>
-
-            {/* Table produits prioritaires */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-medium">Produits Prioritaires</h2>
-                  <p className="text-xs text-muted-foreground">
-                    Produits necessitant une action immediate
-                  </p>
-                </div>
-              </div>
-              {topRiskProducts.length > 0 ? (
-                <RiskTable products={topRiskProducts} />
-              ) : (
-                <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-card px-4 py-6 text-sm text-muted-foreground">
-                  <AlertTriangle className="h-4 w-4 text-green-500" />
-                  Aucun produit prioritaire — votre stock est sain.
-                </div>
-              )}
             </div>
           </>
         )}

@@ -107,7 +107,7 @@ export function ValidateActionDialog({
               )}
             </div>
 
-            <div className="space-y-1.5">
+            <div className="min-w-0 space-y-1.5">
               <label className="text-sm font-medium">Action à effectuer</label>
               <Select
                 value={selectedType}
@@ -115,7 +115,7 @@ export function ValidateActionDialog({
                   setSelectedType(v as DormantAction['type'])
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full min-w-0 truncate">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

@@ -20,7 +20,7 @@ export function DashboardLayout({
   return (
     <div className="flex min-h-svh bg-background">
       <AppSidebar userEmail={userEmail} />
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col overflow-auto">
         <main className="mx-auto w-full max-w-6xl flex-1 px-8 py-8">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div className="space-y-1">

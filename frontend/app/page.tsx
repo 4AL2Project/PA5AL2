@@ -1,35 +1,23 @@
-import {
-  AlertTriangle,
-  ArrowRight,
-  Package,
-  TrendingDown,
-  TrendingUp,
-} from 'lucide-react';
+import { AlertTriangle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-import { RiskChart } from '@/components/dashboard/risk-chart';
+import { CapitalByLevelChart } from '@/components/dashboard/capital-by-level-chart';
+import { DaysOfCoverChart } from '@/components/dashboard/days-of-cover-chart';
+import { DormancyDonutChart } from '@/components/dashboard/dormancy-donut-chart';
 import { RiskTable } from '@/components/dashboard/risk-table';
-import { StatsCard } from '@/components/dashboard/stats-card';
+import { SalesVelocityChart } from '@/components/dashboard/sales-velocity-chart';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Button } from '@/components/ui/button';
 import { UploadModal } from '@/components/upload/upload-modal';
-import { adaptToRiskDistribution, fetchLatestAnalysis } from '@/lib/api';
+import { fetchLatestAnalysis } from '@/lib/api';
 
 export default async function DashboardPage() {
   const { products, stats } = await fetchLatestAnalysis();
 
   const criticalProducts = products.filter((p) => p.riskLevel === 'critical');
-  const topRiskProducts = products
-    .filter((p) => p.riskLevel === 'critical' || p.riskLevel === 'high')
-    .slice(0, 5);
-  const riskDistribution = adaptToRiskDistribution(stats);
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0,
-    }).format(value);
+  const topRiskProducts = products.filter(
+    (p) => p.riskLevel === 'critical' || p.riskLevel === 'high'
+  );
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {
@@ -56,62 +44,44 @@ export default async function DashboardPage() {
       }
     >
       <div className="space-y-6">
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Produits Totaux"
-            value={stats.totalProducts.toLocaleString('fr-FR')}
-            description="Dans l'inventaire"
-            icon={Package}
-            iconClassName="bg-primary/10 text-primary"
-          />
-          <StatsCard
-            title="Don associatif"
-            value={stats.criticalProducts}
-            description="Action immediate requise"
-            icon={AlertTriangle}
-            iconClassName="bg-risk-critical/10 text-risk-critical"
-          />
-          <StatsCard
-            title="Vente B2C"
-            value={stats.highProducts}
-            description="A mettre en ligne"
-            icon={TrendingUp}
-            iconClassName="bg-risk-high/10 text-risk-high"
-          />
-          <StatsCard
-            title="Capital immobilise"
-            value={formatCurrency(stats.totalCapitalLocked)}
-            description="Stock dormant valorise"
-            icon={TrendingDown}
-            iconClassName="bg-risk-low/10 text-risk-low"
-          />
+        {/* Ligne 1 : répartition + capital */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <DormancyDonutChart stats={stats} />
+          <div className="lg:col-span-2">
+            <CapitalByLevelChart products={products} stats={stats} />
+          </div>
         </div>
 
-        {/* Main Content Grid */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          {/* Critical Products Table */}
-          <div className="lg:col-span-2 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-medium">Produits Prioritaires</h2>
-                <p className="text-xs text-muted-foreground">
-                  Produits necessitant une action immediate
-                </p>
-              </div>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/products">
-                  Voir tout
-                  <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
-            <RiskTable products={topRiskProducts} compact />
-          </div>
+        {/* Ligne 2 : ventes + jours de couverture */}
+        <div className="grid gap-4 lg:grid-cols-2">
+          <SalesVelocityChart products={products} />
+          <DaysOfCoverChart products={products} />
+        </div>
 
-          <div className="lg:col-span-1">
-            <RiskChart data={riskDistribution} />
+        {/* Ligne 3 : table pleine largeur */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-medium">Produits Prioritaires</h2>
+              <p className="text-xs text-muted-foreground">
+                Produits necessitant une action immediate
+              </p>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/products">
+                Voir tout
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </Link>
+            </Button>
           </div>
+          {topRiskProducts.length > 0 ? (
+            <RiskTable products={topRiskProducts} />
+          ) : (
+            <div className="flex items-center gap-2 rounded-lg border border-border/50 bg-card px-4 py-6 text-sm text-muted-foreground">
+              <AlertTriangle className="h-4 w-4 text-green-500" />
+              Aucun produit prioritaire — votre stock est sain.
+            </div>
+          )}
         </div>
       </div>
     </DashboardLayout>

@@ -1,5 +1,6 @@
 import {
   AnalysisStats,
+  DormantAction,
   Product,
   RiskDistribution,
   RiskLevel,
@@ -26,6 +27,7 @@ interface RawRiskAnalysis {
   product_id: string;
   product: RawProduct;
   days_of_cover: number;
+  sales_velocity_30d: number;
   capital_locked: number;
   risk_level: string;
   recoverable_value: number;
@@ -71,6 +73,7 @@ function adaptRiskAnalysis(raw: RawRiskAnalysis): Product {
     riskLevel: raw.risk_level as RiskLevel,
     stock: raw.product.stock_quantity,
     recoveryValue: raw.recoverable_value,
+    salesVelocity30d: raw.sales_velocity_30d ?? 0,
     action: raw.suggested_action ?? '',
     lastUpdated: raw.analysis_date,
   };
@@ -176,4 +179,66 @@ export async function uploadFile(
     method: 'POST',
     body: form,
   });
+}
+
+// ─── Actions (US-42) ──────────────────────────────────────────────────────────
+
+interface RawAction {
+  action_id: string;
+  product_id: string;
+  type: string;
+  status: string;
+  snooze_until: string | null;
+  days_of_cover: number;
+  capital_locked?: number | null;
+  recoverable_value?: number | null;
+  product: {
+    name: string;
+    external_sku: string;
+    category?: string | null;
+    brand?: string | null;
+    stock_quantity: number;
+  };
+}
+
+function adaptAction(raw: RawAction): DormantAction {
+  return {
+    id: raw.action_id,
+    productId: raw.product_id,
+    productName: raw.product.name,
+    sku: raw.product.external_sku,
+    category: raw.product.category ?? '',
+    brand: raw.product.brand ?? '',
+    stock: raw.product.stock_quantity,
+    type: raw.type as DormantAction['type'],
+    status: raw.status as DormantAction['status'],
+    snoozeUntil: raw.snooze_until ?? null,
+    daysOfCover: raw.days_of_cover,
+    capitalLocked: raw.capital_locked ?? null,
+    recoverableValue: raw.recoverable_value ?? null,
+  };
+}
+
+export async function fetchPendingActions(): Promise<DormantAction[]> {
+  const data = await apiFetch<RawAction[]>('/api/actions');
+  return data.map(adaptAction);
+}
+
+export async function validateAction(
+  id: string,
+  type?: 'B2C' | 'DON'
+): Promise<void> {
+  await apiFetch(`/api/actions/${id}/validate`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: type ? JSON.stringify({ type }) : undefined,
+  });
+}
+
+export async function ignoreAction(id: string): Promise<void> {
+  await apiFetch(`/api/actions/${id}/ignore`, { method: 'PATCH' });
+}
+
+export async function snoozeAction(id: string): Promise<void> {
+  await apiFetch(`/api/actions/${id}/snooze`, { method: 'PATCH' });
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, EyeOff } from 'lucide-react';
+import { EyeOff } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -37,7 +37,6 @@ interface ActionsTableProps {
   onPageChange: (page: number) => void;
   onOpenValidate: (action: DormantAction) => void;
   onIgnore: (id: string) => void;
-  onSnooze: (id: string) => void;
   loading: boolean;
 }
 
@@ -47,7 +46,6 @@ export function ActionsTable({
   onPageChange,
   onOpenValidate,
   onIgnore,
-  onSnooze,
   loading,
 }: ActionsTableProps) {
   const totalPages = Math.ceil(actions.length / PAGE_SIZE);
@@ -124,15 +122,6 @@ export function ActionsTable({
                       onClick={() => onOpenValidate(action)}
                     >
                       Valider
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={loading}
-                      onClick={() => onSnooze(action.id)}
-                      title="Reporter de 48 h"
-                    >
-                      <Clock className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       size="sm"

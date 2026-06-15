@@ -179,7 +179,6 @@ export default function ActionsPage() {
             onPageChange={setPage}
             onOpenValidate={setPendingAction}
             onIgnore={handleIgnore}
-            onSnooze={handleSnooze}
             loading={mutating}
           />
         ) : (
@@ -200,6 +199,10 @@ export default function ActionsPage() {
           if (!open) setPendingAction(null);
         }}
         onConfirm={handleConfirmValidate}
+        onSnooze={(id) => {
+          handleSnooze(id);
+          setPendingAction(null);
+        }}
         loading={mutating}
       />
     </DashboardLayout>

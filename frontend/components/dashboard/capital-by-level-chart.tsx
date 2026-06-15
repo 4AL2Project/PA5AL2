@@ -32,13 +32,16 @@ const fmt = (v: number) =>
     notation: v >= 1_000_000 ? 'compact' : 'standard',
   }).format(v);
 
-export function CapitalByLevelChart({ products, stats }: CapitalByLevelChartProps) {
+export function CapitalByLevelChart({
+  products,
+  stats,
+}: CapitalByLevelChartProps) {
   const byLevel = products.reduce<Record<string, number>>(
     (acc, p) => {
       acc[p.riskLevel] = (acc[p.riskLevel] ?? 0) + p.capitalLocked;
       return acc;
     },
-    { critical: 0, high: 0, safe: 0 },
+    { critical: 0, high: 0, safe: 0 }
   );
 
   const data = (['critical', 'high', 'safe'] as const).map((level) => ({
@@ -50,15 +53,22 @@ export function CapitalByLevelChart({ products, stats }: CapitalByLevelChartProp
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium">Capital immobilisé</CardTitle>
+        <CardTitle className="text-base font-medium">
+          Capital immobilisé
+        </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Total : {fmt(stats.totalCapitalLocked)} · Récupérable : {fmt(stats.totalRecoveryValue)}
+          Total : {fmt(stats.totalCapitalLocked)} · Récupérable :{' '}
+          {fmt(stats.totalRecoveryValue)}
         </p>
       </CardHeader>
       <CardContent>
         <div className="h-[200px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} layout="vertical" margin={{ left: 0, right: 32 }}>
+            <BarChart
+              data={data}
+              layout="vertical"
+              margin={{ left: 0, right: 32 }}
+            >
               <XAxis
                 type="number"
                 axisLine={false}

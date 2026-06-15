@@ -1,5 +1,6 @@
 'use client';
 
+import { Clock } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -41,6 +42,7 @@ interface ValidateActionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: (id: string, type: DormantAction['type']) => void;
+  onSnooze: (id: string) => void;
   loading: boolean;
 }
 
@@ -49,6 +51,7 @@ export function ValidateActionDialog({
   open,
   onOpenChange,
   onConfirm,
+  onSnooze,
   loading,
 }: ValidateActionDialogProps) {
   const [selectedType, setSelectedType] = useState<DormantAction['type']>(
@@ -137,6 +140,16 @@ export function ValidateActionDialog({
             disabled={loading}
           >
             Annuler
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              if (action) onSnooze(action.id);
+            }}
+            disabled={loading}
+          >
+            <Clock className="h-4 w-4 mr-1.5" />
+            Reporter 48 h
           </Button>
           <Button onClick={handleConfirm} disabled={loading}>
             Valider

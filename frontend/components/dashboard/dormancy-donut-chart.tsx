@@ -1,12 +1,23 @@
 'use client';
 
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
+import {
+  Cell,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+} from 'recharts';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AnalysisStats } from '@/lib/types';
 
 const LEVELS = [
-  { key: 'criticalProducts', label: 'Don associatif', color: 'var(--color-risk-critical)' },
+  {
+    key: 'criticalProducts',
+    label: 'Don associatif',
+    color: 'var(--color-risk-critical)',
+  },
   { key: 'highProducts', label: 'Vente B2C', color: 'var(--color-risk-high)' },
   { key: 'safeProducts', label: 'Sûr', color: 'var(--color-risk-low)' },
 ] as const;
@@ -27,8 +38,12 @@ export function DormancyDonutChart({ stats }: DormancyDonutChartProps) {
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium">Répartition du stock</CardTitle>
-        <p className="text-xs text-muted-foreground">{total} produits analysés</p>
+        <CardTitle className="text-base font-medium">
+          Répartition du stock
+        </CardTitle>
+        <p className="text-xs text-muted-foreground">
+          {total} produits analysés
+        </p>
       </CardHeader>
       <CardContent>
         <div className="h-[200px] relative">
@@ -64,7 +79,9 @@ export function DormancyDonutChart({ stats }: DormancyDonutChartProps) {
                 iconSize={8}
                 wrapperStyle={{ fontSize: 12 }}
                 formatter={(value) => (
-                  <span style={{ color: 'var(--color-muted-foreground)' }}>{value}</span>
+                  <span style={{ color: 'var(--color-muted-foreground)' }}>
+                    {value}
+                  </span>
                 )}
               />
             </PieChart>

@@ -1,7 +1,4 @@
-import {
-  AlertTriangle,
-  ArrowRight,
-} from 'lucide-react';
+import { AlertTriangle, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 import { CapitalByLevelChart } from '@/components/dashboard/capital-by-level-chart';

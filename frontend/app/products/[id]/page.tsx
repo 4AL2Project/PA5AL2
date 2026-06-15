@@ -442,6 +442,7 @@ export default function ProductDetailPage({
         onOpenChange={setDialogOpen}
         onConfirm={handleValidate}
         onSnooze={handleSnooze}
+        onIgnore={handleIgnore}
         loading={loading}
       />
     </DashboardLayout>

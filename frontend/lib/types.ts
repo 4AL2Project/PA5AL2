@@ -1,4 +1,22 @@
 export type RiskLevel = 'critical' | 'high' | 'safe';
+export type ActionStatus = 'EN_ATTENTE' | 'VALIDEE' | 'IGNOREE' | 'SNOOZEE';
+export type ActionType = 'B2C' | 'DON';
+
+export interface DormantAction {
+  id: string;
+  productId: string;
+  productName: string;
+  sku: string;
+  category: string;
+  brand: string;
+  stock: number;
+  type: ActionType;
+  status: ActionStatus;
+  snoozeUntil: string | null;
+  daysOfCover: number;
+  capitalLocked: number | null; // null si masqué (PREPARATEUR)
+  recoverableValue: number | null;
+}
 
 export interface Product {
   id: string;
@@ -10,6 +28,7 @@ export interface Product {
   capitalLocked: number;
   stock: number;
   recoveryValue: number;
+  salesVelocity30d: number;
   action: string;
   lastUpdated: string;
 }

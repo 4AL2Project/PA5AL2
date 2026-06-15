@@ -1,7 +1,10 @@
 'use client';
 
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -14,6 +17,8 @@ import { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 import { RiskBadge } from './risk-badge';
+
+const PAGE_SIZE = 10;
 
 interface RiskTableProps {
   products: Product[];
@@ -31,6 +36,12 @@ export function RiskTable({
   clickable = true,
 }: RiskTableProps) {
   const router = useRouter();
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const start = (safePage - 1) * PAGE_SIZE;
+  const paginated = products.slice(start, start + PAGE_SIZE);
 
   const handleRowClick = (productId: string) => {
     if (clickable) {
@@ -75,7 +86,7 @@ export function RiskTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {products.map((product) => (
+          {paginated.map((product) => (
             <TableRow
               key={product.id}
               className={cn(
@@ -114,6 +125,38 @@ export function RiskTable({
           ))}
         </TableBody>
       </Table>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between border-t border-border/50 px-4 py-3">
+          <span className="text-xs text-muted-foreground">
+            {start + 1}–{Math.min(start + PAGE_SIZE, products.length)} sur{' '}
+            {products.length}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              disabled={safePage === 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs tabular-nums px-1">
+              {safePage} / {totalPages}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              disabled={safePage === totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

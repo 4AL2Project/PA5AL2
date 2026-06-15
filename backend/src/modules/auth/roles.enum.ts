@@ -10,4 +10,5 @@ export const FINANCIAL_FIELDS = [
   'potential_loss',
   'total_recoverable',
   'total_potential_loss',
+  'capital_locked',
 ] as const;

@@ -93,14 +93,16 @@ export function ValidateActionDialog({
               {action.capitalLocked != null && (
                 <>
                   {' · '}
-                  <span className="font-medium text-foreground">
-                    {action.capitalLocked.toLocaleString('fr-FR', {
-                      style: 'currency',
-                      currency: 'EUR',
-                      maximumFractionDigits: 0,
-                    })}
-                  </span>{' '}
-                  immobilisés
+                  <span className="whitespace-nowrap">
+                    <span className="font-medium text-foreground">
+                      {action.capitalLocked.toLocaleString('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR',
+                        maximumFractionDigits: 0,
+                      })}
+                    </span>{' '}
+                    immobilisés
+                  </span>
                 </>
               )}
             </div>

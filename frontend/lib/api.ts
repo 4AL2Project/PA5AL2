@@ -45,6 +45,52 @@ interface RawSummary {
   critical?: number;
   high?: number;
   safe?: number;
+  pending_actions?: number;
+  missing_cost_price_count?: number;
+}
+
+interface RawTop10Dormant {
+  product_id: string;
+  name: string;
+  sku: string;
+  category: string;
+  risk_level: string;
+  days_of_cover: number;
+  capital_locked: number;
+  recoverable_value: number;
+}
+
+interface RawDashboard {
+  pharmacy?: {
+    name?: string;
+    last_upload_at?: string | null;
+    subscription_tier?: string;
+  };
+  summary?: RawSummary;
+  top10_dormants?: RawTop10Dormant[];
+}
+
+export interface DashboardData {
+  pharmacyName: string;
+  lastUploadAt: string | null;
+  totalProducts: number;
+  criticalCount: number;
+  highCount: number;
+  safeCount: number;
+  dormantCount: number;
+  totalCapitalLocked: number;
+  pendingActions: number;
+  missingCostPriceCount: number;
+  top10Dormants: {
+    productId: string;
+    name: string;
+    sku: string;
+    category: string;
+    riskLevel: string;
+    daysOfCover: number;
+    capitalLocked: number;
+    recoverableValue: number;
+  }[];
 }
 
 export interface UploadFileResult {
@@ -241,4 +287,36 @@ export async function ignoreAction(id: string): Promise<void> {
 
 export async function snoozeAction(id: string): Promise<void> {
   await apiFetch(`/api/actions/${id}/snooze`, { method: 'PATCH' });
+}
+
+// ─── Dashboard (US-40) ────────────────────────────────────────────────────────
+
+export async function fetchDashboard(): Promise<DashboardData> {
+  const data = await apiFetch<RawDashboard>('/api/dashboard');
+  const s = data.summary ?? {};
+  const byLevel = s.by_risk_level ?? {};
+  const critical = byLevel.critical ?? 0;
+  const high = byLevel.high ?? 0;
+  return {
+    pharmacyName: data.pharmacy?.name ?? '',
+    lastUploadAt: data.pharmacy?.last_upload_at ?? null,
+    totalProducts: s.total_products ?? 0,
+    criticalCount: critical,
+    highCount: high,
+    safeCount: byLevel.safe ?? 0,
+    dormantCount: critical + high,
+    totalCapitalLocked: s.total_capital_locked ?? 0,
+    pendingActions: s.pending_actions ?? 0,
+    missingCostPriceCount: s.missing_cost_price_count ?? 0,
+    top10Dormants: (data.top10_dormants ?? []).map((d) => ({
+      productId: d.product_id,
+      name: d.name,
+      sku: d.sku,
+      category: d.category,
+      riskLevel: d.risk_level,
+      daysOfCover: d.days_of_cover,
+      capitalLocked: d.capital_locked,
+      recoverableValue: d.recoverable_value,
+    })),
+  };
 }

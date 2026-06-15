@@ -93,19 +93,21 @@ export function ValidateActionDialog({
               {action.capitalLocked != null && (
                 <>
                   {' · '}
-                  <span className="font-medium text-foreground">
-                    {action.capitalLocked.toLocaleString('fr-FR', {
-                      style: 'currency',
-                      currency: 'EUR',
-                      maximumFractionDigits: 0,
-                    })}
-                  </span>{' '}
-                  immobilisés
+                  <span className="whitespace-nowrap">
+                    <span className="font-medium text-foreground">
+                      {action.capitalLocked.toLocaleString('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR',
+                        maximumFractionDigits: 0,
+                      })}
+                    </span>{' '}
+                    immobilisés
+                  </span>
                 </>
               )}
             </div>
 
-            <div className="space-y-1.5">
+            <div className="min-w-0 space-y-1.5">
               <label className="text-sm font-medium">Action à effectuer</label>
               <Select
                 value={selectedType}
@@ -113,7 +115,7 @@ export function ValidateActionDialog({
                   setSelectedType(v as DormantAction['type'])
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full min-w-0 truncate">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -137,24 +139,6 @@ export function ValidateActionDialog({
 
         <DialogFooter>
           <Button
-            variant="ghost"
-            onClick={() => {
-              if (action) onIgnore(action.id);
-            }}
-            disabled={loading}
-            className="mr-auto text-muted-foreground"
-          >
-            <EyeOff className="h-4 w-4 mr-1.5" />
-            Masquer
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
-            Annuler
-          </Button>
-          <Button
             variant="secondary"
             onClick={() => {
               if (action) onSnooze(action.id);
@@ -163,6 +147,14 @@ export function ValidateActionDialog({
           >
             <Clock className="h-4 w-4 mr-1.5" />
             Reporter 48 h
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
+            Annuler
           </Button>
           <Button onClick={handleConfirm} disabled={loading}>
             Valider

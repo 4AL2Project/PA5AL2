@@ -4,11 +4,8 @@ import { Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
-import {
-  ActionRow,
-  EmptyActions,
-  RoiSummary,
-} from '@/components/actions/action-row';
+import { ActionsTable, PAGE_SIZE } from '@/components/actions/actions-table';
+import { EmptyActions, RoiSummary } from '@/components/actions/action-row';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import {
   Select,
@@ -38,6 +35,7 @@ export default function ActionsPage() {
   const [loading, setLoading] = useState(true);
   const [mutating, setMutating] = useState(false);
   const [filter, setFilter] = useState<FilterLevel>('all');
+  const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -62,53 +60,66 @@ export default function ActionsPage() {
       critical: 'DON',
       high: 'B2C',
     };
-    const type = typeMap[filter];
-    return actions.filter((a) => a.type === type);
+    return actions.filter((a) => a.type === typeMap[filter]);
   }, [actions, filter]);
 
-  const handleValidate = useCallback(
-    async (id: string, type: DormantAction['type']) => {
-      // Pour DON : la navigation vers /donations/new est gérée par le lien dans ActionRow.
-      // On appelle quand même l'API pour passer l'action en VALIDEE avec le bon type.
-      setMutating(true);
-      try {
-        await validateAction(id, type);
-        setActions((prev) => prev.filter((a) => a.id !== id));
-        if (type === 'B2C') toast.success('Action validée — offre B2C à publier (V2)');
-      } catch {
-        toast.error('Impossible de valider cette action');
-      } finally {
-        setMutating(false);
-      }
-    },
-    []
-  );
+  // Reset to page 1 when filter changes
+  const handleFilterChange = (value: FilterLevel) => {
+    setFilter(value);
+    setPage(1);
+  };
+
+  const handleValidate = useCallback(async (id: string, type: DormantAction['type']) => {
+    setMutating(true);
+    try {
+      await validateAction(id, type);
+      setActions((prev) => prev.filter((a) => a.id !== id));
+      if (type === 'B2C') toast.success('Action validée — offre B2C à publier (V2)');
+    } catch {
+      toast.error('Impossible de valider cette action');
+    } finally {
+      setMutating(false);
+    }
+  }, []);
 
   const handleIgnore = useCallback(async (id: string) => {
     setMutating(true);
     try {
       await ignoreAction(id);
       toast.success('Produit ignoré');
-      setActions((prev) => prev.filter((a) => a.id !== id));
+      setActions((prev) => {
+        const next = prev.filter((a) => a.id !== id);
+        // Stay on current page unless it's now empty
+        const maxPage = Math.max(1, Math.ceil(next.length / PAGE_SIZE));
+        if (page > maxPage) setPage(maxPage);
+        return next;
+      });
     } catch {
       toast.error("Impossible d'ignorer cette action");
     } finally {
       setMutating(false);
     }
-  }, []);
+  }, [page]);
 
   const handleSnooze = useCallback(async (id: string) => {
     setMutating(true);
     try {
       await snoozeAction(id);
       toast.success('Reporté de 48 h');
-      setActions((prev) => prev.filter((a) => a.id !== id));
+      setActions((prev) => {
+        const next = prev.filter((a) => a.id !== id);
+        const maxPage = Math.max(1, Math.ceil(next.length / PAGE_SIZE));
+        if (page > maxPage) setPage(maxPage);
+        return next;
+      });
     } catch {
       toast.error('Impossible de snoozer cette action');
     } finally {
       setMutating(false);
     }
-  }, []);
+  }, [page]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
   return (
     <DashboardLayout
@@ -116,20 +127,15 @@ export default function ActionsPage() {
       description={
         loading
           ? 'Chargement...'
-          : `${filtered.length} produit${filtered.length !== 1 ? 's' : ''} à traiter`
+          : `${filtered.length} produit${filtered.length !== 1 ? 's' : ''} dormant${filtered.length !== 1 ? 's' : ''}`
       }
     >
       <div className="space-y-4">
-        {/* ROI estimé */}
-        {!loading && <RoiSummary actions={filtered} />}
+        <RoiSummary actions={filtered} />
 
-        {/* Filtre niveau */}
         <div className="flex items-center justify-between">
           <h2 className="text-base font-medium">Produits dormants</h2>
-          <Select
-            value={filter}
-            onValueChange={(v) => setFilter(v as FilterLevel)}
-          >
+          <Select value={filter} onValueChange={handleFilterChange}>
             <SelectTrigger className="w-[220px]">
               <SelectValue placeholder="Filtrer par niveau" />
             </SelectTrigger>
@@ -143,26 +149,28 @@ export default function ActionsPage() {
           </Select>
         </div>
 
-        {/* Liste */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : filtered.length > 0 ? (
-          <div className="space-y-2">
-            {filtered.map((action) => (
-              <ActionRow
-                key={action.id}
-                action={action}
-                onValidate={handleValidate}
-                onIgnore={handleIgnore}
-                onSnooze={handleSnooze}
-                loading={mutating}
-              />
-            ))}
-          </div>
+          <ActionsTable
+            actions={filtered}
+            page={page}
+            onPageChange={setPage}
+            onValidate={handleValidate}
+            onIgnore={handleIgnore}
+            onSnooze={handleSnooze}
+            loading={mutating}
+          />
         ) : (
           <EmptyActions filtered={filter !== 'all'} />
+        )}
+
+        {!loading && filtered.length > 0 && (
+          <p className="text-xs text-muted-foreground text-center">
+            Page {page} sur {totalPages} · {PAGE_SIZE} produits par page
+          </p>
         )}
       </div>
     </DashboardLayout>

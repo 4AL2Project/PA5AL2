@@ -46,7 +46,11 @@ export function SalesVelocityChart({ products }: SalesVelocityChartProps) {
         <div className="h-[220px]">
           {data.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} layout="vertical" margin={{ left: 0, right: 24 }}>
+              <BarChart
+                data={data}
+                layout="vertical"
+                margin={{ left: 0, right: 24 }}
+              >
                 <XAxis
                   type="number"
                   axisLine={false}

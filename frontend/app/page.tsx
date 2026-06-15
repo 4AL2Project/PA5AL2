@@ -15,9 +15,9 @@ export default async function DashboardPage() {
   const { products, stats } = await fetchLatestAnalysis();
 
   const criticalProducts = products.filter((p) => p.riskLevel === 'critical');
-  const topRiskProducts = products
-    .filter((p) => p.riskLevel === 'critical' || p.riskLevel === 'high')
-    .slice(0, 10);
+  const topRiskProducts = products.filter(
+    (p) => p.riskLevel === 'critical' || p.riskLevel === 'high'
+  );
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {

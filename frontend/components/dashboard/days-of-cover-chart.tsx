@@ -44,16 +44,23 @@ export function DaysOfCoverChart({ products }: DaysOfCoverChartProps) {
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-medium">Jours de couverture</CardTitle>
+        <CardTitle className="text-base font-medium">
+          Jours de couverture
+        </CardTitle>
         <p className="text-xs text-muted-foreground">
-          Top {data.length} produits dormants · seuils 60 j (élevé) et 180 j (critique)
+          Top {data.length} produits dormants · seuils 60 j (élevé) et 180 j
+          (critique)
         </p>
       </CardHeader>
       <CardContent>
         <div className="h-[220px]">
           {data.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} layout="vertical" margin={{ left: 0, right: 24 }}>
+              <BarChart
+                data={data}
+                layout="vertical"
+                margin={{ left: 0, right: 24 }}
+              >
                 <XAxis
                   type="number"
                   axisLine={false}

@@ -1,12 +1,12 @@
 'use client';
 
-import { AlertCircle, CheckCircle2, Clock, EyeOff } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Clock, EyeOff, Heart, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { DormantAction } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 const TYPE_LABELS: Record<DormantAction['type'], string> = {
   DON: 'Don associatif',
@@ -20,10 +20,67 @@ const TYPE_COLORS: Record<DormantAction['type'], string> = {
 
 interface ActionRowProps {
   action: DormantAction;
-  onValidate: (id: string) => void;
+  onValidate: (id: string, type: DormantAction['type']) => void;
   onIgnore: (id: string) => void;
   onSnooze: (id: string) => void;
   loading: boolean;
+}
+
+function ValidateButtons({
+  action,
+  onValidate,
+  loading,
+}: Pick<ActionRowProps, 'action' | 'onValidate' | 'loading'>) {
+  const suggested = action.type;
+  const alternative: DormantAction['type'] = suggested === 'DON' ? 'B2C' : 'DON';
+  const SuggestedIcon = suggested === 'DON' ? Heart : ShoppingBag;
+  const AltIcon = alternative === 'DON' ? Heart : ShoppingBag;
+
+  if (suggested === 'DON') {
+    return (
+      <div className="flex flex-col items-end gap-1">
+        <Button size="sm" variant="default" disabled={loading} asChild>
+          <Link
+            href={`/donations/new?action=${action.id}&product=${action.productId}`}
+            onClick={() => onValidate(action.id, 'DON')}
+          >
+            <SuggestedIcon className="h-3.5 w-3.5 mr-1" />
+            Don associatif
+          </Link>
+        </Button>
+        <button
+          disabled={loading}
+          onClick={() => onValidate(action.id, 'B2C')}
+          className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors disabled:opacity-50"
+        >
+          <AltIcon className="h-3 w-3 inline mr-0.5" />
+          Vente B2C à la place
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button
+        size="sm"
+        variant="default"
+        disabled={loading}
+        onClick={() => onValidate(action.id, 'B2C')}
+      >
+        <SuggestedIcon className="h-3.5 w-3.5 mr-1" />
+        Vente B2C
+      </Button>
+      <button
+        disabled={loading}
+        onClick={() => onValidate(action.id, 'DON')}
+        className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors disabled:opacity-50"
+      >
+        <AltIcon className="h-3 w-3 inline mr-0.5" />
+        Don associatif à la place
+      </button>
+    </div>
+  );
 }
 
 export function ActionRow({
@@ -40,18 +97,23 @@ export function ActionRow({
 
   return (
     <div className="flex items-center gap-4 rounded-lg border border-border/60 bg-card p-4">
-      {/* Product info */}
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium truncate">{action.productName}</span>
           <Badge
-            className={cn('border text-[10px] font-medium px-1.5 py-0', TYPE_COLORS[action.type])}
+            className={cn(
+              'border text-[10px] font-medium px-1.5 py-0',
+              TYPE_COLORS[action.type],
+            )}
             variant="outline"
           >
             {TYPE_LABELS[action.type]}
           </Badge>
           {isSnoozedActive && (
-            <Badge variant="outline" className="border-blue-200 bg-blue-50 text-blue-700 text-[10px]">
+            <Badge
+              variant="outline"
+              className="border-blue-200 bg-blue-50 text-blue-700 text-[10px]"
+            >
               <Clock className="h-3 w-3 mr-0.5" />
               Snoozé
             </Badge>
@@ -62,14 +124,13 @@ export function ActionRow({
           {action.category && <span>{action.category}</span>}
           <span>{action.stock} unités</span>
           <span>
-            {action.daysOfCover === Infinity || action.daysOfCover > 9999
-              ? '∞ jours de couverture'
+            {action.daysOfCover > 9999
+              ? '∞ j. de couverture'
               : `${Math.round(action.daysOfCover)} j. de couverture`}
           </span>
         </div>
       </div>
 
-      {/* Capital locked */}
       {action.capitalLocked != null && (
         <div className="hidden sm:flex flex-col items-end">
           <span className="text-sm font-semibold text-foreground">
@@ -83,32 +144,8 @@ export function ActionRow({
         </div>
       )}
 
-      {/* Actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        {action.type === 'DON' ? (
-          <Button
-            size="sm"
-            variant="default"
-            disabled={loading}
-            asChild
-            onClick={() => onValidate(action.id)}
-          >
-            <Link href={`/donations/new?action=${action.id}&product=${action.productId}`}>
-              <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-              Valider
-            </Link>
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            variant="default"
-            disabled={loading}
-            onClick={() => onValidate(action.id)}
-          >
-            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-            Valider
-          </Button>
-        )}
+        <ValidateButtons action={action} onValidate={onValidate} loading={loading} />
         <Button
           size="sm"
           variant="outline"
@@ -152,13 +189,7 @@ export function EmptyActions({ filtered }: { filtered: boolean }) {
 }
 
 export function RoiSummary({ actions }: { actions: DormantAction[] }) {
-  const remaining = actions.filter(
-    (a) => a.status === 'EN_ATTENTE' || (a.status === 'SNOOZEE')
-  );
-  const totalCapital = remaining.reduce(
-    (sum, a) => sum + (a.capitalLocked ?? 0),
-    0
-  );
+  const totalCapital = actions.reduce((sum, a) => sum + (a.capitalLocked ?? 0), 0);
 
   if (totalCapital === 0) return null;
 
@@ -173,8 +204,8 @@ export function RoiSummary({ actions }: { actions: DormantAction[] }) {
             maximumFractionDigits: 0,
           })}
         </strong>{' '}
-        de capital immobilisé sur{' '}
-        <strong>{remaining.length}</strong> produit{remaining.length > 1 ? 's' : ''} dormant{remaining.length > 1 ? 's' : ''}
+        de capital immobilisé sur <strong>{actions.length}</strong> produit
+        {actions.length > 1 ? 's' : ''} dormant{actions.length > 1 ? 's' : ''}
       </span>
     </div>
   );

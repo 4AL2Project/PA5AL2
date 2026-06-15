@@ -22,8 +22,10 @@ export function StaleDataAlert({ lastUploadAt }: StaleDataAlertProps) {
       <AlertTriangle className="h-4 w-4 shrink-0" />
       <span>
         Données non mises à jour depuis{' '}
-        <strong>{days} jour{days > 1 ? 's' : ''}</strong>. Importez un nouvel
-        export LGO pour obtenir des KPIs à jour.
+        <strong>
+          {days} jour{days > 1 ? 's' : ''}
+        </strong>
+        . Importez un nouvel export LGO pour obtenir des KPIs à jour.
       </span>
     </div>
   );

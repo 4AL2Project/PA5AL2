@@ -139,24 +139,6 @@ export function ValidateActionDialog({
 
         <DialogFooter>
           <Button
-            variant="ghost"
-            onClick={() => {
-              if (action) onIgnore(action.id);
-            }}
-            disabled={loading}
-            className="mr-auto text-muted-foreground"
-          >
-            <EyeOff className="h-4 w-4 mr-1.5" />
-            Masquer
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={loading}
-          >
-            Annuler
-          </Button>
-          <Button
             variant="secondary"
             onClick={() => {
               if (action) onSnooze(action.id);
@@ -165,6 +147,14 @@ export function ValidateActionDialog({
           >
             <Clock className="h-4 w-4 mr-1.5" />
             Reporter 48 h
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
+            Annuler
           </Button>
           <Button onClick={handleConfirm} disabled={loading}>
             Valider

@@ -79,7 +79,9 @@ export function Top10DormantsTable({
                 {item.category}
               </TableCell>
               <TableCell>
-                <RiskBadge level={item.riskLevel as 'critical' | 'high' | 'safe'} />
+                <RiskBadge
+                  level={item.riskLevel as 'critical' | 'high' | 'safe'}
+                />
               </TableCell>
               <TableCell className="text-right tabular-nums">
                 {formatDaysOfCover(item.daysOfCover)}

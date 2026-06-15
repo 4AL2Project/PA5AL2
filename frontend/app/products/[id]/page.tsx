@@ -89,7 +89,10 @@ function DaysOfCoverGauge({ product }: { product: Product }) {
             />
             <YAxis type="category" dataKey="name" hide />
             <Tooltip
-              formatter={(v: number) => [`${Math.round(v)} jours`, 'Couverture']}
+              formatter={(v: number) => [
+                `${Math.round(v)} jours`,
+                'Couverture',
+              ]}
               contentStyle={{
                 background: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border))',
@@ -134,7 +137,11 @@ function DaysOfCoverGauge({ product }: { product: Product }) {
 function StockVsVelocityChart({ product }: { product: Product }) {
   const monthly = product.salesVelocity30d;
   const data = [
-    { name: 'Stock actuel', value: product.stock, fill: riskColors[product.riskLevel] },
+    {
+      name: 'Stock actuel',
+      value: product.stock,
+      fill: riskColors[product.riskLevel],
+    },
     { name: 'Ventes / 30 j', value: monthly, fill: '#6366f1' },
   ];
 
@@ -211,20 +218,22 @@ export default function ProductDetailPage({
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    Promise.all([fetchLatestAnalysis(), fetchPendingActions()]).then(
-      ([{ products }, actions]) => {
+    Promise.all([fetchLatestAnalysis(), fetchPendingActions()])
+      .then(([{ products }, actions]) => {
         const found = products.find((p) => p.id === id) ?? null;
         setProduct(found);
         if (found) {
-          const pendingAction =
-            actions.find((a) => a.productId === id) ?? null;
+          const pendingAction = actions.find((a) => a.productId === id) ?? null;
           setAction(pendingAction);
         }
-      }
-    ).catch(() => setProduct(null));
+      })
+      .catch(() => setProduct(null));
   }, [id]);
 
-  const handleValidate = async (actionId: string, type: DormantAction['type']) => {
+  const handleValidate = async (
+    actionId: string,
+    type: DormantAction['type']
+  ) => {
     setLoading(true);
     try {
       await validateAction(actionId, type);
@@ -286,7 +295,10 @@ export default function ProductDetailPage({
   }
 
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(value);
+    new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+    }).format(value);
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {
@@ -355,13 +367,17 @@ export default function ProductDetailPage({
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Capital immobilisé</p>
+                  <p className="text-xs text-muted-foreground">
+                    Capital immobilisé
+                  </p>
                   <p className="text-lg font-bold text-risk-critical">
                     {formatCurrency(product.capitalLocked)}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-muted-foreground">Valeur récupérable</p>
+                  <p className="text-xs text-muted-foreground">
+                    Valeur récupérable
+                  </p>
                   <p className="text-lg font-bold text-emerald-500">
                     {formatCurrency(product.recoveryValue)}
                   </p>
@@ -388,19 +404,29 @@ export default function ProductDetailPage({
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
               <div>
-                <p className="text-xs text-muted-foreground">Identifiant interne</p>
-                <p className="font-mono text-xs mt-0.5 break-all">{product.id}</p>
+                <p className="text-xs text-muted-foreground">
+                  Identifiant interne
+                </p>
+                <p className="font-mono text-xs mt-0.5 break-all">
+                  {product.id}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Catégorie</p>
-                <p className="text-sm font-medium mt-0.5">{product.category || '—'}</p>
+                <p className="text-sm font-medium mt-0.5">
+                  {product.category || '—'}
+                </p>
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Action suggérée</p>
-                <p className="text-sm font-medium mt-0.5">{product.action || '—'}</p>
+                <p className="text-sm font-medium mt-0.5">
+                  {product.action || '—'}
+                </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Dernière mise à jour</p>
+                <p className="text-xs text-muted-foreground">
+                  Dernière mise à jour
+                </p>
                 <p className="text-sm font-medium mt-0.5">
                   {formatDate(product.lastUpdated)}
                 </p>

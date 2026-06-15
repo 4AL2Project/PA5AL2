@@ -1,6 +1,6 @@
 'use client';
 
-import { LayoutDashboard, LogOut, Package, Settings } from 'lucide-react';
+import { Inbox, LayoutDashboard, LogOut, Package, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 const NAV = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/products', label: 'Produits', icon: Package, exact: false },
+  { href: '/actions', label: "Centre d'actions", icon: Inbox, exact: false },
 ];
 
 export function AppSidebar({ userEmail }: { userEmail?: string }) {

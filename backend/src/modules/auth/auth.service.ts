@@ -43,7 +43,9 @@ export class AuthService {
         created_at: true,
       },
     });
-    this.logger.log(`User registered: ${email} [pharmacy=${pharmacyId}, role=${role}]`);
+    this.logger.log(
+      `User registered: ${email} [pharmacy=${pharmacyId}, role=${role}]`
+    );
     return user;
   }
 
@@ -77,7 +79,9 @@ export class AuthService {
         secret: config.auth.refreshSecret,
       });
     } catch {
-      this.logger.warn('Token refresh failed: invalid or expired refresh token');
+      this.logger.warn(
+        'Token refresh failed: invalid or expired refresh token'
+      );
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 

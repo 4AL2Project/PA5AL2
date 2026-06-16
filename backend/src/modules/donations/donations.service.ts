@@ -92,7 +92,9 @@ export class DonationsService {
   async withdraw(donationId: string, pharmacyId: string) {
     await this.assertOwner(donationId, pharmacyId, 'ACCEPTEE');
     const cerfa_number = `CERFA-DON-${Date.now()}`;
-    this.logger.log(`[${pharmacyId}] Donation withdrawn: ${donationId} → cerfa=${cerfa_number}`);
+    this.logger.log(
+      `[${pharmacyId}] Donation withdrawn: ${donationId} → cerfa=${cerfa_number}`
+    );
     return prisma.donation.update({
       where: { donation_id: donationId },
       data: {

@@ -30,7 +30,9 @@ export class IngestionWorker extends WorkerHost {
     const { import_id, pharmacy_id, file_type, buffer, mimetype } = job.data;
 
     await this.setStatus(import_id, pharmacy_id, 'EN_COURS');
-    this.logger.log(`[${import_id}] Processing ${file_type} import for pharmacy ${pharmacy_id}`);
+    this.logger.log(
+      `[${import_id}] Processing ${file_type} import for pharmacy ${pharmacy_id}`
+    );
 
     try {
       const fileBuffer = Buffer.from(buffer, 'base64');
@@ -57,7 +59,9 @@ export class IngestionWorker extends WorkerHost {
 
       // Phase 2 : tout-ou-rien — si une seule erreur, on échoue sans écriture
       if (errors.length > 0) {
-        this.logger.warn(`[${import_id}] Validation failed: ${errors.length} error(s) in ${rows.length} rows`);
+        this.logger.warn(
+          `[${import_id}] Validation failed: ${errors.length} error(s) in ${rows.length} rows`
+        );
         await this.markFailed(import_id, pharmacy_id, rows.length, errors);
         return;
       }
@@ -90,7 +94,9 @@ export class IngestionWorker extends WorkerHost {
 
       await this.analysisService.analyzeAllForPharmacy(pharmacy_id);
       await this.markDone(import_id, pharmacy_id, rows.length);
-      this.logger.log(`[${import_id}] Import complete: ${rows.length} rows processed`);
+      this.logger.log(
+        `[${import_id}] Import complete: ${rows.length} rows processed`
+      );
     } catch (err) {
       this.logger.error(`Ingestion job ${import_id} failed: ${err}`);
       await this.markFailed(import_id, pharmacy_id, 0, [String(err)]);

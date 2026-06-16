@@ -3,7 +3,6 @@
 import { ArrowLeft, CheckCircle2, Loader2, Package, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use, useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import {
   Bar,
   BarChart,
@@ -15,9 +14,9 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { toast } from 'sonner';
 
 import { ValidateActionDialog } from '@/components/actions/validate-action-dialog';
-import { RiskBadge } from '@/components/dashboard/risk-badge';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

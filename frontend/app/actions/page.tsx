@@ -210,11 +210,6 @@ export default function ActionsPage() {
           handleSnooze(id);
           setPendingAction(null);
         }}
-        onIgnore={(id) => {
-          const target = actions.find((a) => a.id === id) ?? null;
-          setIgnoreTarget(target);
-          setPendingAction(null);
-        }}
         loading={mutating}
       />
 

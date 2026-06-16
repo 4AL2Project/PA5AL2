@@ -37,12 +37,6 @@ const riskColors: Record<string, string> = {
   safe: '#22c55e',
 };
 
-const riskBgColors: Record<string, string> = {
-  critical: 'bg-risk-critical/10',
-  high: 'bg-risk-high/10',
-  safe: 'bg-risk-low/10',
-};
-
 // ─── Graphique : jours de couverture ─────────────────────────────────────────
 
 function DaysOfCoverGauge({ product }: { product: Product }) {
@@ -491,7 +485,6 @@ export default function ProductDetailPage({
           onOpenChange={setDialogOpen}
           onConfirm={handleValidate}
           onSnooze={handleSnooze}
-          onIgnore={() => setConfirmIgnore(true)}
           loading={loading}
         />
       </DashboardLayout>

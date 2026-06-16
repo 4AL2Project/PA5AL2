@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -17,6 +18,8 @@ export type DonationStatus = 'PROPOSEE' | 'ACCEPTEE' | 'RETIREE' | 'REFUSEE';
 
 @Injectable()
 export class DonationsService {
+  private readonly logger = new Logger(DonationsService.name);
+
   async create(pharmacyId: string, dto: CreateDonationDto) {
     const product = await prisma.product.findFirst({
       where: { product_id: dto.product_id, pharmacy_id: pharmacyId },
@@ -36,7 +39,7 @@ export class DonationsService {
 
     const estimated_value = product.unit_price * dto.quantity;
 
-    return prisma.donation.create({
+    const donation = await prisma.donation.create({
       data: {
         product_id: dto.product_id,
         pharmacy_id: pharmacyId,
@@ -48,6 +51,10 @@ export class DonationsService {
       },
       include: { product: true, association: true },
     });
+    this.logger.log(
+      `[${pharmacyId}] Donation created: product=${dto.product_id}, qty=${dto.quantity}, assoc=${dto.association_id}, value=${estimated_value}`
+    );
+    return donation;
   }
 
   async listForPharmacy(pharmacyId: string, status?: DonationStatus) {
@@ -66,6 +73,7 @@ export class DonationsService {
 
   async accept(donationId: string, pharmacyId: string) {
     await this.assertOwner(donationId, pharmacyId, 'PROPOSEE');
+    this.logger.log(`[${pharmacyId}] Donation accepted: ${donationId}`);
     return prisma.donation.update({
       where: { donation_id: donationId },
       data: { status: 'ACCEPTEE', accepted_at: new Date() },
@@ -74,6 +82,7 @@ export class DonationsService {
 
   async refuse(donationId: string, pharmacyId: string) {
     await this.assertOwner(donationId, pharmacyId, 'PROPOSEE');
+    this.logger.log(`[${pharmacyId}] Donation refused: ${donationId}`);
     return prisma.donation.update({
       where: { donation_id: donationId },
       data: { status: 'REFUSEE' },
@@ -83,6 +92,9 @@ export class DonationsService {
   async withdraw(donationId: string, pharmacyId: string) {
     await this.assertOwner(donationId, pharmacyId, 'ACCEPTEE');
     const cerfa_number = `CERFA-DON-${Date.now()}`;
+    this.logger.log(
+      `[${pharmacyId}] Donation withdrawn: ${donationId} → cerfa=${cerfa_number}`
+    );
     return prisma.donation.update({
       where: { donation_id: donationId },
       data: {

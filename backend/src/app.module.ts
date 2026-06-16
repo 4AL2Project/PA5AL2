@@ -10,10 +10,14 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AnalysisModule } from './modules/analysis/analysis.module';
 import { AssociationsModule } from './modules/associations/associations.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { CustomerModule } from './modules/customer/customer.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { DonationsModule } from './modules/donations/donations.module';
 import { IngestionModule } from './modules/ingestion/ingestion.module';
 import { InvitationModule } from './modules/invitation/invitation.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { OfferModule } from './modules/offer/offer.module';
+import { OrderModule } from './modules/order/order.module';
 import { ProductModule } from './modules/product/product.module';
 
 @Module({
@@ -36,6 +40,10 @@ import { ProductModule } from './modules/product/product.module';
     DonationsModule,
     ProductModule,
     DashboardModule,
+    CustomerModule,
+    NotificationModule,
+    OfferModule,
+    OrderModule,
   ],
   controllers: [HealthController],
   providers: [AnalysisJob],

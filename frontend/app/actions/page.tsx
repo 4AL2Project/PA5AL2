@@ -6,8 +6,12 @@ import { toast } from 'sonner';
 
 import { EmptyActions, RoiSummary } from '@/components/actions/action-row';
 import { ActionsTable, PAGE_SIZE } from '@/components/actions/actions-table';
-import { ValidateActionDialog } from '@/components/actions/validate-action-dialog';
+import {
+  ValidateActionDialog,
+  ValidateActionPayload,
+} from '@/components/actions/validate-action-dialog';
 import { DashboardLayout } from '@/components/dashboard-layout';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Select,
   SelectContent,
@@ -20,6 +24,7 @@ import {
   ignoreAction,
   snoozeAction,
   validateAction,
+  createOffer,
 } from '@/lib/api';
 import { DormantAction } from '@/lib/types';
 
@@ -40,6 +45,7 @@ export default function ActionsPage() {
   const [pendingAction, setPendingAction] = useState<DormantAction | null>(
     null
   );
+  const [ignoreTarget, setIgnoreTarget] = useState<DormantAction | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -85,17 +91,27 @@ export default function ActionsPage() {
   );
 
   const handleConfirmValidate = useCallback(
-    async (id: string, type: DormantAction['type']) => {
+    async (id: string, payload: ValidateActionPayload) => {
       setMutating(true);
       try {
-        await validateAction(id, type);
+        const action = actions.find((a) => a.id === id) ?? null;
+        await validateAction(id, payload.type);
         removeAction(id);
         setPendingAction(null);
-        if (type === 'DON') {
-          // Naviguer vers le parcours don — le toast est géré par la page donations
+        if (payload.type === 'DON') {
           window.location.href = `/donations/new?action=${id}`;
-        } else {
-          toast.success('Action validée — offre B2C à publier (V2)');
+        } else if (
+          action &&
+          payload.discountedPrice &&
+          payload.quantityOffered
+        ) {
+          await createOffer({
+            product_id: action.productId,
+            action_id: id,
+            discounted_price: payload.discountedPrice,
+            quantity_offered: payload.quantityOffered,
+          });
+          toast.success('Offre B2C publiée avec succès');
         }
       } catch {
         toast.error('Impossible de valider cette action');
@@ -103,7 +119,7 @@ export default function ActionsPage() {
         setMutating(false);
       }
     },
-    [removeAction]
+    [removeAction, actions]
   );
 
   const handleIgnore = useCallback(
@@ -137,8 +153,6 @@ export default function ActionsPage() {
     },
     [removeAction]
   );
-
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
   return (
     <DashboardLayout
@@ -183,12 +197,6 @@ export default function ActionsPage() {
         ) : (
           <EmptyActions filtered={filter !== 'all'} />
         )}
-
-        {!loading && filtered.length > PAGE_SIZE && (
-          <p className="text-xs text-muted-foreground text-center">
-            Page {page} sur {totalPages} · {PAGE_SIZE} produits par page
-          </p>
-        )}
       </div>
 
       <ValidateActionDialog
@@ -203,10 +211,31 @@ export default function ActionsPage() {
           setPendingAction(null);
         }}
         onIgnore={(id) => {
-          handleIgnore(id);
+          const target = actions.find((a) => a.id === id) ?? null;
+          setIgnoreTarget(target);
           setPendingAction(null);
         }}
         loading={mutating}
+      />
+
+      <ConfirmDialog
+        open={!!ignoreTarget}
+        onOpenChange={(open) => {
+          if (!open) setIgnoreTarget(null);
+        }}
+        title="Ignorer ce produit ?"
+        description={
+          ignoreTarget
+            ? `"${ignoreTarget.productName}" ne sera plus suggéré dans le centre d'actions. Vous pourrez le retrouver dans la liste des produits si vous changez d'avis.`
+            : ''
+        }
+        confirmLabel="Ignorer"
+        onConfirm={() => {
+          if (ignoreTarget) {
+            handleIgnore(ignoreTarget.id);
+            setIgnoreTarget(null);
+          }
+        }}
       />
     </DashboardLayout>
   );

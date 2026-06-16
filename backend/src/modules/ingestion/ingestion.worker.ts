@@ -78,12 +78,70 @@ export class IngestionWorker extends WorkerHost {
         data: { last_upload_at: new Date() },
       });
 
+      // Réconciliation stock : si produits mis à jour, annuler les Orders dont le hold dépasse le nouveau stock
+      if (file_type === 'products') {
+        await this.reconcileHolds(
+          pharmacy_id,
+          validated as ReturnType<typeof validateProductRow>[]
+        );
+      }
+
       await this.analysisService.analyzeAllForPharmacy(pharmacy_id);
       await this.markDone(import_id, pharmacy_id, rows.length);
     } catch (err) {
       this.logger.error(`Ingestion job ${import_id} failed: ${err}`);
       await this.markFailed(import_id, pharmacy_id, 0, [String(err)]);
       throw err;
+    }
+  }
+
+  private async reconcileHolds(
+    pharmacyId: string,
+    rows: ReturnType<typeof validateProductRow>[]
+  ) {
+    const skus = rows.map((r) => r.external_sku);
+    const products = await prisma.product.findMany({
+      where: { pharmacy_id: pharmacyId, external_sku: { in: skus } },
+      select: { product_id: true, external_sku: true, stock_quantity: true },
+    });
+
+    for (const product of products) {
+      // Sum active holds on offers linked to this product
+      const offerWithHolds = await prisma.offer.findFirst({
+        where: {
+          product_id: product.product_id,
+          status: { in: ['ACTIVE', 'SUSPENDUE'] },
+        },
+        include: {
+          orders: {
+            where: { status: { in: ['RESERVEE', 'EN_PREPARATION', 'PRETE'] } },
+            orderBy: { reserved_at: 'desc' },
+          },
+        },
+      });
+      if (!offerWithHolds || offerWithHolds.orders.length === 0) continue;
+
+      const totalHeld = offerWithHolds.orders.reduce(
+        (sum, o) => sum + o.quantity,
+        0
+      );
+      const available = product.stock_quantity - totalHeld;
+
+      if (available >= 0) continue;
+
+      // Cancel most recent orders until balance is restored
+      let deficit = Math.abs(available);
+      for (const order of offerWithHolds.orders) {
+        if (deficit <= 0) break;
+        await prisma.order.update({
+          where: { order_id: order.order_id },
+          data: { status: 'ANNULEE', cancelled_at: new Date() },
+        });
+        deficit -= order.quantity;
+        this.logger.warn(
+          `Cancelled order ${order.order_id} due to stock reconciliation (new stock=${product.stock_quantity})`
+        );
+      }
     }
   }
 

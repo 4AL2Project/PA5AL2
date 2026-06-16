@@ -172,7 +172,7 @@ export default function ImportDetailPage({
           </Card>
 
           <Card className="border-border/50">
-            <CardContent className="pt-5">
+            <CardContent>
               <StatCard
                 label="Lignes totales"
                 value={record.rows_total ?? '—'}
@@ -181,7 +181,7 @@ export default function ImportDetailPage({
           </Card>
 
           <Card className="border-border/50">
-            <CardContent className="pt-5">
+            <CardContent>
               <StatCard
                 label="Importées avec succès"
                 value={record.rows_ok ?? '—'}
@@ -200,7 +200,7 @@ export default function ImportDetailPage({
           </Card>
 
           <Card className="border-border/50">
-            <CardContent className="pt-5">
+            <CardContent>
               <StatCard
                 label="Lignes en erreur"
                 value={record.rows_failed ?? '—'}
@@ -262,7 +262,7 @@ export default function ImportDetailPage({
         {/* In-progress notice */}
         {isLive && (
           <Card className="border-border/50">
-            <CardContent className="pt-6 flex items-center gap-4">
+            <CardContent className="flex items-center gap-4">
               <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
               <div>
                 <p className="text-sm font-medium">Traitement en cours</p>

@@ -14,6 +14,8 @@ model Pharmacy {
   address           String?
   siret             String?
   status            String    @default("ACTIVE")
+  lat               Float?
+  lng               Float?
   created_at        DateTime  @default(now())
   last_upload_at    DateTime?
   subscription_tier String    @default("free")

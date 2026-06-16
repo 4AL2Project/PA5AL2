@@ -1,4 +1,4 @@
-import { GoneException, Injectable } from '@nestjs/common';
+import { GoneException, Injectable, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { config } from '../../core/config';
@@ -10,6 +10,8 @@ import { generateToken, hashToken } from './token.util';
 
 @Injectable()
 export class MagicLinkService {
+  private readonly logger = new Logger(MagicLinkService.name);
+
   constructor(
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService
@@ -20,7 +22,6 @@ export class MagicLinkService {
 
     // Reponse silencieuse si email inconnu ou utilisateur PENDING
     if (!user || user.status !== 'ACTIVE') return;
-
     // Rate-limit : max 3 tokens actifs dans la fenetre de 15 min
     const windowStart = new Date(
       Date.now() - config.auth.magicLinkRateLimitWindowMs
@@ -50,6 +51,7 @@ export class MagicLinkService {
 
     const link = `${config.frontUrl}/auth/verify?token=${rawToken}`;
     await this.emailService.sendMagicLinkEmail(email, link);
+    this.logger.log(`Magic link sent to ${email}`);
   }
 
   async verify(rawToken: string) {
@@ -60,6 +62,7 @@ export class MagicLinkService {
     });
 
     if (!record || record.consumed_at || record.expires_at < new Date()) {
+      this.logger.warn('Magic link token expired or already consumed');
       throw new GoneException('Ce lien est expire ou deja utilise');
     }
 
@@ -69,6 +72,7 @@ export class MagicLinkService {
     });
 
     const user = record.user;
+    this.logger.log(`Magic link verified for user ${user.user_id} [pharmacy=${user.pharmacy_id}]`);
     return this.issueTokens({
       sub: user.user_id,
       email: user.email,

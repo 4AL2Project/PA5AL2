@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -13,6 +14,8 @@ import { UserRole } from './roles.enum';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(private readonly jwtService: JwtService) {}
 
   async register(
@@ -40,16 +43,24 @@ export class AuthService {
         created_at: true,
       },
     });
+    this.logger.log(`User registered: ${email} [pharmacy=${pharmacyId}, role=${role}]`);
     return user;
   }
 
   async login(email: string, password: string): Promise<AuthTokens> {
     const user = await prisma.user.findUnique({ where: { email } });
-    if (!user || !user.password)
+    if (!user || !user.password) {
+      this.logger.warn(`Login failed (unknown user): ${email}`);
       throw new UnauthorizedException('Invalid credentials');
+    }
 
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid) throw new UnauthorizedException('Invalid credentials');
+    if (!valid) {
+      this.logger.warn(`Login failed (wrong password): ${email}`);
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    this.logger.log(`User logged in: ${email} [pharmacy=${user.pharmacy_id}]`);
 
     return this.issueTokens({
       sub: user.user_id,
@@ -66,8 +77,11 @@ export class AuthService {
         secret: config.auth.refreshSecret,
       });
     } catch {
+      this.logger.warn('Token refresh failed: invalid or expired refresh token');
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
+
+    this.logger.debug(`Token refreshed for user ${payload.sub}`);
 
     return this.issueTokens({
       sub: payload.sub,

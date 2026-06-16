@@ -11,9 +11,9 @@ import {
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
 
+import { CustomerService } from './customer.service';
 import { CustomerJwtPayload } from './customer-jwt-payload';
 import { CustomerJwtGuard } from './guards/customer-jwt.guard';
-import { CustomerService } from './customer.service';
 
 interface AuthBody {
   email: string;

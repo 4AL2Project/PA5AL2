@@ -10,11 +10,13 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { IconButton } from '@/components/ui/icon-button';
 import {
   Pagination,
   PaginationContent,
@@ -32,16 +34,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { IconButton } from '@/components/ui/icon-button';
 import {
   fetchOffers,
   resumeOffer,
   suspendOffer,
   terminateOffer,
 } from '@/lib/api';
-import { cn } from '@/lib/utils';
 import { Offer, OfferStatus } from '@/lib/types';
-import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const PAGE_SIZE = 10;
 

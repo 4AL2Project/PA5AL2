@@ -15,8 +15,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'RiskAnalyzer - Product Risk Dashboard',
-  description: 'Analyze and monitor product risks with actionable insights',
+  title: 'Savely — Stocks dormants',
+  description:
+    'Identifiez et valorisez vos stocks dormants pour récupérer du capital',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({

@@ -10,7 +10,8 @@ const ACCESS_TOKEN =
 
 async function loginAsTitulaire(page: Page) {
   // Get fresh tokens
-  const res = await page.request.post('http://localhost:3005/api/auth/login', {
+  const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
+  const res = await page.request.post(`${apiBase}/api/auth/login`, {
     data: { email: 'demo@cosmorisk.fr', password: 'demo1234' },
   });
   const body = await res.json();

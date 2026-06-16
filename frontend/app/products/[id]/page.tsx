@@ -1,8 +1,9 @@
 'use client';
 
-import { ArrowLeft, CheckCircle2, Loader2, Package } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Loader2, Package, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { use, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import {
   Bar,
   BarChart,
@@ -18,9 +19,10 @@ import {
 import { ValidateActionDialog } from '@/components/actions/validate-action-dialog';
 import { RiskBadge } from '@/components/dashboard/risk-badge';
 import { DashboardLayout } from '@/components/dashboard-layout';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   fetchPendingActions,
   ignoreAction,
@@ -216,6 +218,7 @@ export default function ProductDetailPage({
   const [action, setAction] = useState<DormantAction | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [confirmIgnore, setConfirmIgnore] = useState(false);
 
   useEffect(() => {
     Promise.all([fetchLatestAnalysis(), fetchPendingActions()])
@@ -232,13 +235,32 @@ export default function ProductDetailPage({
 
   const handleValidate = async (
     actionId: string,
-    type: DormantAction['type']
+    payload: import('@/components/actions/validate-action-dialog').ValidateActionPayload
   ) => {
     setLoading(true);
     try {
-      await validateAction(actionId, type);
+      await validateAction(actionId, payload.type);
+      if (
+        payload.type === 'B2C' &&
+        payload.discountedPrice &&
+        payload.quantityOffered &&
+        action
+      ) {
+        const { createOffer } = await import('@/lib/api');
+        await createOffer({
+          product_id: action.productId,
+          action_id: actionId,
+          discounted_price: payload.discountedPrice,
+          quantity_offered: payload.quantityOffered,
+        });
+        toast.success('Offre B2C publiée avec succès');
+      } else {
+        toast.success('Action validée');
+      }
       setDialogOpen(false);
       setAction(null);
+    } catch {
+      toast.error('Impossible de valider cette action');
     } finally {
       setLoading(false);
     }
@@ -248,8 +270,11 @@ export default function ProductDetailPage({
     setLoading(true);
     try {
       await snoozeAction(actionId);
+      toast.success('Reporté de 48 h');
       setDialogOpen(false);
       setAction(null);
+    } catch {
+      toast.error('Impossible de reporter');
     } finally {
       setLoading(false);
     }
@@ -260,7 +285,10 @@ export default function ProductDetailPage({
     setLoading(true);
     try {
       await ignoreAction(action.id);
+      toast.success('Produit ignoré');
       setAction(null);
+    } catch {
+      toast.error("Impossible d'ignorer ce produit");
     } finally {
       setLoading(false);
     }
@@ -308,143 +336,182 @@ export default function ProductDetailPage({
     });
 
   return (
-    <DashboardLayout title={product.name} description={`SKU: ${product.sku}`}>
-      <div className="space-y-6">
-        {/* Navigation + action */}
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            onClick={() => router.back()}
-            className="gap-2 text-muted-foreground hover:text-foreground -ml-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Retour
-          </Button>
+    <>
+      <DashboardLayout
+        title={product.name}
+        description={`SKU : ${product.sku}`}
+      >
+        <div className="space-y-6">
+          {/* Navigation */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => router.back()}
+              className="gap-2 text-muted-foreground hover:text-foreground -ml-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour
+            </Button>
+          </div>
 
-          {action && (
-            <>
-              <Separator orientation="vertical" className="h-5" />
-              <Button
-                onClick={() => setDialogOpen(true)}
-                disabled={loading}
-                className="gap-2"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                Valider l&apos;action
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleIgnore}
-                disabled={loading}
-              >
-                Ignorer
-              </Button>
-            </>
-          )}
-        </div>
-
-        {/* Header produit */}
-        <Card className="border-border/50">
-          <CardContent className="pt-6">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-4">
-                <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl ${riskBgColors[product.riskLevel]}`}
-                >
-                  <Package
-                    className="h-6 w-6"
-                    style={{ color: riskColors[product.riskLevel] }}
-                  />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold">{product.name}</h1>
-                  <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
-                    <span className="font-mono">{product.sku}</span>
-                    <Separator orientation="vertical" className="h-3" />
-                    <span>{product.category}</span>
+          {/* Header produit — métriques uniquement */}
+          {/* Infos + Centre d'action côte à côte */}
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Carte infos */}
+            <Card className="border-border/50">
+              <CardContent className="pt-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      Capital immobilisé
+                    </p>
+                    <p className="text-lg font-bold text-risk-critical">
+                      {formatCurrency(product.capitalLocked)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      Valeur récupérable
+                    </p>
+                    <p className="text-lg font-bold text-emerald-500">
+                      {formatCurrency(product.recoveryValue)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Catégorie</p>
+                    <p className="text-sm font-medium mt-0.5">
+                      {product.category || '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">
+                      Dernière mise à jour
+                    </p>
+                    <p className="text-sm font-medium mt-0.5">
+                      {formatDate(product.lastUpdated)}
+                    </p>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">
-                    Capital immobilisé
-                  </p>
-                  <p className="text-lg font-bold text-risk-critical">
-                    {formatCurrency(product.capitalLocked)}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-muted-foreground">
-                    Valeur récupérable
-                  </p>
-                  <p className="text-lg font-bold text-emerald-500">
-                    {formatCurrency(product.recoveryValue)}
-                  </p>
-                </div>
-                <RiskBadge level={product.riskLevel} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Graphiques */}
-        <div className="grid gap-6 md:grid-cols-2">
-          <DaysOfCoverGauge product={product} />
-          <StockVsVelocityChart product={product} />
+            {/* Centre d'action */}
+            <Card className="border-border/50">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium">
+                  <Zap className="h-4 w-4 text-muted-foreground" />
+                  Centre d&apos;action
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {product.riskLevel === 'safe' ? (
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <span>✓</span>
+                    <span>Stock sain — aucune action requise.</span>
+                  </div>
+                ) : (
+                  (() => {
+                    const suggestedType =
+                      product.riskLevel === 'critical' ? 'DON' : 'B2C';
+                    const actionType = action?.type ?? suggestedType;
+                    const hasAction = !!action;
+                    return (
+                      <div className="flex flex-col gap-4">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant="outline"
+                              className={
+                                actionType === 'DON'
+                                  ? 'border-red-200 bg-red-50 text-red-700 text-xs'
+                                  : 'border-amber-200 bg-amber-50 text-amber-700 text-xs'
+                              }
+                            >
+                              {actionType === 'DON'
+                                ? 'Don associatif'
+                                : 'Vente B2C'}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              Action suggérée
+                            </span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {actionType === 'DON'
+                              ? 'Le stock est critique. Un don associatif permettrait de libérer le capital immobilisé.'
+                              : 'Produit dormant. Une offre B2C à prix remisé permettrait de récupérer une partie du capital.'}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          {hasAction ? (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                disabled={loading}
+                                onClick={() => setConfirmIgnore(true)}
+                                className="text-muted-foreground"
+                              >
+                                Ignorer
+                              </Button>
+                              <Button
+                                size="sm"
+                                disabled={loading}
+                                onClick={() => setDialogOpen(true)}
+                                className="gap-2"
+                              >
+                                <CheckCircle2 className="h-4 w-4" />
+                                Traiter ce produit
+                              </Button>
+                            </>
+                          ) : (
+                            <Button size="sm" variant="secondary" asChild>
+                              <a href="/actions">
+                                Voir dans le centre d&apos;actions
+                              </a>
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })()
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Graphiques */}
+          <div className="grid gap-6 md:grid-cols-2">
+            <DaysOfCoverGauge product={product} />
+            <StockVsVelocityChart product={product} />
+          </div>
         </div>
 
-        {/* Informations supplémentaires */}
-        <Card className="border-border/50">
-          <CardHeader>
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Informations supplémentaires
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  Identifiant interne
-                </p>
-                <p className="font-mono text-xs mt-0.5 break-all">
-                  {product.id}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Catégorie</p>
-                <p className="text-sm font-medium mt-0.5">
-                  {product.category || '—'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Action suggérée</p>
-                <p className="text-sm font-medium mt-0.5">
-                  {product.action || '—'}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  Dernière mise à jour
-                </p>
-                <p className="text-sm font-medium mt-0.5">
-                  {formatDate(product.lastUpdated)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <ValidateActionDialog
+          action={action}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onConfirm={handleValidate}
+          onSnooze={handleSnooze}
+          onIgnore={() => setConfirmIgnore(true)}
+          loading={loading}
+        />
+      </DashboardLayout>
 
-      <ValidateActionDialog
-        action={action}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onConfirm={handleValidate}
-        onSnooze={handleSnooze}
-        onIgnore={handleIgnore}
-        loading={loading}
+      <ConfirmDialog
+        open={confirmIgnore}
+        onOpenChange={setConfirmIgnore}
+        title="Ignorer ce produit ?"
+        description={
+          action
+            ? `"${action.productName}" ne sera plus suggéré dans le centre d'actions. Vous pourrez le retrouver dans la liste des produits si vous changez d'avis.`
+            : ''
+        }
+        confirmLabel="Ignorer"
+        onConfirm={() => {
+          setConfirmIgnore(false);
+          void handleIgnore();
+        }}
       />
-    </DashboardLayout>
+    </>
   );
 }

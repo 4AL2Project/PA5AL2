@@ -3,6 +3,7 @@ import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 
+import { config } from './core/config';
 import { HealthController } from './health.controller';
 import { AnalysisJob } from './jobs/analysis.job';
 import { ActionsModule } from './modules/actions/actions.module';
@@ -25,10 +26,17 @@ import { ProductModule } from './modules/product/product.module';
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     BullModule.forRoot({
-      connection: {
-        host: process.env.REDIS_HOST ?? 'localhost',
-        port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
-      },
+      connection: (() => {
+        const { hostname, port, username, password } = new URL(
+          config.redis.url
+        );
+        return {
+          host: hostname,
+          port: parseInt(port || '6379', 10),
+          ...(username && { username }),
+          ...(password && { password }),
+        };
+      })(),
     }),
     AuthModule,
     AdminModule,

@@ -24,6 +24,9 @@ model Pharmacy {
   users             User[]
   actions           Action[]
   donations         Donation[]
+  imports           Import[]
+  offers            Offer[]
+  orders            Order[]
 }
 
 model User {
@@ -77,6 +80,7 @@ model Product {
   analyses       RiskAnalysis[]
   action         Action?
   donations      Donation[]
+  offer          Offer?
 
   @@unique([pharmacy_id, external_sku])
   @@index([pharmacy_id, expiry_date])
@@ -135,6 +139,7 @@ model Action {
   product           Product   @relation(fields: [product_id], references: [product_id])
   pharmacy          Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
   donations         Donation[]
+  offer             Offer?
 
   @@index([pharmacy_id, status])
 }
@@ -181,4 +186,86 @@ model Donation {
   action          Action?     @relation(fields: [action_id], references: [action_id])
 
   @@index([pharmacy_id, status])
+}
+
+// Trace métier persistante de chaque dépôt de fichier (≠ Job BullMQ éphémère)
+model Import {
+  import_id   String   @id @default(uuid())
+  pharmacy_id String
+  file_name   String
+  file_type   String   // 'products' | 'sales'
+  uploaded_at DateTime @default(now())
+  status      String   @default("EN_ATTENTE") // EN_ATTENTE|EN_COURS|TERMINÉ|ÉCHOUÉ
+  rows_total  Int?
+  rows_ok     Int?
+  rows_failed Int?
+  errors      Json?
+
+  pharmacy    Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
+
+  @@index([pharmacy_id, uploaded_at])
+}
+
+// Compte léger d'un acheteur B2C (app mobile)
+model Customer {
+  customer_id String   @id @default(uuid())
+  email       String   @unique
+  password    String
+  first_name  String?
+  last_name   String?
+  phone       String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  orders      Order[]
+}
+
+// Offre B2C publiée par le Titulaire sur un produit dormant
+// Un seul produit = une seule Offer active à la fois
+model Offer {
+  offer_id         String    @id @default(uuid())
+  pharmacy_id      String
+  product_id       String    @unique
+  action_id        String?   @unique
+  discounted_price Float
+  quantity_offered Int
+  status           String    @default("ACTIVE") // ACTIVE|SUSPENDUE|TERMINEE
+  expires_at       DateTime?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  pharmacy         Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  product          Product   @relation(fields: [product_id], references: [product_id])
+  action           Action?   @relation(fields: [action_id], references: [action_id])
+  orders           Order[]
+
+  @@index([pharmacy_id, status])
+}
+
+// Réservation d'une Offer par un Customer
+// Machine à états : RESERVEE→EN_PREPARATION→PRETE→RETIREE|ANNULEE|EXPIREE
+model Order {
+  order_id     String    @id @default(uuid())
+  customer_id  String
+  offer_id     String
+  pharmacy_id  String
+  quantity     Int
+  status       String    @default("RESERVEE")
+  qr_code      String    @unique @default(uuid())
+  expires_at   DateTime  // reserved_at + 24h
+  reserved_at  DateTime  @default(now())
+  prepared_at  DateTime?
+  ready_at     DateTime?
+  withdrawn_at DateTime?
+  cancelled_at DateTime?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  customer     Customer  @relation(fields: [customer_id], references: [customer_id])
+  offer        Offer     @relation(fields: [offer_id], references: [offer_id])
+  pharmacy     Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
+
+  @@index([pharmacy_id, status])
+  @@index([offer_id, status])
+  @@index([expires_at, status])
 }

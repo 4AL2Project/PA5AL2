@@ -27,7 +27,7 @@ export default function SettingsPage() {
               Gerez vos preferences de notification
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent>
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Alertes critiques</Label>

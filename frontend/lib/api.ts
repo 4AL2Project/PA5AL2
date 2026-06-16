@@ -1,6 +1,9 @@
 import {
   AnalysisStats,
   DormantAction,
+  ImportRecord,
+  Offer,
+  Order,
   Product,
   RiskDistribution,
   RiskLevel,
@@ -101,9 +104,7 @@ export interface UploadFileResult {
 }
 
 export interface UploadResponse {
-  products?: UploadFileResult;
-  sales?: UploadFileResult;
-  analysis?: unknown;
+  imports: ImportRecord[];
 }
 
 // ─── Adapteurs ────────────────────────────────────────────────────────────────
@@ -227,6 +228,14 @@ export async function uploadFile(
   });
 }
 
+export async function fetchImports(): Promise<ImportRecord[]> {
+  return apiFetch<ImportRecord[]>('/api/imports');
+}
+
+export async function fetchImport(importId: string): Promise<ImportRecord> {
+  return apiFetch<ImportRecord>(`/api/imports/${importId}`);
+}
+
 // ─── Actions (US-42) ──────────────────────────────────────────────────────────
 
 interface RawAction {
@@ -244,6 +253,7 @@ interface RawAction {
     category?: string | null;
     brand?: string | null;
     stock_quantity: number;
+    unit_price: number;
   };
 }
 
@@ -256,6 +266,7 @@ function adaptAction(raw: RawAction): DormantAction {
     category: raw.product.category ?? '',
     brand: raw.product.brand ?? '',
     stock: raw.product.stock_quantity,
+    unitPrice: raw.product.unit_price,
     type: raw.type as DormantAction['type'],
     status: raw.status as DormantAction['status'],
     snoozeUntil: raw.snooze_until ?? null,
@@ -319,4 +330,65 @@ export async function fetchDashboard(): Promise<DashboardData> {
       recoverableValue: d.recoverable_value,
     })),
   };
+}
+
+// ─── B2C chain ───────────────────────────────────────────────────────────────
+
+export async function fetchOffers(status?: string): Promise<Offer[]> {
+  const qs = status ? `?status=${status}` : '';
+  return apiFetch<Offer[]>(`/api/offers${qs}`);
+}
+
+export interface CreateOfferPayload {
+  product_id: string;
+  action_id?: string;
+  discounted_price: number;
+  quantity_offered: number;
+}
+
+export async function createOffer(payload: CreateOfferPayload): Promise<Offer> {
+  return apiFetch<Offer>('/api/offers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function suspendOffer(offerId: string): Promise<Offer> {
+  return apiFetch<Offer>(`/api/offers/${offerId}/suspend`, { method: 'PATCH' });
+}
+
+export async function resumeOffer(offerId: string): Promise<Offer> {
+  return apiFetch<Offer>(`/api/offers/${offerId}/resume`, { method: 'PATCH' });
+}
+
+export async function terminateOffer(offerId: string): Promise<Offer> {
+  return apiFetch<Offer>(`/api/offers/${offerId}`, { method: 'DELETE' });
+}
+
+export async function fetchOrders(status?: string): Promise<Order[]> {
+  const qs = status ? `?status=${status}` : '';
+  return apiFetch<Order[]>(`/api/orders${qs}`);
+}
+
+export async function prepareOrder(orderId: string): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/${orderId}/prepare`, { method: 'PATCH' });
+}
+
+export async function markOrderReady(orderId: string): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/${orderId}/ready`, { method: 'PATCH' });
+}
+
+export async function withdrawOrder(orderId: string): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/${orderId}/withdraw`, {
+    method: 'PATCH',
+  });
+}
+
+export async function cancelOrder(orderId: string): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/${orderId}/cancel`, { method: 'PATCH' });
+}
+
+export async function fetchOrderByQr(qrCode: string): Promise<Order> {
+  return apiFetch<Order>(`/api/orders/qr/${qrCode}`);
 }

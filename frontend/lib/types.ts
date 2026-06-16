@@ -2,6 +2,22 @@ export type RiskLevel = 'critical' | 'high' | 'safe';
 export type ActionStatus = 'EN_ATTENTE' | 'VALIDEE' | 'IGNOREE' | 'SNOOZEE';
 export type ActionType = 'B2C' | 'DON';
 
+export type ImportStatus = 'EN_ATTENTE' | 'EN_COURS' | 'TERMINÉ' | 'ÉCHOUÉ';
+export type ImportFileType = 'products' | 'sales';
+
+export interface ImportRecord {
+  import_id: string;
+  pharmacy_id: string;
+  file_name: string;
+  file_type: ImportFileType;
+  uploaded_at: string;
+  status: ImportStatus;
+  rows_total: number | null;
+  rows_ok: number | null;
+  rows_failed: number | null;
+  errors: string[] | null;
+}
+
 export interface DormantAction {
   id: string;
   productId: string;
@@ -10,6 +26,7 @@ export interface DormantAction {
   category: string;
   brand: string;
   stock: number;
+  unitPrice: number;
   type: ActionType;
   status: ActionStatus;
   snoozeUntil: string | null;
@@ -47,4 +64,61 @@ export interface RiskDistribution {
   level: RiskLevel;
   count: number;
   percentage: number;
+}
+
+// ─── B2C chain ──────────────────────────────────────────────────────────────
+
+export type OfferStatus = 'ACTIVE' | 'SUSPENDUE' | 'TERMINEE';
+export type OrderStatus =
+  | 'RESERVEE'
+  | 'EN_PREPARATION'
+  | 'PRETE'
+  | 'RETIREE'
+  | 'ANNULEE'
+  | 'EXPIREE';
+
+export interface Offer {
+  offer_id: string;
+  pharmacy_id: string;
+  product_id: string;
+  action_id: string | null;
+  discounted_price: number;
+  quantity_offered: number;
+  status: OfferStatus;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+  product: {
+    name: string;
+    external_sku: string;
+    category?: string;
+    brand?: string;
+  };
+  _count?: { orders: number };
+}
+
+export interface Order {
+  order_id: string;
+  customer_id: string;
+  offer_id: string;
+  pharmacy_id: string;
+  quantity: number;
+  status: OrderStatus;
+  qr_code: string;
+  expires_at: string;
+  reserved_at: string;
+  prepared_at: string | null;
+  ready_at: string | null;
+  withdrawn_at: string | null;
+  cancelled_at: string | null;
+  customer: {
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    phone: string | null;
+  };
+  offer: {
+    discounted_price: number;
+    product: { name: string; external_sku: string };
+  };
 }

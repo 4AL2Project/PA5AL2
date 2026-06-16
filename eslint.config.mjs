@@ -19,6 +19,11 @@ export default tseslint.config(
   eslintConfigPrettier,
   ...tseslint.configs.recommended,
   {
+    languageOptions: {
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
     plugins: {
       'unused-imports': unusedImports,
       'simple-import-sort': simpleImportSort,

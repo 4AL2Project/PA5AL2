@@ -51,7 +51,6 @@ interface ValidateActionDialogProps {
   onOpenChange: (open: boolean) => void;
   onConfirm: (id: string, payload: ValidateActionPayload) => void;
   onSnooze: (id: string) => void;
-  onIgnore: (id: string) => void;
   loading: boolean;
 }
 
@@ -61,7 +60,6 @@ export function ValidateActionDialog({
   onOpenChange,
   onConfirm,
   onSnooze,
-  onIgnore,
   loading,
 }: ValidateActionDialogProps) {
   const [selectedType, setSelectedType] = useState<DormantAction['type']>(

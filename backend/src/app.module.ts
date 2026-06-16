@@ -4,7 +4,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { HealthController } from './health.controller';
-import { AnalysisJob } from './jobs/analysis.job';
+import { AnalysisJob } from './jobs/analysis.job';  
 import { ActionsModule } from './modules/actions/actions.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AnalysisModule } from './modules/analysis/analysis.module';

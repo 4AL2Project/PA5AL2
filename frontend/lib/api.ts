@@ -1,6 +1,7 @@
 import {
   AnalysisStats,
   DormantAction,
+  ImportRecord,
   Product,
   RiskDistribution,
   RiskLevel,
@@ -101,9 +102,7 @@ export interface UploadFileResult {
 }
 
 export interface UploadResponse {
-  products?: UploadFileResult;
-  sales?: UploadFileResult;
-  analysis?: unknown;
+  imports: ImportRecord[];
 }
 
 // ─── Adapteurs ────────────────────────────────────────────────────────────────
@@ -225,6 +224,14 @@ export async function uploadFile(
     method: 'POST',
     body: form,
   });
+}
+
+export async function fetchImports(): Promise<ImportRecord[]> {
+  return apiFetch<ImportRecord[]>('/api/imports');
+}
+
+export async function fetchImport(importId: string): Promise<ImportRecord> {
+  return apiFetch<ImportRecord>(`/api/imports/${importId}`);
 }
 
 // ─── Actions (US-42) ──────────────────────────────────────────────────────────

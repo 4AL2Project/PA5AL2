@@ -24,6 +24,7 @@ model Pharmacy {
   users             User[]
   actions           Action[]
   donations         Donation[]
+  imports           Import[]
 }
 
 model User {
@@ -181,4 +182,22 @@ model Donation {
   action          Action?     @relation(fields: [action_id], references: [action_id])
 
   @@index([pharmacy_id, status])
+}
+
+// Trace métier persistante de chaque dépôt de fichier (≠ Job BullMQ éphémère)
+model Import {
+  import_id   String   @id @default(uuid())
+  pharmacy_id String
+  file_name   String
+  file_type   String   // 'products' | 'sales'
+  uploaded_at DateTime @default(now())
+  status      String   @default("EN_ATTENTE") // EN_ATTENTE|EN_COURS|TERMINÉ|ÉCHOUÉ
+  rows_total  Int?
+  rows_ok     Int?
+  rows_failed Int?
+  errors      Json?
+
+  pharmacy    Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
+
+  @@index([pharmacy_id, uploaded_at])
 }

@@ -9,7 +9,6 @@ import { StaleDataAlert } from '@/components/dashboard/stale-data-alert';
 import { Top10DormantsTable } from '@/components/dashboard/top10-dormants-table';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Button } from '@/components/ui/button';
-import { UploadModal } from '@/components/upload/upload-modal';
 import { fetchDashboard, fetchLatestAnalysis } from '@/lib/api';
 import { getSession } from '@/lib/session';
 
@@ -40,7 +39,9 @@ export default async function DashboardPage() {
       description={`Derniere analyse : ${formatDate(stats.lastAnalysisDate)}`}
       actions={
         <>
-          <UploadModal />
+          <Button size="sm" asChild>
+            <Link href="/upload">Importer</Link>
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/products?filter=critical">
               Produits a donner ({criticalProducts.length})

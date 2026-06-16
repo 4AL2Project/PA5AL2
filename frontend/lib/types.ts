@@ -2,6 +2,22 @@ export type RiskLevel = 'critical' | 'high' | 'safe';
 export type ActionStatus = 'EN_ATTENTE' | 'VALIDEE' | 'IGNOREE' | 'SNOOZEE';
 export type ActionType = 'B2C' | 'DON';
 
+export type ImportStatus = 'EN_ATTENTE' | 'EN_COURS' | 'TERMINÉ' | 'ÉCHOUÉ';
+export type ImportFileType = 'products' | 'sales';
+
+export interface ImportRecord {
+  import_id: string;
+  pharmacy_id: string;
+  file_name: string;
+  file_type: ImportFileType;
+  uploaded_at: string;
+  status: ImportStatus;
+  rows_total: number | null;
+  rows_ok: number | null;
+  rows_failed: number | null;
+  errors: string[] | null;
+}
+
 export interface DormantAction {
   id: string;
   productId: string;

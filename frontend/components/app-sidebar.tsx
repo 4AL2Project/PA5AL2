@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  FileStack,
   Inbox,
   LayoutDashboard,
   LogOut,
@@ -19,6 +20,7 @@ const NAV = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/products', label: 'Produits', icon: Package, exact: false },
   { href: '/actions', label: "Centre d'actions", icon: Inbox, exact: false },
+  { href: '/imports', label: 'Imports', icon: FileStack, exact: false },
 ];
 
 export function AppSidebar({ userEmail }: { userEmail?: string }) {

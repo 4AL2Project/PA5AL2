@@ -1,4 +1,6 @@
+import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { HealthController } from './health.controller';
@@ -10,17 +12,24 @@ import { AssociationsModule } from './modules/associations/associations.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { DonationsModule } from './modules/donations/donations.module';
+import { IngestionModule } from './modules/ingestion/ingestion.module';
 import { InvitationModule } from './modules/invitation/invitation.module';
 import { ProductModule } from './modules/product/product.module';
-import { UploadModule } from './modules/upload/upload.module';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
+    BullModule.forRoot({
+      connection: {
+        host: process.env.REDIS_HOST ?? 'localhost',
+        port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
+      },
+    }),
     AuthModule,
     AdminModule,
     InvitationModule,
-    UploadModule,
+    IngestionModule,
     AnalysisModule,
     ActionsModule,
     AssociationsModule,

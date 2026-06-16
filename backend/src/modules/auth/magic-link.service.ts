@@ -72,7 +72,9 @@ export class MagicLinkService {
     });
 
     const user = record.user;
-    this.logger.log(`Magic link verified for user ${user.user_id} [pharmacy=${user.pharmacy_id}]`);
+    this.logger.log(
+      `Magic link verified for user ${user.user_id} [pharmacy=${user.pharmacy_id}]`
+    );
     return this.issueTokens({
       sub: user.user_id,
       email: user.email,

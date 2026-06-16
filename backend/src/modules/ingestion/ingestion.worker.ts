@@ -8,10 +8,10 @@ import { AnalysisService } from '../analysis/analysis.service';
 import { parseFile } from './csv.parser';
 import {
   IMPORT_STATUS_EVENT,
-  INGESTION_QUEUE,
-  IngestionJobData,
   ImportStatus,
   ImportStatusPayload,
+  INGESTION_QUEUE,
+  IngestionJobData,
 } from './ingestion.events';
 import { validateProductRow, validateSaleRow } from './validation.schema';
 

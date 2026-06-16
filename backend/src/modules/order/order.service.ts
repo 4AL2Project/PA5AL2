@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Inject,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -19,6 +20,8 @@ type ActiveStatus = (typeof ACTIVE_STATUSES)[number];
 
 @Injectable()
 export class OrderService {
+  private readonly logger = new Logger(OrderService.name);
+
   constructor(
     @Inject(NOTIFICATION_SERVICE)
     private readonly notifications: INotificationService
@@ -83,6 +86,10 @@ export class OrderService {
       this.notifications.newOrderForPrep(notifPayload),
     ]);
 
+    this.logger.log(
+      `[${offer.pharmacy_id}] Order created: offer=${offerId}, customer=${customerId}, qty=${quantity} → order_id=${order.order_id}`
+    );
+
     return order;
   }
 
@@ -144,6 +151,7 @@ export class OrderService {
 
   /** Préparateur: RESERVEE → EN_PREPARATION */
   async startPreparation(pharmacyId: string, orderId: string) {
+    this.logger.log(`[${pharmacyId}] Order ${orderId} → EN_PREPARATION`);
     return this.transition(pharmacyId, orderId, 'RESERVEE', 'EN_PREPARATION', {
       prepared_at: new Date(),
     });
@@ -151,6 +159,7 @@ export class OrderService {
 
   /** Préparateur: EN_PREPARATION → PRETE */
   async markReady(pharmacyId: string, orderId: string) {
+    this.logger.log(`[${pharmacyId}] Order ${orderId} → PRETE`);
     const order = await this.transition(
       pharmacyId,
       orderId,
@@ -188,6 +197,7 @@ export class OrderService {
 
   /** Préparateur: valide le retrait (scan QR) — décrémente le stock */
   async withdraw(pharmacyId: string, orderId: string) {
+    this.logger.log(`[${pharmacyId}] Order ${orderId} → RETIREE`);
     const order = await this.transition(
       pharmacyId,
       orderId,
@@ -256,6 +266,8 @@ export class OrderService {
       data: { status: 'ANNULEE', cancelled_at: new Date() },
     });
 
+    this.logger.log(`[${orderId}] Order cancelled by ${requesterType}`);
+
     await this.notifications.orderCancelled(
       {
         order_id: order.order_id,
@@ -297,6 +309,8 @@ export class OrderService {
     });
 
     if (expired.length === 0) return 0;
+
+    this.logger.log(`Expiring ${expired.length} overdue order(s)`);
 
     await prisma.order.updateMany({
       where: {

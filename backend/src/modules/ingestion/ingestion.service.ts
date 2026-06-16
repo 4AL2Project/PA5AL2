@@ -1,5 +1,5 @@
 import { InjectQueue } from '@nestjs/bullmq';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bullmq';
 
 import { prisma } from '../../database/client';
@@ -7,6 +7,8 @@ import { FileType, INGESTION_QUEUE } from './ingestion.events';
 
 @Injectable()
 export class IngestionService {
+  private readonly logger = new Logger(IngestionService.name);
+
   constructor(@InjectQueue(INGESTION_QUEUE) private readonly queue: Queue) {}
 
   async enqueue(
@@ -30,6 +32,10 @@ export class IngestionService {
       buffer: file.buffer.toString('base64'),
       mimetype: file.mimetype,
     });
+
+    this.logger.log(
+      `[${pharmacyId}] Import enqueued: ${file.originalname} (${fileType}, ${file.size}B) → import_id=${imp.import_id}`
+    );
 
     return imp;
   }

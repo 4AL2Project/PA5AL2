@@ -22,7 +22,7 @@ import {
 import { DormantAction } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
-export const PAGE_SIZE = 15;
+export const PAGE_SIZE = 10;
 
 const TYPE_COLORS: Record<DormantAction['type'], string> = {
   DON: 'bg-red-50 text-red-700 border-red-200',
@@ -125,60 +125,59 @@ export function ActionsTable({
         </Table>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>
-            {(page - 1) * PAGE_SIZE + 1}–
-            {Math.min(page * PAGE_SIZE, actions.length)} sur {actions.length}
-          </span>
-          <Pagination className="w-auto mx-0 justify-end">
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (page > 1) onPageChange(page - 1);
-                  }}
-                  className={cn(page === 1 && 'pointer-events-none opacity-40')}
-                />
-              </PaginationItem>
-              {pages.map((p, i) =>
-                p === '...' ? (
-                  <PaginationItem key={`ellipsis-${i}`}>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                ) : (
-                  <PaginationItem key={p}>
-                    <PaginationLink
-                      href="#"
-                      isActive={p === page}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        onPageChange(p as number);
-                      }}
-                    >
-                      {p}
-                    </PaginationLink>
-                  </PaginationItem>
-                )
-              )}
-              <PaginationItem>
-                <PaginationNext
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    if (page < totalPages) onPageChange(page + 1);
-                  }}
-                  className={cn(
-                    page === totalPages && 'pointer-events-none opacity-40'
-                  )}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
-      )}
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>
+          {actions.length === 0
+            ? '0 résultat'
+            : `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, actions.length)} sur ${actions.length}`}
+        </span>
+        <Pagination className="w-auto mx-0 justify-end">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page > 1) onPageChange(page - 1);
+                }}
+                className={cn(page === 1 && 'pointer-events-none opacity-40')}
+              />
+            </PaginationItem>
+            {pages.map((p, i) =>
+              p === '...' ? (
+                <PaginationItem key={`ellipsis-${i}`}>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              ) : (
+                <PaginationItem key={p}>
+                  <PaginationLink
+                    href="#"
+                    isActive={p === page}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onPageChange(p as number);
+                    }}
+                  >
+                    {p}
+                  </PaginationLink>
+                </PaginationItem>
+              )
+            )}
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (page < totalPages) onPageChange(page + 1);
+                }}
+                className={cn(
+                  page === totalPages && 'pointer-events-none opacity-40'
+                )}
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
     </div>
   );
 }

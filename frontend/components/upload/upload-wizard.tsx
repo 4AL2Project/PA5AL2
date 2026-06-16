@@ -13,7 +13,8 @@ import {
 import { useCallback, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { ImportStatusBadge } from '@/components/upload/import-status-badge';
+import { useImportPolling } from '@/hooks/use-import-polling';
 import { uploadFile } from '@/lib/api';
 import { ParsedPreview, previewFile } from '@/lib/file-preview';
 import { DetectionResult, detectLgo } from '@/lib/lgo-detector';
@@ -24,7 +25,7 @@ type DragState = 'idle' | 'dragging';
 
 interface UploadWizardProps {
   defaultFileType?: 'products' | 'sales';
-  /** Appelé après un import réussi */
+  /** Appelé après un import réussi (terminal) */
   onSuccess?: () => void;
 }
 
@@ -35,14 +36,10 @@ interface WizardState {
   preview: ParsedPreview | null;
   detection: DetectionResult | null;
   parseError: string | null;
-  uploadProgress: number;
-  uploadStatus: 'idle' | 'uploading' | 'success' | 'error';
+  /** import_id retourné par le serveur après POST /upload */
+  importId: string | null;
+  /** Erreur réseau lors du POST initial */
   uploadError: string | null;
-  uploadResult: {
-    inserted?: number;
-    updated?: number;
-    skipped?: number;
-  } | null;
 }
 
 const INITIAL_STATE: WizardState = {
@@ -52,10 +49,8 @@ const INITIAL_STATE: WizardState = {
   preview: null,
   detection: null,
   parseError: null,
-  uploadProgress: 0,
-  uploadStatus: 'idle',
+  importId: null,
   uploadError: null,
-  uploadResult: null,
 };
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
@@ -362,47 +357,81 @@ function Step2({
 // ─── Step 3 ───────────────────────────────────────────────────────────────────
 
 interface Step3Props {
-  status: 'uploading' | 'success' | 'error';
-  progress: number;
+  importId: string | null;
+  uploadError: string | null;
   file: File;
-  result: { inserted?: number; updated?: number; skipped?: number } | null;
-  error: string | null;
   onReset: () => void;
   onSuccess?: () => void;
 }
 
 function Step3({
-  status,
-  progress,
+  importId,
+  uploadError,
   file,
-  result,
-  error,
   onReset,
   onSuccess,
 }: Step3Props) {
+  const record = useImportPolling(importId);
+
+  // Network-level error (POST failed before getting an import_id)
+  if (uploadError) {
+    return (
+      <div className="space-y-4 min-h-[200px] flex flex-col items-center justify-center text-center">
+        <div className="mx-auto rounded-full bg-risk-critical/10 p-4">
+          <XCircle className="h-10 w-10 text-risk-critical" />
+        </div>
+        <div>
+          <p className="text-lg font-medium text-risk-critical">
+            Erreur réseau
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">{uploadError}</p>
+        </div>
+        <Button variant="outline" onClick={onReset}>
+          <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+          Réessayer
+        </Button>
+      </div>
+    );
+  }
+
+  // Waiting for first poll result
+  if (!record) {
+    return (
+      <div className="min-h-[200px] flex flex-col items-center justify-center gap-4">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="text-sm text-muted-foreground">
+          Fichier envoyé, traitement en cours…
+        </p>
+      </div>
+    );
+  }
+
+  const isProcessing =
+    record.status === 'EN_ATTENTE' || record.status === 'EN_COURS';
+  const isDone = record.status === 'TERMINÉ';
+  const isFailed = record.status === 'ÉCHOUÉ';
+
   return (
     <div className="space-y-4 min-h-[200px] flex flex-col items-center justify-center text-center">
-      {status === 'uploading' && (
-        <div className="w-full space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="rounded-lg bg-muted p-2">
+      {isProcessing && (
+        <div className="w-full max-w-sm space-y-4">
+          <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-muted/30 p-3">
+            <div className="rounded-md bg-muted p-2">
               <FileText className="h-5 w-5 text-muted-foreground" />
             </div>
-            <div className="flex-1 min-w-0 text-left">
-              <p className="truncate text-sm font-medium">{file.name}</p>
-            </div>
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          </div>
-          <div className="space-y-1.5">
-            <Progress value={progress} className="h-2" />
-            <p className="text-sm text-muted-foreground">
-              Import en cours… {progress}%
+            <p className="flex-1 truncate text-sm font-medium text-left">
+              {file.name}
             </p>
+            <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
           </div>
+          <ImportStatusBadge status={record.status} />
+          <p className="text-sm text-muted-foreground">
+            Validation et écriture en cours…
+          </p>
         </div>
       )}
 
-      {status === 'success' && (
+      {isDone && (
         <>
           <div className="mx-auto rounded-full bg-risk-low/10 p-4">
             <CheckCircle className="h-10 w-10 text-risk-low" />
@@ -410,13 +439,10 @@ function Step3({
           <div>
             <p className="text-lg font-medium text-risk-low">Import réussi</p>
             <p className="text-sm text-muted-foreground mt-1">{file.name}</p>
-            {result && (
+            {record.rows_ok != null && (
               <p className="mt-2 text-sm text-muted-foreground">
-                {result.inserted != null && `${result.inserted} insérés`}
-                {result.updated != null && ` · ${result.updated} mis à jour`}
-                {result.skipped != null &&
-                  result.skipped > 0 &&
-                  ` · ${result.skipped} ignorés`}
+                {record.rows_ok} ligne{record.rows_ok !== 1 ? 's' : ''} importée
+                {record.rows_ok !== 1 ? 's' : ''}
               </p>
             )}
           </div>
@@ -432,19 +458,43 @@ function Step3({
         </>
       )}
 
-      {status === 'error' && (
+      {isFailed && (
         <>
           <div className="mx-auto rounded-full bg-risk-critical/10 p-4">
             <XCircle className="h-10 w-10 text-risk-critical" />
           </div>
-          <div>
-            <p className="text-lg font-medium text-risk-critical">
-              Erreur d&apos;import
-            </p>
-            <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          <div className="w-full max-w-lg text-left space-y-3">
+            <div className="text-center">
+              <p className="text-lg font-medium text-risk-critical">
+                Import échoué
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">{file.name}</p>
+            </div>
+            {record.errors && record.errors.length > 0 && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 space-y-1 max-h-52 overflow-y-auto">
+                <p className="text-xs font-semibold text-destructive mb-2 uppercase tracking-wide">
+                  {record.errors.length} erreur
+                  {record.errors.length !== 1 ? 's' : ''} détectée
+                  {record.errors.length !== 1 ? 's' : ''}
+                </p>
+                {record.errors.map((err, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-2 text-xs text-destructive"
+                  >
+                    <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                    <span>{err}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+          <p className="text-xs text-muted-foreground">
+            Corrigez le fichier puis relancez l&apos;import.
+          </p>
           <Button variant="outline" onClick={onReset}>
-            Réessayer
+            <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+            Relancer avec un nouveau fichier
           </Button>
         </>
       )}
@@ -481,33 +531,35 @@ export function UploadWizard({
 
   const handleConfirm = useCallback(async () => {
     if (!state.file) return;
-    update({ step: 3, uploadStatus: 'uploading', uploadProgress: 0 });
-
-    const timer = setInterval(() => {
-      setState((s) => ({
-        ...s,
-        uploadProgress: Math.min(s.uploadProgress + 15, 90),
-      }));
-    }, 300);
+    update({ step: 3, importId: null, uploadError: null });
 
     try {
       const data = await uploadFile(state.file, state.fileType);
-      clearInterval(timer);
-      const result =
-        (state.fileType === 'products' ? data.products : data.sales) ?? null;
-      update({
-        uploadStatus: 'success',
-        uploadProgress: 100,
-        uploadResult: result,
-      });
+      const imp = data.imports?.[0] ?? null;
+      if (imp) {
+        update({ importId: imp.import_id });
+        // Notify parent when import reaches TERMINÉ
+        if (onSuccess) {
+          const check = setInterval(async () => {
+            const { fetchImport } = await import('@/lib/api');
+            const latest = await fetchImport(imp.import_id).catch(() => null);
+            if (latest?.status === 'TERMINÉ') {
+              clearInterval(check);
+              onSuccess();
+            } else if (latest?.status === 'ÉCHOUÉ') {
+              clearInterval(check);
+            }
+          }, 2000);
+        }
+      } else {
+        update({ uploadError: 'Réponse inattendue du serveur.' });
+      }
     } catch (err) {
-      clearInterval(timer);
       update({
-        uploadStatus: 'error',
-        uploadError: err instanceof Error ? err.message : 'Erreur inconnue',
+        uploadError: err instanceof Error ? err.message : 'Erreur réseau',
       });
     }
-  }, [state.file, state.fileType]);
+  }, [state.file, state.fileType, onSuccess]);
 
   const handleReset = useCallback(() => {
     setState({ ...INITIAL_STATE, fileType: state.fileType });
@@ -541,11 +593,9 @@ export function UploadWizard({
 
       {state.step === 3 && state.file && (
         <Step3
-          status={state.uploadStatus as 'uploading' | 'success' | 'error'}
-          progress={state.uploadProgress}
+          importId={state.importId}
+          uploadError={state.uploadError}
           file={state.file}
-          result={state.uploadResult}
-          error={state.uploadError}
           onReset={handleReset}
           onSuccess={onSuccess}
         />

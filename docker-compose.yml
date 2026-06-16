@@ -1,4 +1,12 @@
 services:
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -28,6 +36,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      redis:
+        condition: service_started
 
   frontend:
     build:
@@ -51,3 +61,4 @@ services:
       - '8025:8025'
 volumes:
   postgres_data:
+  redis_data:

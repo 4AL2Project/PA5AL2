@@ -1,11 +1,14 @@
 'use client';
 
 import {
+  ClipboardList,
+  FileStack,
   Inbox,
   LayoutDashboard,
   LogOut,
   Package,
   Settings,
+  ShoppingBag,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -19,6 +22,9 @@ const NAV = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/products', label: 'Produits', icon: Package, exact: false },
   { href: '/actions', label: "Centre d'actions", icon: Inbox, exact: false },
+  { href: '/offers', label: 'Offres B2C', icon: ShoppingBag, exact: false },
+  { href: '/orders', label: 'Commandes', icon: ClipboardList, exact: false },
+  { href: '/imports', label: 'Imports', icon: FileStack, exact: false },
 ];
 
 export function AppSidebar({ userEmail }: { userEmail?: string }) {

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 
@@ -32,6 +33,8 @@ export interface CreateOfferDto {
 
 @Injectable()
 export class OfferService {
+  private readonly logger = new Logger(OfferService.name);
+
   constructor() {}
 
   async create(pharmacyId: string, dto: CreateOfferDto) {
@@ -54,7 +57,7 @@ export class OfferService {
       );
     }
 
-    return prisma.offer.create({
+    const offer = await prisma.offer.create({
       data: {
         pharmacy_id: pharmacyId,
         product_id: dto.product_id,
@@ -65,6 +68,10 @@ export class OfferService {
       },
       include: OFFER_INCLUDE,
     });
+    this.logger.log(
+      `[${pharmacyId}] Offer created: product=${dto.product_id}, qty=${dto.quantity_offered}, price=${dto.discounted_price} → offer_id=${offer.offer_id}`
+    );
+    return offer;
   }
 
   async findAllForPharmacy(pharmacyId: string, status?: string) {
@@ -129,10 +136,12 @@ export class OfferService {
   }
 
   async suspend(pharmacyId: string, offerId: string) {
+    this.logger.log(`[${pharmacyId}] Offer ${offerId} → SUSPENDUE`);
     return this.updateStatus(pharmacyId, offerId, 'ACTIVE', 'SUSPENDUE');
   }
 
   async resume(pharmacyId: string, offerId: string) {
+    this.logger.log(`[${pharmacyId}] Offer ${offerId} → ACTIVE (resumed)`);
     return this.updateStatus(pharmacyId, offerId, 'SUSPENDUE', 'ACTIVE');
   }
 
@@ -146,6 +155,7 @@ export class OfferService {
       },
       data: { status: 'ANNULEE', cancelled_at: new Date() },
     });
+    this.logger.log(`[${pharmacyId}] Offer ${offerId} → TERMINEE`);
     return prisma.offer.update({
       where: { offer_id: offerId },
       data: { status: 'TERMINEE' },

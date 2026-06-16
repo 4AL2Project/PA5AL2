@@ -42,6 +42,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
         `${request?.method ?? 'UNKNOWN'} ${request?.url ?? ''} → ${status}`,
         exception instanceof Error ? exception.stack : String(exception)
       );
+    } else if (status >= 400) {
+      this.logger.warn(
+        `${request?.method ?? 'UNKNOWN'} ${request?.url ?? ''} → ${status} ${message}`
+      );
     }
 
     const body: ErrorResponse = {

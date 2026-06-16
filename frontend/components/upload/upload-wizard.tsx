@@ -12,10 +12,10 @@ import {
 } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
-import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { Button } from '@/components/ui/button';
-import { uploadFile } from '@/lib/api';
+import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { useImportPolling } from '@/hooks/use-import-polling';
+import { uploadFile } from '@/lib/api';
 import { ParsedPreview, previewFile } from '@/lib/file-preview';
 import { DetectionResult, detectLgo } from '@/lib/lgo-detector';
 import { cn } from '@/lib/utils';

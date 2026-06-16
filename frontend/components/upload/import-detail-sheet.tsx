@@ -2,7 +2,6 @@
 
 import { AlertCircle, FileText, RotateCcw } from 'lucide-react';
 
-import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -12,6 +11,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { useImportPolling } from '@/hooks/use-import-polling';
 import { ImportRecord } from '@/lib/types';
 

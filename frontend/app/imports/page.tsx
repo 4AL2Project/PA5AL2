@@ -4,7 +4,6 @@ import { FileStack, Loader2, RotateCcw } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { fetchImports } from '@/lib/api';
 import { ImportFileType, ImportRecord, ImportStatus } from '@/lib/types';
 

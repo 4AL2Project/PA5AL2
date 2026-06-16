@@ -13,12 +13,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';
 
-import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { useImportPolling } from '@/hooks/use-import-polling';
 import { ImportFileType, ImportStatus } from '@/lib/types';
 

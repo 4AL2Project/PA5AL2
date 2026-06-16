@@ -1,6 +1,6 @@
 'use client';
 
-import { Clock, EyeOff } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';

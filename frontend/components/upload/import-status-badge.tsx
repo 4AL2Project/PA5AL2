@@ -1,7 +1,7 @@
 import { CheckCircle2, Clock, Loader2, XCircle } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { ImportStatus } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 const CONFIG: Record<
   ImportStatus,

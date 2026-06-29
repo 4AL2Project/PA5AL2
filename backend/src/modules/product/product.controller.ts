@@ -73,6 +73,31 @@ export class ProductController {
     return { products: filtered, total: filtered.length };
   }
 
+  @Get('sku/:external_sku')
+  @ApiOperation({ summary: 'Lookup produit par external_sku — US-87' })
+  async getProductBySku(
+    @TenantPharmacyId() pharmacyId: string,
+    @Param('external_sku') externalSku: string
+  ) {
+    const product = await prisma.product.findFirst({
+      where: { external_sku: externalSku, pharmacy_id: pharmacyId },
+      select: {
+        product_id: true,
+        external_sku: true,
+        name: true,
+        category: true,
+        brand: true,
+        expiry_date: true,
+        stock_quantity: true,
+        unit_price: true,
+        cost_price: true,
+      },
+    });
+
+    if (!product) throw new NotFoundException('Product not found');
+    return product;
+  }
+
   @Get(':product_id')
   @ApiOperation({ summary: 'Fetch a single product by id (tenant-scoped)' })
   async getProduct(

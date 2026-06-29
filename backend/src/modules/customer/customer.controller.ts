@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Patch,
   Post,
   Req,
   UseGuards,
@@ -61,6 +62,16 @@ export class CustomerController {
   @ApiOperation({ summary: 'Profil du Customer connecté' })
   me(@Req() req: Request & { customer: CustomerJwtPayload }) {
     return this.customerService.findById(req.customer.sub);
+  }
+
+  @Patch('me')
+  @UseGuards(CustomerJwtGuard)
+  @ApiOperation({ summary: 'Mise à jour partielle du profil Customer — US-86' })
+  updateMe(
+    @Req() req: Request & { customer: CustomerJwtPayload },
+    @Body() body: { first_name?: string; last_name?: string; phone?: string }
+  ) {
+    return this.customerService.updateProfile(req.customer.sub, body);
   }
 
   @Get('me/stats')

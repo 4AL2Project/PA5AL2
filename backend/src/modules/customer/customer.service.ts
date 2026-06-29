@@ -117,6 +117,25 @@ export class CustomerService {
     };
   }
 
+  /** Mise à jour partielle du profil Customer — US-86 */
+  async updateProfile(
+    customerId: string,
+    dto: { first_name?: string; last_name?: string; phone?: string }
+  ) {
+    return prisma.customer.update({
+      where: { customer_id: customerId },
+      data: dto,
+      select: {
+        customer_id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        phone: true,
+        created_at: true,
+      },
+    });
+  }
+
   /** Statistiques agrégées du Customer pour l'écran Profil — US-84 */
   async getStats(customerId: string) {
     const customer = await prisma.customer.findUniqueOrThrow({

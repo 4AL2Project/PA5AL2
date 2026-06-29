@@ -19,6 +19,7 @@ import { InvitationModule } from './modules/invitation/invitation.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { OfferModule } from './modules/offer/offer.module';
 import { OrderModule } from './modules/order/order.module';
+import { PharmacyModule } from './modules/pharmacy/pharmacy.module';
 import { ProductModule } from './modules/product/product.module';
 
 @Module({
@@ -47,6 +48,7 @@ import { ProductModule } from './modules/product/product.module';
     AssociationsModule,
     DonationsModule,
     ProductModule,
+    PharmacyModule,
     DashboardModule,
     CustomerModule,
     NotificationModule,

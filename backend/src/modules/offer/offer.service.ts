@@ -1,3 +1,5 @@
+// Gilles — v1.1
+// US-80 : recherche géolocalisée + US-81 : détail offre (mobile)
 import {
   BadRequestException,
   ForbiddenException,
@@ -6,7 +8,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { haversineKm } from '../../core/geo.util';
 import { prisma } from '../../database/client';
+
+const ACTIVE_HOLD_STATUSES = ['RESERVEE', 'EN_PREPARATION', 'PRETE'] as const;
 
 const OFFER_INCLUDE = {
   product: {
@@ -15,12 +20,17 @@ const OFFER_INCLUDE = {
   _count: {
     select: {
       orders: {
-        where: {
-          status: { in: ['RESERVEE', 'EN_PREPARATION', 'PRETE'] as string[] },
-        },
+        where: { status: { in: ACTIVE_HOLD_STATUSES as unknown as string[] } },
       },
     },
   },
+};
+
+const OFFER_CUSTOMER_INCLUDE = {
+  product: {
+    select: { name: true, category: true, brand: true, unit_price: true },
+  },
+  pharmacy: { select: { name: true, address: true, lat: true, lng: true } },
 };
 
 export interface CreateOfferDto {
@@ -29,6 +39,16 @@ export interface CreateOfferDto {
   discounted_price: number;
   quantity_offered: number;
   expires_at?: Date;
+}
+
+export interface GeoOfferQuery {
+  lat: number;
+  lng: number;
+  radius?: number;
+  category?: string;
+  minDiscount?: number;
+  maxDistance?: number;
+  sortBy?: 'distance' | 'discount' | 'price';
 }
 
 @Injectable()
@@ -47,7 +67,6 @@ export class OfferService {
       throw new BadRequestException('quantity_offered exceeds stock_quantity');
     }
 
-    // One active offer per product
     const existing = await prisma.offer.findFirst({
       where: { product_id: dto.product_id, status: 'ACTIVE' },
     });
@@ -76,10 +95,7 @@ export class OfferService {
 
   async findAllForPharmacy(pharmacyId: string, status?: string) {
     return prisma.offer.findMany({
-      where: {
-        pharmacy_id: pharmacyId,
-        ...(status ? { status } : {}),
-      },
+      where: { pharmacy_id: pharmacyId, ...(status ? { status } : {}) },
       include: {
         product: {
           select: {
@@ -91,11 +107,7 @@ export class OfferService {
         },
         _count: {
           select: {
-            orders: {
-              where: {
-                status: { in: ['RESERVEE', 'EN_PREPARATION', 'PRETE'] },
-              },
-            },
+            orders: { where: { status: { in: [...ACTIVE_HOLD_STATUSES] } } },
           },
         },
       },
@@ -103,26 +115,143 @@ export class OfferService {
     });
   }
 
-  /** Catalogue public authentifié pour le mobile Customer */
+  /** Catalogue mobile géolocalisé — US-80 */
+  async searchNearby(query: GeoOfferQuery) {
+    const {
+      lat,
+      lng,
+      radius = 3,
+      category,
+      minDiscount,
+      sortBy = 'distance',
+    } = query;
+    const maxDist = query.maxDistance ?? radius;
+
+    const offers = await prisma.offer.findMany({
+      where: {
+        status: 'ACTIVE',
+        ...(category ? { product: { is: { category } } } : {}),
+      },
+      include: {
+        ...OFFER_CUSTOMER_INCLUDE,
+        _count: {
+          select: {
+            orders: { where: { status: { in: [...ACTIVE_HOLD_STATUSES] } } },
+          },
+        },
+      },
+    });
+
+    const enriched = await Promise.all(
+      offers.map(async (offer) => {
+        const pharmacy = offer.pharmacy as {
+          lat: number | null;
+          lng: number | null;
+          name: string;
+          address: string;
+        };
+        if (pharmacy.lat == null || pharmacy.lng == null) return null;
+
+        const distanceKm = haversineKm(lat, lng, pharmacy.lat, pharmacy.lng);
+        if (distanceKm > maxDist) return null;
+
+        const originalPrice = (offer.product as { unit_price: number })
+          .unit_price;
+        const discountPercent =
+          originalPrice > 0
+            ? Math.round(
+                ((originalPrice - offer.discounted_price) / originalPrice) * 100
+              )
+            : 0;
+
+        if (minDiscount != null && discountPercent < minDiscount) return null;
+
+        const holds = await prisma.order.aggregate({
+          where: {
+            offer_id: offer.offer_id,
+            status: { in: [...ACTIVE_HOLD_STATUSES] },
+          },
+          _sum: { quantity: true },
+        });
+        const reserved = holds._sum.quantity ?? 0;
+
+        return {
+          offer_id: offer.offer_id,
+          product: offer.product,
+          discounted_price: offer.discounted_price,
+          original_price: originalPrice,
+          discount_percent: discountPercent,
+          available_quantity: offer.quantity_offered - reserved,
+          distanceKm: Math.round(distanceKm * 10) / 10,
+          pharmacy: {
+            name: pharmacy.name,
+            address: pharmacy.address,
+            pharmacy_id: offer.pharmacy_id,
+          },
+          expires_at: offer.expires_at,
+        };
+      })
+    );
+
+    const filtered = enriched.filter(Boolean) as NonNullable<
+      (typeof enriched)[number]
+    >[];
+
+    const sorted = filtered.sort((a, b) => {
+      if (sortBy === 'discount') return b.discount_percent - a.discount_percent;
+      if (sortBy === 'price') return a.discounted_price - b.discounted_price;
+      return a.distanceKm - b.distanceKm;
+    });
+
+    return { total: sorted.length, offers: sorted };
+  }
+
+  /** Détail d'une offre active pour le Customer — US-81 */
+  async findActiveById(offerId: string) {
+    const offer = await prisma.offer.findUnique({
+      where: { offer_id: offerId },
+      include: {
+        ...OFFER_CUSTOMER_INCLUDE,
+      },
+    });
+    if (!offer) throw new NotFoundException('Offer not found');
+    if (offer.status !== 'ACTIVE')
+      throw new NotFoundException('Offer not available');
+
+    const holds = await prisma.order.aggregate({
+      where: { offer_id: offerId, status: { in: [...ACTIVE_HOLD_STATUSES] } },
+      _sum: { quantity: true },
+    });
+    const reserved = holds._sum.quantity ?? 0;
+    const originalPrice = (offer.product as { unit_price: number }).unit_price;
+
+    return {
+      ...offer,
+      original_price: originalPrice,
+      discount_percent:
+        originalPrice > 0
+          ? Math.round(
+              ((originalPrice - offer.discounted_price) / originalPrice) * 100
+            )
+          : 0,
+      available_quantity: offer.quantity_offered - reserved,
+    };
+  }
+
+  /** Catalogue par pharmacie (endpoint hérité) */
   async findActiveForCustomer(pharmacyId: string) {
     const offers = await prisma.offer.findMany({
       where: { pharmacy_id: pharmacyId, status: 'ACTIVE' },
-      include: {
-        product: {
-          select: { name: true, category: true, brand: true, unit_price: true },
-        },
-        pharmacy: { select: { name: true, address: true } },
-      },
+      include: OFFER_CUSTOMER_INCLUDE,
       orderBy: { created_at: 'desc' },
     });
 
-    // Compute available quantity = quantity_offered - active holds
     return Promise.all(
       offers.map(async (offer) => {
         const holds = await prisma.order.aggregate({
           where: {
             offer_id: offer.offer_id,
-            status: { in: ['RESERVEE', 'EN_PREPARATION', 'PRETE'] },
+            status: { in: [...ACTIVE_HOLD_STATUSES] },
           },
           _sum: { quantity: true },
         });
@@ -147,7 +276,6 @@ export class OfferService {
 
   async terminate(pharmacyId: string, offerId: string) {
     await this.findOwned(pharmacyId, offerId);
-    // Cancel all active orders on this offer
     await prisma.order.updateMany({
       where: {
         offer_id: offerId,

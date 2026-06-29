@@ -1,3 +1,5 @@
+// Gilles — v1.1
+// US-83 : refresh token + US-84 : stats profil Customer
 import {
   Body,
   Controller,
@@ -47,10 +49,24 @@ export class CustomerController {
     return this.customerService.login(body.email, body.password);
   }
 
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Renouveler les tokens Customer — US-83' })
+  refresh(@Body() body: { refresh_token: string }) {
+    return this.customerService.refreshTokens(body.refresh_token);
+  }
+
   @Get('me')
   @UseGuards(CustomerJwtGuard)
   @ApiOperation({ summary: 'Profil du Customer connecté' })
   me(@Req() req: Request & { customer: CustomerJwtPayload }) {
     return this.customerService.findById(req.customer.sub);
+  }
+
+  @Get('me/stats')
+  @UseGuards(CustomerJwtGuard)
+  @ApiOperation({ summary: 'Statistiques du profil Customer — US-84' })
+  stats(@Req() req: Request & { customer: CustomerJwtPayload }) {
+    return this.customerService.getStats(req.customer.sub);
   }
 }

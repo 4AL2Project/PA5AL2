@@ -5,8 +5,11 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
+import { config } from '../../core/config';
 import { prisma } from '../../database/client';
 import { UserRole } from '../auth/roles.enum';
+import { generateToken, hashToken } from '../auth/token.util';
+import { EmailService } from '../email/email.service';
 
 export interface UpdatePharmacyMeInput {
   name?: string;
@@ -29,6 +32,10 @@ export interface PreparateurInput {
   last_name: string;
   email: string;
   phone: string;
+}
+
+export interface InvitePreparateurInput {
+  email: string;
 }
 
 const PHARMACY_SELECT = {
@@ -56,6 +63,8 @@ const PREPARATEUR_SELECT = {
 
 @Injectable()
 export class PharmacyService {
+  constructor(private readonly emailService: EmailService) {}
+
   async getMyPharmacy(pharmacyId: string) {
     const pharmacy = await prisma.pharmacy.findUnique({
       where: { pharmacy_id: pharmacyId },
@@ -94,10 +103,14 @@ export class PharmacyService {
     });
   }
 
-  /** Cree un preparateur ACTIVE sans mot de passe : connexion via magic link. */
+  /**
+   * Cree un preparateur en attente (PENDING, sans mot de passe) a partir de son
+   * seul email, puis lui envoie une invitation. Le preparateur renseigne son
+   * profil (nom, telephone) et choisit un mot de passe depuis l'app mobile.
+   */
   async addPreparateur(
     pharmacyId: string,
-    dto: PreparateurInput
+    dto: InvitePreparateurInput
   ): Promise<PreparateurItem> {
     const existing = await prisma.user.findUnique({
       where: { email: dto.email },
@@ -106,19 +119,45 @@ export class PharmacyService {
       throw new ConflictException('Un compte existe deja pour cet email');
     }
 
-    return prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         pharmacy_id: pharmacyId,
         email: dto.email,
-        first_name: dto.first_name,
-        last_name: dto.last_name,
-        phone: dto.phone,
+        first_name: null,
+        last_name: null,
+        phone: null,
         role: UserRole.PREPARATEUR,
-        status: 'ACTIVE',
+        status: 'PENDING',
         password: null,
       },
       select: PREPARATEUR_SELECT,
     });
+
+    await this.sendPreparateurInvitation(user.user_id, user.email);
+
+    return user;
+  }
+
+  /** Cree un token d'invitation (48h) et envoie le mail au preparateur. */
+  private async sendPreparateurInvitation(
+    userId: string,
+    email: string
+  ): Promise<void> {
+    const rawToken = generateToken();
+    const tokenHash = hashToken(rawToken);
+    const expiresAt = new Date(Date.now() + config.auth.invitationTtlMs);
+
+    await prisma.authToken.create({
+      data: {
+        user_id: userId,
+        token_hash: tokenHash,
+        type: 'INVITATION',
+        expires_at: expiresAt,
+      },
+    });
+
+    const link = `${config.frontUrl}/preparateur/onboarding?token=${rawToken}`;
+    await this.emailService.sendInvitationEmail(email, link);
   }
 
   async updatePreparateur(
@@ -126,14 +165,7 @@ export class PharmacyService {
     userId: string,
     dto: Partial<PreparateurInput>
   ): Promise<PreparateurItem> {
-    const user = await prisma.user.findUnique({ where: { user_id: userId } });
-    if (
-      !user ||
-      user.pharmacy_id !== pharmacyId ||
-      user.role !== UserRole.PREPARATEUR
-    ) {
-      throw new NotFoundException('Preparateur introuvable');
-    }
+    const user = await this.assertMyPreparateur(pharmacyId, userId);
 
     if (dto.email && dto.email !== user.email) {
       const existing = await prisma.user.findUnique({
@@ -156,10 +188,42 @@ export class PharmacyService {
     });
   }
 
+  /** Active ou desactive le compte d'un preparateur de mon officine. */
+  async setPreparateurStatus(
+    pharmacyId: string,
+    userId: string,
+    status: 'ACTIVE' | 'INACTIVE'
+  ): Promise<PreparateurItem> {
+    const user = await this.assertMyPreparateur(pharmacyId, userId);
+
+    if (status === 'ACTIVE' && !user.password) {
+      throw new ConflictException(
+        "Ce preparateur n'a pas encore finalise son compte"
+      );
+    }
+
+    return prisma.user.update({
+      where: { user_id: userId },
+      data: { status },
+      select: PREPARATEUR_SELECT,
+    });
+  }
+
   async deletePreparateur(
     pharmacyId: string,
     userId: string
   ): Promise<{ deleted: true }> {
+    await this.assertMyPreparateur(pharmacyId, userId);
+
+    await prisma.$transaction([
+      prisma.authToken.deleteMany({ where: { user_id: userId } }),
+      prisma.user.delete({ where: { user_id: userId } }),
+    ]);
+    return { deleted: true };
+  }
+
+  /** Garantit que le preparateur appartient bien a mon officine. */
+  private async assertMyPreparateur(pharmacyId: string, userId: string) {
     const user = await prisma.user.findUnique({ where: { user_id: userId } });
     if (
       !user ||
@@ -168,11 +232,6 @@ export class PharmacyService {
     ) {
       throw new NotFoundException('Preparateur introuvable');
     }
-
-    await prisma.$transaction([
-      prisma.authToken.deleteMany({ where: { user_id: userId } }),
-      prisma.user.delete({ where: { user_id: userId } }),
-    ]);
-    return { deleted: true };
+    return user;
   }
 }

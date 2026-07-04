@@ -62,6 +62,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (user.status !== 'ACTIVE') {
+      this.logger.warn(`Login refused (status=${user.status}): ${email}`);
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     this.logger.log(`User logged in: ${email} [pharmacy=${user.pharmacy_id}]`);
 
     return this.issueTokens({

@@ -15,6 +15,7 @@ export interface JwtClaims {
 }
 
 export interface InvitationInfo {
+  role: string;
   pharmacy: {
     pharmacy_id: string;
     name: string;
@@ -77,7 +78,7 @@ export interface Preparateur {
   last_name: string | null;
   email: string;
   phone: string | null;
-  status: 'PENDING' | 'ACTIVE' | string;
+  status: 'PENDING' | 'ACTIVE' | 'INACTIVE' | string;
 }
 
 export interface PharmacyDetail extends PharmacyListItem {

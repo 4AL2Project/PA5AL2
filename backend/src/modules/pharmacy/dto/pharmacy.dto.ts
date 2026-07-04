@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
+  IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -38,24 +39,15 @@ export class UpdatePharmacyMeDto {
 // ─── Preparateurs (gestion par le titulaire) ─────────────────────────────────
 
 export class CreatePreparateurDto {
-  @ApiProperty({ example: 'Jean' })
-  @IsString()
-  @IsNotEmpty()
-  first_name!: string;
-
-  @ApiProperty({ example: 'Martin' })
-  @IsString()
-  @IsNotEmpty()
-  last_name!: string;
-
   @ApiProperty({ example: 'jean.martin@pharmacie.fr', format: 'email' })
   @IsEmail()
   email!: string;
+}
 
-  @ApiProperty({ example: '0612345678' })
-  @IsString()
-  @IsNotEmpty()
-  phone!: string;
+export class UpdatePreparateurStatusDto {
+  @ApiProperty({ example: 'INACTIVE', enum: ['ACTIVE', 'INACTIVE'] })
+  @IsIn(['ACTIVE', 'INACTIVE'])
+  status!: 'ACTIVE' | 'INACTIVE';
 }
 
 export class UpdatePreparateurDto {

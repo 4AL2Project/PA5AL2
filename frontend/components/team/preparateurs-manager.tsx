@@ -13,7 +13,7 @@ export function PreparateursManager({
     <PreparateursTable
       endpointBase="/api/be/api/pharmacies/me/preparateurs"
       preparateurs={preparateurs}
-      emptyDescription="Ajoutez un préparateur de commande à votre officine. Il se connectera via un lien magique envoyé à son email."
+      emptyDescription="Ajoutez un préparateur de commande à votre officine. Il recevra une invitation par email pour créer son compte."
     />
   );
 }

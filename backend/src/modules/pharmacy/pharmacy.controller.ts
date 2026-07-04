@@ -1,5 +1,21 @@
-import { Body, Controller, Get, Patch, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -8,7 +24,12 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { JwtPayload } from '../auth/jwt-payload';
 import { UserRole } from '../auth/roles.enum';
-import { UpdatePharmacyMeDto } from './dto/pharmacy.dto';
+import {
+  CreatePreparateurDto,
+  PreparateurResponseDto,
+  UpdatePharmacyMeDto,
+  UpdatePreparateurDto,
+} from './dto/pharmacy.dto';
 import { PharmacyService } from './pharmacy.service';
 
 @ApiTags('pharmacy')
@@ -36,5 +57,61 @@ export class PharmacyController {
     @Body() dto: UpdatePharmacyMeDto
   ) {
     return this.pharmacyService.updateMyPharmacy(req.user.pharmacy_id, dto);
+  }
+
+  // ─── Preparateurs (titulaire uniquement) ───────────────────────────────────
+
+  @Get('me/preparateurs')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.TITULAIRE)
+  @ApiOperation({
+    summary: 'Lister les preparateurs de commande de mon officine',
+  })
+  @ApiOkResponse({ type: [PreparateurResponseDto] })
+  listPreparateurs(@Req() req: Request & { user: JwtPayload }) {
+    return this.pharmacyService.listPreparateurs(req.user.pharmacy_id);
+  }
+
+  @Post('me/preparateurs')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.TITULAIRE)
+  @ApiOperation({
+    summary: 'Ajouter un preparateur de commande a mon officine',
+  })
+  @ApiCreatedResponse({ type: PreparateurResponseDto })
+  addPreparateur(
+    @Req() req: Request & { user: JwtPayload },
+    @Body() dto: CreatePreparateurDto
+  ) {
+    return this.pharmacyService.addPreparateur(req.user.pharmacy_id, dto);
+  }
+
+  @Patch('me/preparateurs/:userId')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.TITULAIRE)
+  @ApiOperation({ summary: 'Modifier un preparateur de mon officine' })
+  @ApiOkResponse({ type: PreparateurResponseDto })
+  updatePreparateur(
+    @Req() req: Request & { user: JwtPayload },
+    @Param('userId') userId: string,
+    @Body() dto: UpdatePreparateurDto
+  ) {
+    return this.pharmacyService.updatePreparateur(
+      req.user.pharmacy_id,
+      userId,
+      dto
+    );
+  }
+
+  @Delete('me/preparateurs/:userId')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.TITULAIRE)
+  @ApiOperation({ summary: 'Supprimer un preparateur de mon officine' })
+  @ApiOkResponse({ description: 'Preparateur supprime' })
+  deletePreparateur(
+    @Req() req: Request & { user: JwtPayload },
+    @Param('userId') userId: string
+  ) {
+    return this.pharmacyService.deletePreparateur(req.user.pharmacy_id, userId);
   }
 }

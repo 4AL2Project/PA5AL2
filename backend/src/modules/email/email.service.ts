@@ -45,9 +45,7 @@ export class EmailService {
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         this.logger.error(`SMTP error sending to ${payload.to}: ${message}`);
-        throw new InternalServerErrorException(
-          `Email non envoyé : ${message}`
-        );
+        throw new InternalServerErrorException(`Email non envoyé : ${message}`);
       }
       return;
     }

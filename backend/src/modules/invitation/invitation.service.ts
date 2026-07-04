@@ -79,7 +79,7 @@ export class InvitationService {
 
   /**
    * Finalise le compte d'un preparateur invite : il choisit son mot de passe
-   * depuis l'application mobile. Le compte passe de PENDING a ACTIVE.
+   * depuis l'onboarding web. Le compte passe de PENDING a ACTIVE.
    */
   async acceptPreparateur(
     rawToken: string,
@@ -102,7 +102,7 @@ export class InvitationService {
 
     if (user.role !== UserRole.PREPARATEUR) {
       throw new BadRequestException(
-        "Cette invitation ne concerne pas un compte preparateur"
+        'Cette invitation ne concerne pas un compte preparateur'
       );
     }
 

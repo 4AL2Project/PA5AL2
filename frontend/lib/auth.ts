@@ -212,6 +212,27 @@ export async function acceptInvitation(
   );
 }
 
+export interface AcceptPreparateurPayload {
+  password: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  accepted_terms: boolean;
+}
+
+export async function acceptPreparateurInvitation(
+  token: string,
+  payload: AcceptPreparateurPayload
+): Promise<AuthTokens> {
+  return backendFetch<AuthTokens>(
+    `/api/auth/invitations/${encodeURIComponent(token)}/accept-preparateur`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
 export async function adminLogin(
   email: string,
   password: string

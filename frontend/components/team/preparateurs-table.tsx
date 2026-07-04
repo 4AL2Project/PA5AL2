@@ -119,7 +119,7 @@ function InvitePreparateurDialog({
           <DialogTitle>Inviter un préparateur</DialogTitle>
           <DialogDescription>
             Il recevra un email pour créer son compte et choisir son mot de
-            passe depuis l’application mobile.
+            passe.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
@@ -334,9 +334,7 @@ function PreparateurDetailsDialog({
                 Annuler
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting && (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                )}
+                {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 Enregistrer
               </Button>
             </DialogFooter>

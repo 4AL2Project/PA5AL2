@@ -55,7 +55,7 @@ export class InvitationController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary:
-      'Finaliser un compte preparateur avec mot de passe (application mobile)',
+      'Finaliser un compte preparateur avec mot de passe (onboarding web)',
   })
   @ApiOkResponse({ type: AuthTokensDto })
   @ApiGoneResponse({ description: 'Token expire ou deja consomme' })

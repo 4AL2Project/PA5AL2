@@ -43,7 +43,18 @@ export function AssociationRow({ item }: { item: Association }) {
   return (
     <>
       <TableRow>
-        <TableCell className="text-xs font-medium">{item.name}</TableCell>
+        <TableCell className="text-xs font-medium">
+          <div className="flex items-center gap-2">
+            {item.logo_url ? (
+              <img
+                src={`/api/be${item.logo_url}`}
+                alt=""
+                className="h-7 w-7 shrink-0 rounded-md object-contain"
+              />
+            ) : null}
+            <span>{item.name}</span>
+          </div>
+        </TableCell>
         <TableCell className="text-xs text-muted-foreground">
           {item.city} {item.postal_code}
         </TableCell>

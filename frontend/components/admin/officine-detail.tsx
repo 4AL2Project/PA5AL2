@@ -10,7 +10,7 @@ import { PharmacyDetail } from '@/lib/auth';
 const TAB_LIST =
   'h-auto w-full justify-start gap-6 rounded-none border-b bg-transparent p-0';
 const TAB_TRIGGER =
-  'rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 pb-3 text-sm text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none';
+  'flex-none rounded-none border-0 border-b-2 border-transparent bg-transparent px-0 pb-3 text-sm text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-foreground data-[state=active]:shadow-none';
 
 export function OfficineDetail({ pharmacy }: { pharmacy: PharmacyDetail }) {
   return (

@@ -1,7 +1,7 @@
 'use client';
 
-import { Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { ImagePlus, Loader2, X } from 'lucide-react';
+import { useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,17 @@ const CATEGORY_OPTIONS = [
   'materiel_medical',
   'autre',
 ];
+
+const ALLOWED_LOGO_TYPES = /^image\/(jpe?g|png|webp|gif|svg\+xml)$/;
+const MAX_LOGO_BYTES = 5 * 1024 * 1024; // 5 Mo
+
+// Résout un logo (chemin relatif servi par le backend) en URL same-origin
+// passant par le proxy `/api/be`.
+function resolveLogoUrl(path: string | null): string | null {
+  if (!path) return null;
+  if (/^https?:\/\//.test(path)) return path;
+  return `/api/be${path}`;
+}
 
 interface AssociationFormProps {
   initial?: Association;
@@ -66,6 +77,12 @@ export function AssociationForm({
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(
+    resolveLogoUrl(initial?.logo_url ?? null)
+  );
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -77,6 +94,33 @@ export function AssociationForm({
         ? prev.categories.filter((c) => c !== cat)
         : [...prev.categories, cat],
     }));
+  };
+
+  const acceptLogo = (file: File | undefined) => {
+    if (!file) return;
+    if (!ALLOWED_LOGO_TYPES.test(file.type)) {
+      setError('Format de logo non supporté (jpeg, png, webp, gif, svg).');
+      return;
+    }
+    if (file.size > MAX_LOGO_BYTES) {
+      setError('Le logo dépasse la taille maximale de 5 Mo.');
+      return;
+    }
+    setError(null);
+    setLogoFile(file);
+    setLogoPreview(URL.createObjectURL(file));
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setDragActive(false);
+    acceptLogo(e.dataTransfer.files?.[0]);
+  };
+
+  const removeLogo = () => {
+    setLogoFile(null);
+    setLogoPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const onSubmit = async (e: React.FormEvent) => {
@@ -109,6 +153,28 @@ export function AssociationForm({
         setError('Une erreur est survenue. Vérifiez votre saisie.');
         return;
       }
+
+      if (logoFile) {
+        const payload = await res.json().catch(() => null);
+        const associationId: string | undefined = isEdit
+          ? initial!.association_id
+          : (payload?.data?.association_id ?? payload?.association_id);
+        if (associationId) {
+          const logoForm = new FormData();
+          logoForm.append('logo', logoFile);
+          const logoRes = await fetch(
+            `/api/be/api/associations/${associationId}/logo`,
+            { method: 'POST', body: logoForm }
+          );
+          if (!logoRes.ok) {
+            setError(
+              "L'association a été enregistrée mais le logo n'a pas pu être téléversé."
+            );
+            return;
+          }
+        }
+      }
+
       onSaved();
     } finally {
       setSubmitting(false);
@@ -136,6 +202,78 @@ export function AssociationForm({
           disabled={submitting}
           placeholder="Croix Bleue Paris"
         />
+      </div>
+
+      <div className="space-y-1.5">
+        <Label className="text-xs">Logo (optionnel)</Label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => acceptLogo(e.target.files?.[0])}
+          disabled={submitting}
+        />
+        {logoPreview ? (
+          <div className="flex items-center gap-3 rounded-lg border p-3">
+            <img
+              src={logoPreview}
+              alt="Logo de l'association"
+              className="h-14 w-14 rounded-md object-contain"
+            />
+            <div className="flex flex-1 items-center justify-between gap-2">
+              <button
+                type="button"
+                className="text-xs text-primary hover:underline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={submitting}
+              >
+                Remplacer
+              </button>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-destructive"
+                onClick={removeLogo}
+                disabled={submitting}
+                aria-label="Retirer le logo"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragActive(true);
+            }}
+            onDragLeave={() => setDragActive(false)}
+            onDrop={handleDrop}
+            className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed px-4 py-6 text-center transition-colors ${
+              dragActive
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/50'
+            }`}
+          >
+            <ImagePlus className="h-5 w-5 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">
+              Glissez-déposez une image ou{' '}
+              <span className="text-primary">parcourez</span>
+            </p>
+            <p className="text-[11px] text-muted-foreground/70">
+              PNG, JPG, WEBP, SVG — 5 Mo max
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="space-y-1.5">

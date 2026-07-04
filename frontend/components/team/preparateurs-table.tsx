@@ -342,10 +342,14 @@ function PreparateurDetailsDialog({
         ) : (
           <div className="space-y-4">
             <dl className="grid grid-cols-3 gap-y-2 text-sm">
+              <dt className="text-muted-foreground">Prénom</dt>
+              <dd className="col-span-2">{target.first_name || '—'}</dd>
+              <dt className="text-muted-foreground">Nom</dt>
+              <dd className="col-span-2">{target.last_name || '—'}</dd>
               <dt className="text-muted-foreground">Email</dt>
               <dd className="col-span-2">{target.email}</dd>
               <dt className="text-muted-foreground">Téléphone</dt>
-              <dd className="col-span-2">{target.phone ?? '—'}</dd>
+              <dd className="col-span-2">{target.phone || '—'}</dd>
             </dl>
 
             {error && (

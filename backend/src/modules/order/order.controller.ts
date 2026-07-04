@@ -50,6 +50,16 @@ export class OrderController {
     return this.orderService.findOrdersForCustomer(req.customer.sub);
   }
 
+  @Get('my/:id')
+  @UseGuards(CustomerJwtGuard)
+  @ApiOperation({ summary: "Détail d'un Order pour le Customer — US-82" })
+  findOneCustomer(
+    @Req() req: Request & { customer: CustomerJwtPayload },
+    @Param('id') id: string
+  ) {
+    return this.orderService.findOneForCustomer(id, req.customer.sub);
+  }
+
   @Patch(':id/cancel')
   @UseGuards(CustomerJwtGuard)
   @ApiOperation({
@@ -75,6 +85,16 @@ export class OrderController {
       req.user.pharmacy_id,
       status
     );
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard, TenantGuard)
+  @ApiOperation({ summary: "Détail d'un Order pour la Pharmacie — US-82" })
+  findOnePharmacy(
+    @Req() req: Request & { user: JwtPayload },
+    @Param('id') id: string
+  ) {
+    return this.orderService.findOneForPharmacy(id, req.user.pharmacy_id);
   }
 
   @Get('qr/:qrCode')

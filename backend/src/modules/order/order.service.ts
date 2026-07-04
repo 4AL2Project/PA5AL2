@@ -16,7 +16,6 @@ import {
 const HOLD_DURATION_HOURS = 24;
 
 const ACTIVE_STATUSES = ['RESERVEE', 'EN_PREPARATION', 'PRETE'] as const;
-type ActiveStatus = (typeof ACTIVE_STATUSES)[number];
 
 @Injectable()
 export class OrderService {
@@ -131,6 +130,55 @@ export class OrderService {
       },
       orderBy: { reserved_at: 'desc' },
     });
+  }
+
+  /** Détail d'un Order pour le Customer — US-82 */
+  async findOneForCustomer(orderId: string, customerId: string) {
+    const order = await prisma.order.findUnique({
+      where: { order_id: orderId },
+      include: {
+        offer: {
+          include: {
+            product: { select: { name: true, category: true } },
+            pharmacy: { select: { name: true, address: true } },
+          },
+        },
+      },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.customer_id !== customerId)
+      throw new ForbiddenException('Not your order');
+
+    // Retourner pharmacy + qr_code, masquer les infos client
+    const { pharmacy_id: _pid, ...orderData } = order;
+    return { ...orderData, pharmacy_id: _pid };
+  }
+
+  /** Détail d'un Order pour la Pharmacie — US-82 */
+  async findOneForPharmacy(orderId: string, pharmacyId: string) {
+    const order = await prisma.order.findUnique({
+      where: { order_id: orderId },
+      include: {
+        customer: {
+          select: {
+            email: true,
+            first_name: true,
+            last_name: true,
+            phone: true,
+          },
+        },
+        offer: {
+          include: { product: { select: { name: true, external_sku: true } } },
+        },
+      },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    if (order.pharmacy_id !== pharmacyId)
+      throw new ForbiddenException('Not your order');
+
+    // Masquer qr_code côté pharmacie (confidentiel pour le client)
+    const { qr_code: _qr, ...rest } = order;
+    return rest;
   }
 
   async findByQrCode(qrCode: string, pharmacyId: string) {

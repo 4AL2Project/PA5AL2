@@ -77,6 +77,14 @@ export type OrderStatus =
   | 'ANNULEE'
   | 'EXPIREE';
 
+export interface OfferImage {
+  image_id: string;
+  offer_id: string;
+  url: string;
+  position: number;
+  created_at: string;
+}
+
 export interface Offer {
   offer_id: string;
   pharmacy_id: string;
@@ -94,6 +102,31 @@ export interface Offer {
     category?: string;
     brand?: string;
   };
+  images?: OfferImage[];
+  _count?: { orders: number };
+}
+
+export interface OfferDetail {
+  offer_id: string;
+  pharmacy_id: string;
+  product_id: string;
+  action_id: string | null;
+  discounted_price: number;
+  quantity_offered: number;
+  status: OfferStatus;
+  expires_at: string | null;
+  created_at: string;
+  updated_at: string;
+  reserved_quantity: number;
+  product: {
+    name: string;
+    external_sku: string;
+    category: string | null;
+    brand: string | null;
+    unit_price: number;
+    stock_quantity: number;
+  };
+  images: OfferImage[];
   _count?: { orders: number };
 }
 

@@ -158,6 +158,7 @@ model Association {
   categories     String[]
   contact_email  String?
   contact_phone  String?
+  logo_url       String?
   active         Boolean  @default(true)
   created_at     DateTime @default(now())
 

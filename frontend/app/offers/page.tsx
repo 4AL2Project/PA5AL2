@@ -7,8 +7,11 @@ import {
   Loader2,
   PackageSearch,
   RefreshCw,
+  Settings2,
   Trash2,
 } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -103,6 +106,7 @@ export default function OffersPage() {
   const [actionId, setActionId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [confirmOffer, setConfirmOffer] = useState<Offer | null>(null);
+  const router = useRouter();
 
   const load = useCallback(async () => {
     try {
@@ -236,7 +240,12 @@ export default function OffersPage() {
                           className="border-border/50 hover:bg-muted/30"
                         >
                           <TableCell className="font-medium max-w-[160px] truncate">
-                            {offer.product.name}
+                            <Link
+                              href={`/offers/${offer.offer_id}`}
+                              className="hover:text-primary hover:underline"
+                            >
+                              {offer.product.name}
+                            </Link>
                           </TableCell>
                           <TableCell className="font-mono text-xs text-muted-foreground">
                             {offer.product.external_sku}
@@ -257,6 +266,16 @@ export default function OffersPage() {
                           </TableCell>
                           <TableCell>
                             <div className="flex justify-end gap-1">
+                              <IconButton
+                                variant="ghost"
+                                size="sm"
+                                tooltip="Gérer l'offre"
+                                onClick={() =>
+                                  router.push(`/offers/${offer.offer_id}`)
+                                }
+                              >
+                                <Settings2 className="h-4 w-4" />
+                              </IconButton>
                               {offer.status === 'ACTIVE' && (
                                 <IconButton
                                   variant="ghost"

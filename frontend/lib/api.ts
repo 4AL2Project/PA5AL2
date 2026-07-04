@@ -3,6 +3,7 @@ import {
   DormantAction,
   ImportRecord,
   Offer,
+  OfferDetail,
   Order,
   Product,
   RiskDistribution,
@@ -364,6 +365,56 @@ export async function resumeOffer(offerId: string): Promise<Offer> {
 
 export async function terminateOffer(offerId: string): Promise<Offer> {
   return apiFetch<Offer>(`/api/offers/${offerId}`, { method: 'DELETE' });
+}
+
+export async function fetchOfferDetail(offerId: string): Promise<OfferDetail> {
+  return apiFetch<OfferDetail>(`/api/offers/${offerId}/manage`);
+}
+
+export interface UpdateOfferPayload {
+  discounted_price?: number;
+  quantity_offered?: number;
+  expires_at?: string | null;
+}
+
+export async function updateOffer(
+  offerId: string,
+  payload: UpdateOfferPayload
+): Promise<OfferDetail> {
+  return apiFetch<OfferDetail>(`/api/offers/${offerId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function uploadOfferImages(
+  offerId: string,
+  files: File[]
+): Promise<OfferDetail> {
+  const form = new FormData();
+  files.forEach((file) => form.append('images', file));
+  return apiFetch<OfferDetail>(`/api/offers/${offerId}/images`, {
+    method: 'POST',
+    body: form,
+  });
+}
+
+export async function deleteOfferImage(
+  offerId: string,
+  imageId: string
+): Promise<OfferDetail> {
+  return apiFetch<OfferDetail>(`/api/offers/${offerId}/images/${imageId}`, {
+    method: 'DELETE',
+  });
+}
+
+// Résout une image d'offre (chemin relatif servi par le backend) en URL
+// same-origin passant par le proxy `/api/be`.
+export function resolveOfferImageUrl(path: string | null): string | null {
+  if (!path) return null;
+  if (/^https?:\/\//.test(path)) return path;
+  return `/api/be${path}`;
 }
 
 export async function fetchOrders(status?: string): Promise<Order[]> {

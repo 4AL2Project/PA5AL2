@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 
 import { haversineKm } from '../../core/geo.util';
+import { deleteUploadByUrl } from '../../core/uploads';
 import { prisma } from '../../database/client';
 
 const ACTIVE_HOLD_STATUSES = ['RESERVEE', 'EN_PREPARATION', 'PRETE'] as const;
@@ -33,12 +34,38 @@ const OFFER_CUSTOMER_INCLUDE = {
   pharmacy: { select: { name: true, address: true, lat: true, lng: true } },
 };
 
+// Vue détaillée côté Titulaire (page de gestion d'une offre)
+const OFFER_MANAGE_INCLUDE = {
+  product: {
+    select: {
+      name: true,
+      external_sku: true,
+      category: true,
+      brand: true,
+      unit_price: true,
+      stock_quantity: true,
+    },
+  },
+  images: { orderBy: { position: 'asc' as const } },
+  _count: {
+    select: {
+      orders: { where: { status: { in: [...ACTIVE_HOLD_STATUSES] } } },
+    },
+  },
+};
+
 export interface CreateOfferDto {
   product_id: string;
   action_id?: string;
   discounted_price: number;
   quantity_offered: number;
   expires_at?: Date;
+}
+
+export interface UpdateOfferDto {
+  discounted_price?: number;
+  quantity_offered?: number;
+  expires_at?: Date | null;
 }
 
 export interface GeoOfferQuery {
@@ -113,6 +140,112 @@ export class OfferService {
       },
       orderBy: { created_at: 'desc' },
     });
+  }
+
+  /** Détail d'une offre pour le Titulaire (page de gestion) */
+  async findOneForPharmacy(pharmacyId: string, offerId: string) {
+    const offer = await prisma.offer.findUnique({
+      where: { offer_id: offerId },
+      include: OFFER_MANAGE_INCLUDE,
+    });
+    if (!offer) throw new NotFoundException('Offer not found');
+    if (offer.pharmacy_id !== pharmacyId)
+      throw new ForbiddenException('Not your offer');
+
+    const holds = await prisma.order.aggregate({
+      where: { offer_id: offerId, status: { in: [...ACTIVE_HOLD_STATUSES] } },
+      _sum: { quantity: true },
+    });
+    const reserved = holds._sum.quantity ?? 0;
+
+    return { ...offer, reserved_quantity: reserved };
+  }
+
+  /** Modification des informations d'une offre (prix, quantité, expiration) */
+  async update(pharmacyId: string, offerId: string, dto: UpdateOfferDto) {
+    const offer = await this.findOwned(pharmacyId, offerId);
+    if (offer.status === 'TERMINEE') {
+      throw new BadRequestException('Cannot edit a terminated offer');
+    }
+
+    if (dto.discounted_price != null && dto.discounted_price <= 0) {
+      throw new BadRequestException('discounted_price must be greater than 0');
+    }
+
+    if (dto.quantity_offered != null) {
+      if (dto.quantity_offered <= 0) {
+        throw new BadRequestException(
+          'quantity_offered must be greater than 0'
+        );
+      }
+      const product = await prisma.product.findUnique({
+        where: { product_id: offer.product_id },
+        select: { stock_quantity: true },
+      });
+      if (product && dto.quantity_offered > product.stock_quantity) {
+        throw new BadRequestException(
+          'quantity_offered exceeds stock_quantity'
+        );
+      }
+    }
+
+    this.logger.log(`[${pharmacyId}] Offer ${offerId} updated`);
+    return prisma.offer.update({
+      where: { offer_id: offerId },
+      data: {
+        ...(dto.discounted_price != null
+          ? { discounted_price: dto.discounted_price }
+          : {}),
+        ...(dto.quantity_offered != null
+          ? { quantity_offered: dto.quantity_offered }
+          : {}),
+        ...(dto.expires_at !== undefined ? { expires_at: dto.expires_at } : {}),
+      },
+      include: OFFER_MANAGE_INCLUDE,
+    });
+  }
+
+  /** Ajoute une ou plusieurs images produit à une offre (append, ordonnées) */
+  async addImages(pharmacyId: string, offerId: string, urls: string[]) {
+    await this.findOwned(pharmacyId, offerId);
+
+    const last = await prisma.offerImage.findFirst({
+      where: { offer_id: offerId },
+      orderBy: { position: 'desc' },
+      select: { position: true },
+    });
+    const start = (last?.position ?? -1) + 1;
+
+    await prisma.offerImage.createMany({
+      data: urls.map((url, i) => ({
+        offer_id: offerId,
+        url,
+        position: start + i,
+      })),
+    });
+    this.logger.log(
+      `[${pharmacyId}] Offer ${offerId}: +${urls.length} image(s)`
+    );
+    return this.findOneForPharmacy(pharmacyId, offerId);
+  }
+
+  /** Supprime une image d'une offre (et le fichier associé, best-effort) */
+  async removeImage(pharmacyId: string, offerId: string, imageId: string) {
+    await this.findOwned(pharmacyId, offerId);
+
+    const image = await prisma.offerImage.findUnique({
+      where: { image_id: imageId },
+    });
+    if (!image || image.offer_id !== offerId) {
+      throw new NotFoundException('Image not found');
+    }
+
+    await prisma.offerImage.delete({ where: { image_id: imageId } });
+    deleteUploadByUrl(image.url);
+    this.logger.log(
+      `[${pharmacyId}] Offer ${offerId}: image ${imageId} removed`
+    );
+    return this.findOneForPharmacy(pharmacyId, offerId);
   }
 
   /** Catalogue mobile géolocalisé — US-80 */

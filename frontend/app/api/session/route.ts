@@ -6,6 +6,23 @@ import { ACCESS_COOKIE, REFRESH_COOKIE } from '@/lib/session';
 
 const isProd = process.env.NODE_ENV === 'production';
 
+export async function GET() {
+  const jar = await cookies();
+  const access = jar.get(ACCESS_COOKIE)?.value;
+  if (!access) {
+    return NextResponse.json({ authenticated: false });
+  }
+  const claims = decodeJwt(access);
+  if (!claims) {
+    return NextResponse.json({ authenticated: false });
+  }
+  return NextResponse.json({
+    authenticated: true,
+    role: claims.role,
+    email: claims.email,
+  });
+}
+
 export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => null)) as {
     access_token?: string;

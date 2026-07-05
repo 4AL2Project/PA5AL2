@@ -14,12 +14,24 @@ import { prisma } from '../../database/client';
 import { EmailService } from '../email/email.service';
 import { CustomerJwtPayload } from './customer-jwt-payload';
 import { generateOtpCode, hashOtpCode } from './customer-otp.util';
+import { UpdateCustomerMeDto } from './dto/customer.dto';
 
 type CustomerRefreshPayload = {
   sub: string;
   email: string;
   type: 'customer_refresh';
 };
+
+// Champs de profil renvoyés au client mobile (jamais le mot de passe)
+const CUSTOMER_PUBLIC_SELECT = {
+  customer_id: true,
+  email: true,
+  civility: true,
+  first_name: true,
+  last_name: true,
+  phone: true,
+  created_at: true,
+} as const;
 
 @Injectable()
 export class CustomerService {
@@ -51,14 +63,7 @@ export class CustomerService {
         last_name: lastName,
         phone,
       },
-      select: {
-        customer_id: true,
-        email: true,
-        first_name: true,
-        last_name: true,
-        phone: true,
-        created_at: true,
-      },
+      select: CUSTOMER_PUBLIC_SELECT,
     });
 
     return {
@@ -170,27 +175,13 @@ export class CustomerService {
 
     let customer = await prisma.customer.findUnique({
       where: { email: normalizedEmail },
-      select: {
-        customer_id: true,
-        email: true,
-        first_name: true,
-        last_name: true,
-        phone: true,
-        created_at: true,
-      },
+      select: CUSTOMER_PUBLIC_SELECT,
     });
 
     if (!customer) {
       customer = await prisma.customer.create({
         data: { email: normalizedEmail },
-        select: {
-          customer_id: true,
-          email: true,
-          first_name: true,
-          last_name: true,
-          phone: true,
-          created_at: true,
-        },
+        select: CUSTOMER_PUBLIC_SELECT,
       });
       this.logger.log(`Customer created via OTP: ${normalizedEmail}`);
     }
@@ -208,14 +199,7 @@ export class CustomerService {
   async findById(customerId: string) {
     return prisma.customer.findUniqueOrThrow({
       where: { customer_id: customerId },
-      select: {
-        customer_id: true,
-        email: true,
-        first_name: true,
-        last_name: true,
-        phone: true,
-        created_at: true,
-      },
+      select: CUSTOMER_PUBLIC_SELECT,
     });
   }
 
@@ -242,21 +226,11 @@ export class CustomerService {
   }
 
   /** Mise à jour partielle du profil Customer — US-86 */
-  async updateProfile(
-    customerId: string,
-    dto: { first_name?: string; last_name?: string; phone?: string }
-  ) {
+  async updateProfile(customerId: string, dto: UpdateCustomerMeDto) {
     return prisma.customer.update({
       where: { customer_id: customerId },
       data: dto,
-      select: {
-        customer_id: true,
-        email: true,
-        first_name: true,
-        last_name: true,
-        phone: true,
-        created_at: true,
-      },
+      select: CUSTOMER_PUBLIC_SELECT,
     });
   }
 

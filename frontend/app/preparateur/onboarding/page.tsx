@@ -1,8 +1,8 @@
 'use client';
 
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { AuthShell } from '@/components/auth/auth-shell';
@@ -15,7 +15,6 @@ import {
   acceptPreparateurInvitation,
   getInvitation,
   InvitationInfo,
-  startSession,
 } from '@/lib/auth';
 
 const MIN_PASSWORD_LENGTH = 8;
@@ -47,7 +46,6 @@ function buildInitialForm(info: InvitationInfo): FormState {
 }
 
 function PreparateurOnboardingContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
 
@@ -55,6 +53,7 @@ function PreparateurOnboardingContent() {
   const [form, setForm] = useState<FormState | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successEmail, setSuccessEmail] = useState<string | null>(null);
 
   useEffect(() => {
     if (!token) {
@@ -106,15 +105,16 @@ function PreparateurOnboardingContent() {
 
     setSubmitting(true);
     try {
-      const tokens = await acceptPreparateurInvitation(token, {
+      await acceptPreparateurInvitation(token, {
         password: form.password,
         first_name: form.first_name,
         last_name: form.last_name,
         phone: form.phone.trim() || undefined,
         accepted_terms: form.accepted_terms,
       });
-      await startSession(tokens);
-      router.replace('/');
+      const email =
+        loadState.kind === 'ready' ? loadState.info.titulaire.email : '';
+      setSuccessEmail(email);
     } catch (err) {
       const status = (err as { status?: number }).status;
       if (status === 410) {
@@ -136,6 +136,25 @@ function PreparateurOnboardingContent() {
       <AuthShell title="Chargement de votre invitation">
         <div className="flex items-center justify-center py-4">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      </AuthShell>
+    );
+  }
+
+  if (successEmail) {
+    return (
+      <AuthShell
+        title="Compte créé avec succès"
+        description="Votre compte préparateur est prêt."
+      >
+        <div className="rounded-lg border bg-muted/30 p-4 flex items-start gap-3">
+          <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
+          <p className="text-xs text-muted-foreground">
+            Vous pouvez désormais vous connecter sur l’application mobile Savely
+            avec votre adresse email{' '}
+            <span className="font-medium text-foreground">{successEmail}</span>{' '}
+            et le mot de passe que vous venez de choisir.
+          </p>
         </div>
       </AuthShell>
     );

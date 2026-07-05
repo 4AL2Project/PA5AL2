@@ -29,6 +29,7 @@ import {
   PreparateurResponseDto,
   UpdatePharmacyMeDto,
   UpdatePreparateurDto,
+  UpdatePreparateurStatusDto,
 } from './dto/pharmacy.dto';
 import { PharmacyService } from './pharmacy.service';
 
@@ -100,6 +101,25 @@ export class PharmacyController {
       req.user.pharmacy_id,
       userId,
       dto
+    );
+  }
+
+  @Patch('me/preparateurs/:userId/status')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.TITULAIRE)
+  @ApiOperation({
+    summary: 'Activer ou desactiver le compte d un preparateur',
+  })
+  @ApiOkResponse({ type: PreparateurResponseDto })
+  setPreparateurStatus(
+    @Req() req: Request & { user: JwtPayload },
+    @Param('userId') userId: string,
+    @Body() dto: UpdatePreparateurStatusDto
+  ) {
+    return this.pharmacyService.setPreparateurStatus(
+      req.user.pharmacy_id,
+      userId,
+      dto.status
     );
   }
 

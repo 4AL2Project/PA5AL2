@@ -8,8 +8,14 @@ jest.mock('resend', () => ({
   })),
 }));
 
+const mockSendMail = jest.fn();
+jest.mock('nodemailer', () => ({
+  createTransport: jest.fn(() => ({ sendMail: mockSendMail })),
+}));
+
 import { InternalServerErrorException } from '@nestjs/common';
 
+import { config } from '../../core/config';
 import { EmailService } from './email.service';
 
 describe('EmailService — sendInvitationEmail (US-67)', () => {
@@ -293,5 +299,48 @@ describe('EmailService — sendMagicLinkEmail (US-67)', () => {
         'https://savely.fr/auth/verify?token=xyz'
       )
     ).rejects.toThrow('Resend network error');
+  });
+});
+
+describe('EmailService — transport SMTP (MailHog)', () => {
+  let service: EmailService;
+  const originalTransport = config.email.transport;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    config.email.transport = 'smtp';
+    mockSendMail.mockResolvedValue({ messageId: 'smtp-msg-id' });
+    service = new EmailService();
+  });
+
+  afterEach(() => {
+    config.email.transport = originalTransport;
+  });
+
+  it('envoie via SMTP sans passer par Resend', async () => {
+    await service.sendInvitationEmail(
+      'test@pharma.fr',
+      'https://savely.fr/invite/abc'
+    );
+
+    expect(mockSendMail).toHaveBeenCalledTimes(1);
+    expect(mockSend).not.toHaveBeenCalled();
+    expect(mockSendMail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'test@pharma.fr',
+        subject: 'Bienvenue sur Savely -- Finalisez votre compte',
+      })
+    );
+  });
+
+  it('leve InternalServerErrorException si SMTP echoue', async () => {
+    mockSendMail.mockRejectedValue(new Error('SMTP down'));
+
+    await expect(
+      service.sendMagicLinkEmail(
+        'test@pharma.fr',
+        'https://savely.fr/auth/verify?token=xyz'
+      )
+    ).rejects.toThrow(InternalServerErrorException);
   });
 });

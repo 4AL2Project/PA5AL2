@@ -23,8 +23,14 @@ export const config = {
     magicLinkRateLimitWindowMs: 15 * 60 * 1000, // 15min window
   },
   email: {
+    // 'resend' (prod) ou 'smtp' (dev/test via MailHog)
+    transport: (process.env.EMAIL_TRANSPORT || 'resend') as 'resend' | 'smtp',
     apiKey: process.env.RESEND_API_KEY || '',
     from: process.env.EMAIL_FROM || 'noreply@savely.fr',
+    smtp: {
+      host: process.env.SMTP_HOST || 'localhost',
+      port: parseInt(process.env.SMTP_PORT || '1025', 10),
+    },
   },
   frontUrl: process.env.FRONT_URL || 'http://localhost:3000',
 };

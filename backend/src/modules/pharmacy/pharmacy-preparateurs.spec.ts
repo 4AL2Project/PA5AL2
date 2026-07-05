@@ -4,6 +4,7 @@
 import { ConflictException, NotFoundException } from '@nestjs/common';
 
 import { UserRole } from '../auth/roles.enum';
+import { EmailService } from '../email/email.service';
 import { PharmacyService } from './pharmacy.service';
 
 // --- Mocks -------------------------------------------------------------------
@@ -16,7 +17,7 @@ jest.mock('../../database/client', () => {
       update: jest.fn(),
       delete: jest.fn(),
     },
-    authToken: { deleteMany: jest.fn() },
+    authToken: { create: jest.fn(), deleteMany: jest.fn() },
     $transaction: jest.fn((arg: unknown) =>
       typeof arg === 'function'
         ? (arg as (tx: unknown) => unknown)(client)
@@ -36,10 +37,12 @@ const { prisma } = require('../../database/client') as {
       update: jest.Mock;
       delete: jest.Mock;
     };
-    authToken: { deleteMany: jest.Mock };
+    authToken: { create: jest.Mock; deleteMany: jest.Mock };
     $transaction: jest.Mock;
   };
 };
+
+const emailMock = { sendInvitationEmail: jest.fn() };
 
 const prepa = {
   first_name: 'Jean',
@@ -53,7 +56,7 @@ describe('PharmacyService preparateurs', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new PharmacyService();
+    service = new PharmacyService(emailMock as unknown as EmailService);
   });
 
   describe('listPreparateurs', () => {
@@ -74,30 +77,100 @@ describe('PharmacyService preparateurs', () => {
   });
 
   describe('addPreparateur', () => {
-    it('cree un preparateur ACTIVE sans mot de passe dans mon officine', async () => {
+    it('cree un preparateur PENDING (email seul) et envoie une invitation', async () => {
       prisma.user.findUnique.mockResolvedValue(null);
-      prisma.user.create.mockResolvedValue({ user_id: 'u-prepa', ...prepa });
+      prisma.user.create.mockResolvedValue({
+        user_id: 'u-prepa',
+        email: 'jean@a.fr',
+        first_name: null,
+        last_name: null,
+        phone: null,
+        status: 'PENDING',
+      });
 
-      await service.addPreparateur('p1', prepa);
+      await service.addPreparateur('p1', { email: 'jean@a.fr' });
 
       expect(prisma.user.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({
             pharmacy_id: 'p1',
+            email: 'jean@a.fr',
             role: UserRole.PREPARATEUR,
-            status: 'ACTIVE',
+            status: 'PENDING',
             password: null,
+            first_name: null,
+            last_name: null,
+            phone: null,
           }),
         })
+      );
+      expect(prisma.authToken.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ type: 'INVITATION' }),
+        })
+      );
+      expect(emailMock.sendInvitationEmail).toHaveBeenCalledWith(
+        'jean@a.fr',
+        expect.stringContaining('/preparateur/onboarding?token=')
       );
     });
 
     it('leve ConflictException si l email existe deja', async () => {
       prisma.user.findUnique.mockResolvedValue({ user_id: 'autre' });
-      await expect(service.addPreparateur('p1', prepa)).rejects.toThrow(
-        ConflictException
-      );
+      await expect(
+        service.addPreparateur('p1', { email: 'jean@a.fr' })
+      ).rejects.toThrow(ConflictException);
       expect(prisma.user.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('setPreparateurStatus', () => {
+    it('desactive un preparateur de mon officine', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        user_id: 'u-prepa',
+        pharmacy_id: 'p1',
+        role: UserRole.PREPARATEUR,
+        password: 'hash',
+      });
+      prisma.user.update.mockResolvedValue({
+        user_id: 'u-prepa',
+        ...prepa,
+        status: 'INACTIVE',
+      });
+
+      await service.setPreparateurStatus('p1', 'u-prepa', 'INACTIVE');
+
+      expect(prisma.user.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { user_id: 'u-prepa' },
+          data: { status: 'INACTIVE' },
+        })
+      );
+    });
+
+    it('refuse de reactiver un preparateur sans mot de passe (PENDING)', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        user_id: 'u-prepa',
+        pharmacy_id: 'p1',
+        role: UserRole.PREPARATEUR,
+        password: null,
+      });
+      await expect(
+        service.setPreparateurStatus('p1', 'u-prepa', 'ACTIVE')
+      ).rejects.toThrow(ConflictException);
+      expect(prisma.user.update).not.toHaveBeenCalled();
+    });
+
+    it('refuse un preparateur d une autre officine', async () => {
+      prisma.user.findUnique.mockResolvedValue({
+        user_id: 'u-prepa',
+        pharmacy_id: 'autre',
+        role: UserRole.PREPARATEUR,
+        password: 'hash',
+      });
+      await expect(
+        service.setPreparateurStatus('p1', 'u-prepa', 'INACTIVE')
+      ).rejects.toThrow(NotFoundException);
     });
   });
 

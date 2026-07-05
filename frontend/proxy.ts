@@ -4,7 +4,13 @@ import { decodeJwt, Role } from '@/lib/auth';
 
 const ACCESS_COOKIE = 'savely_access';
 
-const PUBLIC_PATHS = ['/login', '/admin/login', '/onboarding', '/auth/verify'];
+const PUBLIC_PATHS = [
+  '/login',
+  '/admin/login',
+  '/onboarding',
+  '/preparateur/onboarding',
+  '/auth/verify',
+];
 
 const ADMIN_PREFIX = '/admin';
 

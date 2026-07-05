@@ -15,6 +15,7 @@ export interface JwtClaims {
 }
 
 export interface InvitationInfo {
+  role: string;
   pharmacy: {
     pharmacy_id: string;
     name: string;
@@ -77,7 +78,7 @@ export interface Preparateur {
   last_name: string | null;
   email: string;
   phone: string | null;
-  status: 'PENDING' | 'ACTIVE' | string;
+  status: 'PENDING' | 'ACTIVE' | 'INACTIVE' | string;
 }
 
 export interface PharmacyDetail extends PharmacyListItem {
@@ -204,6 +205,27 @@ export async function acceptInvitation(
 ): Promise<AuthTokens> {
   return backendFetch<AuthTokens>(
     `/api/auth/invitations/${encodeURIComponent(token)}/accept`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
+export interface AcceptPreparateurPayload {
+  password: string;
+  first_name: string;
+  last_name: string;
+  phone?: string;
+  accepted_terms: boolean;
+}
+
+export async function acceptPreparateurInvitation(
+  token: string,
+  payload: AcceptPreparateurPayload
+): Promise<AuthTokens> {
+  return backendFetch<AuthTokens>(
+    `/api/auth/invitations/${encodeURIComponent(token)}/accept-preparateur`,
     {
       method: 'POST',
       body: JSON.stringify(payload),

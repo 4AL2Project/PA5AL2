@@ -38,6 +38,7 @@ import {
   UpdatePharmacyDto,
   UpdatePharmacyStatusDto,
   UpdatePreparateurDto,
+  UpdatePreparateurStatusDto,
 } from './dto/admin.dto';
 
 @ApiTags('admin')
@@ -190,6 +191,28 @@ export class AdminController {
     @CurrentUser() user: { role: UserRole }
   ) {
     return this.adminService.updatePreparateur(id, user.role, userId, dto);
+  }
+
+  @Patch('pharmacies/:id/preparateurs/:userId/status')
+  @ApiOperation({
+    summary:
+      'Activer ou desactiver un preparateur de commande (ADMIN_SAVELY uniquement)',
+  })
+  @ApiOkResponse({ type: PreparateurDto })
+  @ApiForbiddenResponse({ description: 'Reserve aux administrateurs Savely' })
+  @ApiNotFoundResponse({ description: 'Preparateur introuvable' })
+  setPreparateurStatus(
+    @Param('id') id: string,
+    @Param('userId') userId: string,
+    @Body() dto: UpdatePreparateurStatusDto,
+    @CurrentUser() user: { role: UserRole }
+  ) {
+    return this.adminService.setPreparateurStatus(
+      id,
+      user.role,
+      userId,
+      dto.status
+    );
   }
 
   @Delete('pharmacies/:id/preparateurs/:userId')

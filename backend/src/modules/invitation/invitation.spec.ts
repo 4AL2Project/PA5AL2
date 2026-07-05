@@ -229,3 +229,110 @@ describe('InvitationService.accept', () => {
     );
   });
 });
+
+// --- POST /api/auth/invitations/:token/accept-preparateur --------------------
+function makePreparateurToken(
+  overrides: Partial<{ consumed_at: Date | null; expires_at: Date }> = {}
+) {
+  return {
+    id: 'token-uuid',
+    token_hash: 'hash',
+    type: 'INVITATION',
+    consumed_at: null,
+    expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    user: {
+      user_id: 'prepa-uuid',
+      email: 'jean@pharma.fr',
+      pharmacy_id: 'pharma-uuid',
+      first_name: 'Jean',
+      last_name: 'Martin',
+      phone: '0612345678',
+      role: 'PREPARATEUR',
+      status: 'PENDING',
+      pharmacy: { pharmacy_id: 'pharma-uuid', name: 'Pharmacie du Centre' },
+    },
+    ...overrides,
+  };
+}
+
+describe('InvitationService.acceptPreparateur', () => {
+  let service: InvitationService;
+
+  const validBody = {
+    password: 'MonMotDePasse123',
+    accepted_terms: true as unknown,
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    service = new InvitationService(new JwtService());
+    prisma.authToken.findFirst.mockResolvedValue(makePreparateurToken());
+    prisma.user.update.mockResolvedValue({
+      user_id: 'prepa-uuid',
+      email: 'jean@pharma.fr',
+      pharmacy_id: 'pharma-uuid',
+      role: 'PREPARATEUR',
+    });
+    prisma.authToken.update.mockResolvedValue({});
+  });
+
+  it('retourne access_token + refresh_token apres finalisation', async () => {
+    const result = (await service.acceptPreparateur(
+      'valid-token',
+      validBody
+    )) as Record<string, unknown>;
+    expect(result).toHaveProperty('access_token');
+    expect(result).toHaveProperty('refresh_token');
+  });
+
+  it('enregistre un mot de passe hashe et passe le compte ACTIVE', async () => {
+    await service.acceptPreparateur('valid-token', validBody);
+    const updateCall = prisma.user.update.mock.calls[0][0];
+    expect(updateCall.data.status).toBe('ACTIVE');
+    expect(updateCall.data.password).toEqual(expect.any(String));
+    expect(updateCall.data.password).not.toBe(validBody.password);
+  });
+
+  it('invalide le token en remplissant consumed_at', async () => {
+    await service.acceptPreparateur('valid-token', validBody);
+    expect(prisma.authToken.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ consumed_at: expect.any(Date) }),
+      })
+    );
+  });
+
+  it('leve 400 si accepted_terms est false', async () => {
+    await expect(
+      service.acceptPreparateur('valid-token', {
+        ...validBody,
+        accepted_terms: false,
+      })
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('leve 400 si l invitation ne concerne pas un preparateur', async () => {
+    prisma.authToken.findFirst.mockResolvedValue(makeValidToken());
+    await expect(
+      service.acceptPreparateur('valid-token', validBody)
+    ).rejects.toThrow(BadRequestException);
+  });
+
+  it('leve 410 Gone si le token est expire', async () => {
+    prisma.authToken.findFirst.mockResolvedValue(
+      makePreparateurToken({ expires_at: new Date(Date.now() - 1000) })
+    );
+    await expect(
+      service.acceptPreparateur('expired-token', validBody)
+    ).rejects.toThrow(GoneException);
+  });
+
+  it('leve 410 Gone si le token est deja consomme', async () => {
+    prisma.authToken.findFirst.mockResolvedValue(
+      makePreparateurToken({ consumed_at: new Date() })
+    );
+    await expect(
+      service.acceptPreparateur('used-token', validBody)
+    ).rejects.toThrow(GoneException);
+  });
+});

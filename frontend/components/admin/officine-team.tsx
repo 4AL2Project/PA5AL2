@@ -15,7 +15,7 @@ export function OfficineTeam({
     <PreparateursTable
       endpointBase={`/api/admin/pharmacies/${pharmacyId}/preparateurs`}
       preparateurs={preparateurs}
-      emptyDescription="Ajoutez un préparateur de commande pour cette officine. Il se connectera via un lien magique envoyé à son email."
+      emptyDescription="Ajoutez un préparateur de commande pour cette officine. Il recevra une invitation par email pour créer son compte."
     />
   );
 }

@@ -3,7 +3,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bullmq';
 
 import { prisma } from '../../database/client';
-import { FileType, INGESTION_QUEUE } from './ingestion.events';
+import { INGESTION_QUEUE, IngestionFile } from './ingestion.events';
+
+/** Fichiers reçus dans une même requête d'import (au moins l'un des deux). */
+export interface UploadFiles {
+  products?: Express.Multer.File;
+  sales?: Express.Multer.File;
+}
 
 @Injectable()
 export class IngestionService {
@@ -11,16 +17,25 @@ export class IngestionService {
 
   constructor(@InjectQueue(INGESTION_QUEUE) private readonly queue: Queue) {}
 
-  async enqueue(
-    pharmacyId: string,
-    file: Express.Multer.File,
-    fileType: FileType
-  ) {
+  /**
+   * Crée UN seul Import regroupant le(s) fichier(s) produits et ventes, puis
+   * enfile UN seul job. Le traitement est tout-ou-rien : si l'un des fichiers
+   * échoue, l'import entier est marqué en échec.
+   */
+  async enqueue(pharmacyId: string, files: UploadFiles) {
+    const types: string[] = [];
+    if (files.products) types.push('products');
+    if (files.sales) types.push('sales');
+
+    const fileName = [files.products?.originalname, files.sales?.originalname]
+      .filter(Boolean)
+      .join(' + ');
+
     const imp = await prisma.import.create({
       data: {
         pharmacy_id: pharmacyId,
-        file_name: file.originalname,
-        file_type: fileType,
+        file_name: fileName,
+        file_type: types.join('+'),
         status: 'EN_ATTENTE',
       },
     });
@@ -28,13 +43,12 @@ export class IngestionService {
     await this.queue.add('process', {
       import_id: imp.import_id,
       pharmacy_id: pharmacyId,
-      file_type: fileType,
-      buffer: file.buffer.toString('base64'),
-      mimetype: file.mimetype,
+      products: toIngestionFile(files.products),
+      sales: toIngestionFile(files.sales),
     });
 
     this.logger.log(
-      `[${pharmacyId}] Import enqueued: ${file.originalname} (${fileType}, ${file.size}B) → import_id=${imp.import_id}`
+      `[${pharmacyId}] Import enqueued: ${fileName} (${types.join('+')}) → import_id=${imp.import_id}`
     );
 
     return imp;
@@ -53,4 +67,15 @@ export class IngestionService {
       take: 20,
     });
   }
+}
+
+function toIngestionFile(
+  file: Express.Multer.File | undefined
+): IngestionFile | undefined {
+  if (!file) return undefined;
+  return {
+    file_name: file.originalname,
+    buffer: file.buffer.toString('base64'),
+    mimetype: file.mimetype,
+  };
 }

@@ -16,10 +16,12 @@ import { IngestionWorker } from './ingestion.worker';
 jest.mock('../../database/client', () => ({
   prisma: {
     pharmacy: { update: jest.fn() },
-    product: { findMany: jest.fn(), findFirst: jest.fn() },
+    product: { findMany: jest.fn(), findFirst: jest.fn(), upsert: jest.fn() },
     sale: { upsert: jest.fn() },
+    offer: { findFirst: jest.fn() },
+    order: { update: jest.fn() },
     import: { update: jest.fn() },
-    $transaction: jest.fn().mockImplementation((ops) => Promise.all(ops)),
+    $transaction: jest.fn(),
   },
 }));
 
@@ -29,12 +31,25 @@ jest.mock('../analysis/analysis.service');
 const { prisma } = require('../../database/client') as {
   prisma: {
     pharmacy: { update: jest.Mock };
-    product: { findMany: jest.Mock; findFirst: jest.Mock };
+    product: { findMany: jest.Mock; findFirst: jest.Mock; upsert: jest.Mock };
     sale: { upsert: jest.Mock };
+    offer: { findFirst: jest.Mock };
+    order: { update: jest.Mock };
     import: { update: jest.Mock };
     $transaction: jest.Mock;
   };
 };
+
+// L'écriture se fait désormais dans une transaction interactive : le worker
+// appelle prisma.$transaction(async (tx) => …). On exécute le callback avec le
+// mock prisma comme client de transaction.
+function wireTransaction() {
+  prisma.$transaction.mockImplementation((arg: unknown) =>
+    typeof arg === 'function'
+      ? (arg as (tx: typeof prisma) => Promise<unknown>)(prisma)
+      : Promise.all(arg as Promise<unknown>[])
+  );
+}
 
 // --- Helpers -----------------------------------------------------------------
 function makeSalesJobData(rows: string) {
@@ -42,9 +57,11 @@ function makeSalesJobData(rows: string) {
   return {
     import_id: 'import-uuid',
     pharmacy_id: 'pharma-uuid',
-    file_type: 'sales' as const,
-    buffer: Buffer.from(csv).toString('base64'),
-    mimetype: 'text/csv',
+    sales: {
+      file_name: 'sales.csv',
+      buffer: Buffer.from(csv).toString('base64'),
+      mimetype: 'text/csv',
+    },
   };
 }
 
@@ -79,8 +96,10 @@ describe('IngestionWorker — déduplication des ventes (US-11)', () => {
     prisma.product.findMany.mockResolvedValue([
       { product_id: PRODUCT_ID, external_sku: 'SKU-001' },
     ] as never);
-    prisma.$transaction.mockImplementation((ops) => Promise.all(ops));
+    prisma.product.upsert.mockResolvedValue({} as never);
     prisma.sale.upsert.mockResolvedValue({} as never);
+    prisma.offer.findFirst.mockResolvedValue(null as never);
+    wireTransaction();
   });
 
   describe('Critère : aucune vente dupliquée à la ré-importation', () => {
@@ -96,8 +115,8 @@ describe('IngestionWorker — déduplication des ventes (US-11)', () => {
       prisma.product.findMany.mockResolvedValue([
         { product_id: PRODUCT_ID, external_sku: 'SKU-001' },
       ] as never);
-      prisma.$transaction.mockImplementation((ops) => Promise.all(ops));
       prisma.sale.upsert.mockResolvedValue({} as never);
+      wireTransaction();
       analysisMock.analyzeAllForPharmacy.mockResolvedValue({
         succeeded: 0,
         failed: 0,
@@ -192,15 +211,91 @@ describe('IngestionWorker — déduplication des ventes (US-11)', () => {
       const jobData = {
         import_id: 'import-uuid',
         pharmacy_id: PHARMACY_ID,
-        file_type: 'sales' as const,
-        buffer: Buffer.from(csv).toString('base64'),
-        mimetype: 'text/csv',
+        sales: {
+          file_name: 'sales.csv',
+          buffer: Buffer.from(csv).toString('base64'),
+          mimetype: 'text/csv',
+        },
       };
 
       await worker.process(makeJob(jobData));
 
       expect(prisma.sale.upsert).not.toHaveBeenCalled();
       expect(prisma.import.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: 'ÉCHOUÉ' }),
+        })
+      );
+    });
+  });
+
+  describe('Import groupé produits + ventes (tout-ou-rien inter-fichiers)', () => {
+    function makeCombinedJob(productsCsv: string, salesCsv: string) {
+      return makeJob({
+        import_id: 'import-uuid',
+        pharmacy_id: PHARMACY_ID,
+        products: {
+          file_name: 'products.csv',
+          buffer: Buffer.from(
+            `external_sku,name,stock_quantity,unit_price\n${productsCsv}`
+          ).toString('base64'),
+          mimetype: 'text/csv',
+        },
+        sales: {
+          file_name: 'sales.csv',
+          buffer: Buffer.from(
+            `external_sku,sale_date,quantity_sold,unit_price_sold\n${salesCsv}`
+          ).toString('base64'),
+          mimetype: 'text/csv',
+        },
+      } as unknown as ReturnType<typeof makeSalesJobData>);
+    }
+
+    it('les deux fichiers valides → produits ET ventes écrits, Import TERMINÉ', async () => {
+      const job = makeCombinedJob(
+        'SKU-001,Produit A,20,9.90',
+        'SKU-001,2024-01-15,10,5.50'
+      );
+
+      await worker.process(job);
+
+      expect(prisma.product.upsert).toHaveBeenCalledTimes(1);
+      expect(prisma.sale.upsert).toHaveBeenCalledTimes(1);
+      expect(prisma.import.update).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: 'TERMINÉ', rows_total: 2 }),
+        })
+      );
+    });
+
+    it('produits valides mais ventes invalides → AUCUNE écriture, Import ÉCHOUÉ', async () => {
+      const job = makeCombinedJob(
+        'SKU-001,Produit A,20,9.90',
+        'SKU-001,invalid-date,10,5.50'
+      );
+
+      await worker.process(job);
+
+      expect(prisma.product.upsert).not.toHaveBeenCalled();
+      expect(prisma.sale.upsert).not.toHaveBeenCalled();
+      expect(prisma.import.update).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ status: 'ÉCHOUÉ' }),
+        })
+      );
+    });
+
+    it('ventes valides mais produits invalides → AUCUNE écriture, Import ÉCHOUÉ', async () => {
+      const job = makeCombinedJob(
+        'SKU-001,Produit A,-5,9.90',
+        'SKU-001,2024-01-15,10,5.50'
+      );
+
+      await worker.process(job);
+
+      expect(prisma.product.upsert).not.toHaveBeenCalled();
+      expect(prisma.sale.upsert).not.toHaveBeenCalled();
+      expect(prisma.import.update).toHaveBeenLastCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ status: 'ÉCHOUÉ' }),
         })

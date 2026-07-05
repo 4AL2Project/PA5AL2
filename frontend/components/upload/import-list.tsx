@@ -5,6 +5,7 @@ import Link from 'next/link';
 
 import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { ImportRecord } from '@/lib/types';
+import { importFileTypeLabel } from '@/lib/utils';
 
 interface ImportListProps {
   imports: ImportRecord[];
@@ -17,10 +18,6 @@ function formatDate(iso: string) {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-function fileTypeLabel(t: 'products' | 'sales') {
-  return t === 'products' ? 'Produits' : 'Ventes';
 }
 
 export function ImportList({ imports }: ImportListProps) {
@@ -46,7 +43,8 @@ export function ImportList({ imports }: ImportListProps) {
           <div className="flex-1 min-w-0">
             <p className="truncate text-sm font-medium">{imp.file_name}</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              {fileTypeLabel(imp.file_type)} · {formatDate(imp.uploaded_at)}
+              {importFileTypeLabel(imp.file_type)} ·{' '}
+              {formatDate(imp.uploaded_at)}
             </p>
             {imp.status === 'TERMINÉ' && imp.rows_ok != null && (
               <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5">

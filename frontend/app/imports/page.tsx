@@ -16,6 +16,7 @@ import {
 import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { fetchImports } from '@/lib/api';
 import { ImportFileType, ImportRecord, ImportStatus } from '@/lib/types';
+import { importFileTypeLabel } from '@/lib/utils';
 
 type StatusFilter = ImportStatus | 'all';
 type TypeFilter = ImportFileType | 'all';
@@ -30,6 +31,7 @@ const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
 
 const TYPE_OPTIONS: { value: TypeFilter; label: string }[] = [
   { value: 'all', label: 'Tous les types' },
+  { value: 'products+sales', label: 'Produits + Ventes' },
   { value: 'products', label: 'Produits' },
   { value: 'sales', label: 'Ventes' },
 ];
@@ -42,10 +44,6 @@ function formatDate(iso: string) {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-function fileTypeLabel(t: ImportFileType) {
-  return t === 'products' ? 'Produits' : 'Ventes';
 }
 
 export default function ImportsPage() {
@@ -212,7 +210,7 @@ export default function ImportsPage() {
                       </p>
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-                      {fileTypeLabel(imp.file_type)}
+                      {importFileTypeLabel(imp.file_type)}
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
                       {formatDate(imp.uploaded_at)}

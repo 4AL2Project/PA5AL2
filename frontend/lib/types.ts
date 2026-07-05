@@ -3,7 +3,7 @@ export type ActionStatus = 'EN_ATTENTE' | 'VALIDEE' | 'IGNOREE' | 'SNOOZEE';
 export type ActionType = 'B2C' | 'DON';
 
 export type ImportStatus = 'EN_ATTENTE' | 'EN_COURS' | 'TERMINÉ' | 'ÉCHOUÉ';
-export type ImportFileType = 'products' | 'sales';
+export type ImportFileType = 'products' | 'sales' | 'products+sales';
 
 export interface ImportRecord {
   import_id: string;

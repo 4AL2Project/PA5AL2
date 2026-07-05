@@ -30,11 +30,15 @@ import { CompanySearchService } from '../company/company-search.service';
 import { CompanySuggestionDto } from '../company/dto/company.dto';
 import { AdminService } from './admin.service';
 import {
+  AdminUserDto,
+  CreateAdminUserDto,
   CreatePharmacyDto,
   CreatePharmacyResponseDto,
   CreatePreparateurDto,
   PharmacyDetailDto,
   PreparateurDto,
+  UpdateAdminUserDto,
+  UpdateAdminUserStatusDto,
   UpdatePharmacyDto,
   UpdatePharmacyStatusDto,
   UpdatePreparateurDto,
@@ -233,11 +237,72 @@ export class AdminController {
   @Get('companies')
   @ApiOperation({
     summary:
-      'Recherche d’officines via recherche-entreprises.api.gouv.fr pour pré-remplir le formulaire (ADMIN_SAVELY uniquement)',
+      "Recherche d'officines via recherche-entreprises.api.gouv.fr pour pre-remplir le formulaire (ADMIN_SAVELY uniquement)",
   })
   @ApiOkResponse({ type: [CompanySuggestionDto] })
   @ApiForbiddenResponse({ description: 'Reserve aux administrateurs Savely' })
   searchCompanies(@Query('q') q: string) {
     return this.companySearch.search(q ?? '');
+  }
+
+  // ─── Admin Users CRUD ────────────────────────────────────────────────────────
+
+  @Get('users')
+  @ApiOperation({ summary: 'Liste des comptes ADMIN_SAVELY (paginée)' })
+  @ApiOkResponse({ type: [AdminUserDto] })
+  listAdminUsers(
+    @Query('page') page?: string,
+    @Query('limit') limit?: string
+  ) {
+    return this.adminService.listAdminUsers(
+      page ? parseInt(page, 10) : 1,
+      limit ? parseInt(limit, 10) : 20
+    );
+  }
+
+  @Post('users')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Inviter un nouvel administrateur Savely par email',
+  })
+  @ApiCreatedResponse({ type: AdminUserDto })
+  createAdminUser(@Body() dto: CreateAdminUserDto) {
+    return this.adminService.createAdminUser(dto);
+  }
+
+  @Patch('users/:id')
+  @ApiOperation({ summary: "Modifier le nom/prenom d'un administrateur" })
+  @ApiOkResponse({ type: AdminUserDto })
+  updateAdminUser(@Param('id') id: string, @Body() dto: UpdateAdminUserDto) {
+    return this.adminService.updateAdminUser(id, dto);
+  }
+
+  @Patch('users/:id/status')
+  @ApiOperation({ summary: 'Activer ou désactiver un administrateur' })
+  @ApiOkResponse({ type: AdminUserDto })
+  setAdminUserStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateAdminUserStatusDto,
+    @CurrentUser() user: { sub: string }
+  ) {
+    return this.adminService.setAdminUserStatus(id, dto.status, user.sub);
+  }
+
+  @Post('users/:id/resend-invitation')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Renvoyer l'invitation à un admin en PENDING" })
+  resendAdminUserInvitation(@Param('id') id: string) {
+    return this.adminService.resendAdminUserInvitation(id);
+  }
+
+  @Delete('users/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Désactiver un administrateur (soft delete)' })
+  @ApiOkResponse({ type: AdminUserDto })
+  deactivateAdminUser(
+    @Param('id') id: string,
+    @CurrentUser() user: { sub: string }
+  ) {
+    return this.adminService.deactivateAdminUser(id, user.sub);
   }
 }

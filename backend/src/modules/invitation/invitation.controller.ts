@@ -16,6 +16,7 @@ import {
 
 import { AuthTokensDto } from '../auth/dto/auth.dto';
 import {
+  AcceptAdminInvitationDto,
   AcceptInvitationDto,
   AcceptPreparateurInvitationDto,
   InvitationInfoDto,
@@ -64,5 +65,19 @@ export class InvitationController {
     @Body() dto: AcceptPreparateurInvitationDto
   ) {
     return this.invitationService.acceptPreparateur(token, dto);
+  }
+
+  @Post(':token/accept-admin')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Finaliser un compte administrateur Savely (onboarding back-office)',
+  })
+  @ApiOkResponse({ type: AuthTokensDto })
+  @ApiGoneResponse({ description: 'Token expire ou deja consomme' })
+  acceptAdminInvitation(
+    @Param('token') token: string,
+    @Body() dto: AcceptAdminInvitationDto
+  ) {
+    return this.invitationService.acceptAdmin(token, dto);
   }
 }

@@ -241,3 +241,50 @@ export class UpdatePreparateurDto {
   @IsNotEmpty()
   phone?: string;
 }
+
+// ─── Admin Users ──────────────────────────────────────────────────────────────
+
+export class CreateAdminUserDto {
+  @ApiProperty({ format: 'email', example: 'admin@savely.fr' })
+  @IsEmail()
+  email!: string;
+
+  @ApiProperty({ example: 'Alice' })
+  @IsString()
+  @IsNotEmpty()
+  first_name!: string;
+
+  @ApiProperty({ example: 'Martin' })
+  @IsString()
+  @IsNotEmpty()
+  last_name!: string;
+}
+
+export class UpdateAdminUserDto {
+  @ApiProperty({ required: false, example: 'Alice' })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  first_name?: string;
+
+  @ApiProperty({ required: false, example: 'Martin' })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  last_name?: string;
+}
+
+export class UpdateAdminUserStatusDto {
+  @ApiProperty({ enum: ['ACTIVE', 'INACTIVE'], example: 'INACTIVE' })
+  @IsIn(['ACTIVE', 'INACTIVE'])
+  status!: 'ACTIVE' | 'INACTIVE';
+}
+
+export class AdminUserDto {
+  @ApiProperty() user_id!: string;
+  @ApiProperty({ nullable: true }) first_name!: string | null;
+  @ApiProperty({ nullable: true }) last_name!: string | null;
+  @ApiProperty() email!: string;
+  @ApiProperty() status!: string;
+  @ApiProperty() created_at!: Date;
+}

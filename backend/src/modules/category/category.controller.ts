@@ -34,7 +34,7 @@ export class CategoryController {
   @UseGuards(JwtAuthGuard, TenantGuard)
   @ApiOperation({ summary: 'Lister les catégories (système + pharmacie)' })
   findAll(@Req() req: Request & { user: JwtPayload }) {
-    return this.categoryService.findAllForPharmacy(req.user.pharmacy_id);
+    return this.categoryService.findAllForPharmacy(req.user.pharmacy_id!);
   }
 
   @Post()
@@ -45,7 +45,7 @@ export class CategoryController {
     @Req() req: Request & { user: JwtPayload },
     @Body() body: CreateCategoryDto
   ) {
-    return this.categoryService.create(req.user.pharmacy_id, body);
+    return this.categoryService.create(req.user.pharmacy_id!, body);
   }
 
   @Patch(':id')
@@ -57,7 +57,7 @@ export class CategoryController {
     @Param('id') id: string,
     @Body() body: UpdateCategoryDto
   ) {
-    return this.categoryService.update(req.user.pharmacy_id, id, body);
+    return this.categoryService.update(req.user.pharmacy_id!, id, body);
   }
 
   @Delete(':id')
@@ -65,6 +65,6 @@ export class CategoryController {
   @Roles(UserRole.TITULAIRE)
   @ApiOperation({ summary: 'Supprimer une catégorie de la pharmacie' })
   remove(@Req() req: Request & { user: JwtPayload }, @Param('id') id: string) {
-    return this.categoryService.remove(req.user.pharmacy_id, id);
+    return this.categoryService.remove(req.user.pharmacy_id!, id);
   }
 }

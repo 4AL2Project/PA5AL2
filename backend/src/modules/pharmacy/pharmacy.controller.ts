@@ -43,7 +43,7 @@ export class PharmacyController {
   @Get('me')
   @ApiOperation({ summary: 'Fiche de mon officine' })
   getMe(@Req() req: Request & { user: JwtPayload }) {
-    return this.pharmacyService.getMyPharmacy(req.user.pharmacy_id);
+    return this.pharmacyService.getMyPharmacy(req.user.pharmacy_id!);
   }
 
   @Patch('me')
@@ -57,7 +57,7 @@ export class PharmacyController {
     @Req() req: Request & { user: JwtPayload },
     @Body() dto: UpdatePharmacyMeDto
   ) {
-    return this.pharmacyService.updateMyPharmacy(req.user.pharmacy_id, dto);
+    return this.pharmacyService.updateMyPharmacy(req.user.pharmacy_id!, dto);
   }
 
   // ─── Preparateurs (titulaire uniquement) ───────────────────────────────────
@@ -70,7 +70,7 @@ export class PharmacyController {
   })
   @ApiOkResponse({ type: [PreparateurResponseDto] })
   listPreparateurs(@Req() req: Request & { user: JwtPayload }) {
-    return this.pharmacyService.listPreparateurs(req.user.pharmacy_id);
+    return this.pharmacyService.listPreparateurs(req.user.pharmacy_id!);
   }
 
   @Post('me/preparateurs')
@@ -84,7 +84,7 @@ export class PharmacyController {
     @Req() req: Request & { user: JwtPayload },
     @Body() dto: CreatePreparateurDto
   ) {
-    return this.pharmacyService.addPreparateur(req.user.pharmacy_id, dto);
+    return this.pharmacyService.addPreparateur(req.user.pharmacy_id!, dto);
   }
 
   @Patch('me/preparateurs/:userId')
@@ -98,7 +98,7 @@ export class PharmacyController {
     @Body() dto: UpdatePreparateurDto
   ) {
     return this.pharmacyService.updatePreparateur(
-      req.user.pharmacy_id,
+      req.user.pharmacy_id!,
       userId,
       dto
     );
@@ -117,7 +117,7 @@ export class PharmacyController {
     @Body() dto: UpdatePreparateurStatusDto
   ) {
     return this.pharmacyService.setPreparateurStatus(
-      req.user.pharmacy_id,
+      req.user.pharmacy_id!,
       userId,
       dto.status
     );
@@ -132,6 +132,6 @@ export class PharmacyController {
     @Req() req: Request & { user: JwtPayload },
     @Param('userId') userId: string
   ) {
-    return this.pharmacyService.deletePreparateur(req.user.pharmacy_id, userId);
+    return this.pharmacyService.deletePreparateur(req.user.pharmacy_id!, userId);
   }
 }

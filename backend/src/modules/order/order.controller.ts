@@ -82,7 +82,7 @@ export class OrderController {
     @Query('status') status?: string
   ) {
     return this.orderService.findOrdersForPharmacy(
-      req.user.pharmacy_id,
+      req.user.pharmacy_id!,
       status
     );
   }
@@ -94,7 +94,7 @@ export class OrderController {
     @Req() req: Request & { user: JwtPayload },
     @Param('id') id: string
   ) {
-    return this.orderService.findOneForPharmacy(id, req.user.pharmacy_id);
+    return this.orderService.findOneForPharmacy(id, req.user.pharmacy_id!);
   }
 
   @Get('qr/:qrCode')
@@ -104,7 +104,7 @@ export class OrderController {
     @Req() req: Request & { user: JwtPayload },
     @Param('qrCode') qrCode: string
   ) {
-    return this.orderService.findByQrCode(qrCode, req.user.pharmacy_id);
+    return this.orderService.findByQrCode(qrCode, req.user.pharmacy_id!);
   }
 
   @Patch(':id/prepare')
@@ -112,7 +112,7 @@ export class OrderController {
   @Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR)
   @ApiOperation({ summary: 'Passer un Order EN_PREPARATION' })
   prepare(@Req() req: Request & { user: JwtPayload }, @Param('id') id: string) {
-    return this.orderService.startPreparation(req.user.pharmacy_id, id);
+    return this.orderService.startPreparation(req.user.pharmacy_id!, id);
   }
 
   @Patch(':id/ready')
@@ -120,7 +120,7 @@ export class OrderController {
   @Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR)
   @ApiOperation({ summary: 'Marquer un Order PRETE' })
   ready(@Req() req: Request & { user: JwtPayload }, @Param('id') id: string) {
-    return this.orderService.markReady(req.user.pharmacy_id, id);
+    return this.orderService.markReady(req.user.pharmacy_id!, id);
   }
 
   @Patch(':id/withdraw')
@@ -131,7 +131,7 @@ export class OrderController {
     @Req() req: Request & { user: JwtPayload },
     @Param('id') id: string
   ) {
-    return this.orderService.withdraw(req.user.pharmacy_id, id);
+    return this.orderService.withdraw(req.user.pharmacy_id!, id);
   }
 
   @Patch(':id/cancel')
@@ -144,9 +144,9 @@ export class OrderController {
   ) {
     return this.orderService.cancel(
       id,
-      req.user.pharmacy_id,
+      req.user.pharmacy_id!,
       'pharmacy',
-      req.user.pharmacy_id
+      req.user.pharmacy_id!
     );
   }
 }

@@ -90,4 +90,20 @@ export class EmailService {
       `,
     });
   }
+
+  async sendOtpCodeEmail(to: string, code: string): Promise<void> {
+    const ttlMinutes = Math.round(config.auth.customerOtpTtlMs / 60000);
+    await this.send({
+      from: config.email.from,
+      to,
+      subject: 'Savely -- Votre code de connexion',
+      html: `
+        <p>Bonjour,</p>
+        <p>Voici votre code de connexion a Savely :</p>
+        <p style="font-size:28px;font-weight:bold;letter-spacing:6px;">${code}</p>
+        <p>Ce code expire dans ${ttlMinutes} minutes.</p>
+        <p>Si vous n'etes pas a l'origine de cette demande, ignorez cet email.</p>
+      `,
+    });
+  }
 }

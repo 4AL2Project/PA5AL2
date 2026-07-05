@@ -21,6 +21,12 @@ export const config = {
     magicLinkTtlMs: 15 * 60 * 1000, // 15min
     magicLinkRateLimit: 3, // max requests per window
     magicLinkRateLimitWindowMs: 15 * 60 * 1000, // 15min window
+    // OTP de connexion Customer B2C (app mobile)
+    customerOtpLength: 6, // nombre de chiffres du code
+    customerOtpTtlMs: 10 * 60 * 1000, // 10min de validité
+    customerOtpMaxAttempts: 5, // essais de vérification avant invalidation
+    customerOtpRateLimit: 3, // max de codes demandés par fenêtre
+    customerOtpRateLimitWindowMs: 15 * 60 * 1000, // 15min window
   },
   email: {
     // 'resend' (prod) ou 'smtp' (dev/test via MailHog)

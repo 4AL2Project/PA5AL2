@@ -11,13 +11,19 @@ import {
 import { haversineKm } from '../../core/geo.util';
 import { deleteUploadByUrl } from '../../core/uploads';
 import { prisma } from '../../database/client';
+import { CategoryService } from '../category/category.service';
 
 const ACTIVE_HOLD_STATUSES = ['RESERVEE', 'EN_PREPARATION', 'PRETE'] as const;
+
+const CATEGORY_SELECT = {
+  select: { category_id: true, name: true, slug: true },
+} as const;
 
 const OFFER_INCLUDE = {
   product: {
     select: { name: true, external_sku: true, category: true, brand: true },
   },
+  categories: CATEGORY_SELECT,
   _count: {
     select: {
       orders: {
@@ -31,6 +37,7 @@ const OFFER_CUSTOMER_INCLUDE = {
   product: {
     select: { name: true, category: true, brand: true, unit_price: true },
   },
+  categories: CATEGORY_SELECT,
   pharmacy: { select: { name: true, address: true, lat: true, lng: true } },
 };
 
@@ -46,6 +53,7 @@ const OFFER_MANAGE_INCLUDE = {
       stock_quantity: true,
     },
   },
+  categories: CATEGORY_SELECT,
   images: { orderBy: { position: 'asc' as const } },
   _count: {
     select: {
@@ -57,12 +65,16 @@ const OFFER_MANAGE_INCLUDE = {
 export interface CreateOfferDto {
   product_id: string;
   action_id?: string;
+  description?: string;
+  category_ids?: string[];
   discounted_price: number;
   quantity_offered: number;
   expires_at?: Date;
 }
 
 export interface UpdateOfferDto {
+  description?: string | null;
+  category_ids?: string[];
   discounted_price?: number;
   quantity_offered?: number;
   expires_at?: Date | null;
@@ -82,7 +94,7 @@ export interface GeoOfferQuery {
 export class OfferService {
   private readonly logger = new Logger(OfferService.name);
 
-  constructor() {}
+  constructor(private readonly categoryService: CategoryService) {}
 
   async create(pharmacyId: string, dto: CreateOfferDto) {
     const product = await prisma.product.findFirst({
@@ -103,19 +115,31 @@ export class OfferService {
       );
     }
 
+    // Catégories : sélection du Titulaire, ou repli "Autres" si aucune fournie.
+    const requestedIds = dto.category_ids ?? [];
+    await this.categoryService.assertVisibleIds(pharmacyId, requestedIds);
+    const categoryIds =
+      requestedIds.length > 0
+        ? [...new Set(requestedIds)]
+        : [await this.categoryService.getFallbackCategoryId()];
+
     const offer = await prisma.offer.create({
       data: {
         pharmacy_id: pharmacyId,
         product_id: dto.product_id,
         action_id: dto.action_id,
+        description: dto.description,
         discounted_price: dto.discounted_price,
         quantity_offered: dto.quantity_offered,
         expires_at: dto.expires_at,
+        categories: {
+          connect: categoryIds.map((category_id) => ({ category_id })),
+        },
       },
       include: OFFER_INCLUDE,
     });
     this.logger.log(
-      `[${pharmacyId}] Offer created: product=${dto.product_id}, qty=${dto.quantity_offered}, price=${dto.discounted_price} → offer_id=${offer.offer_id}`
+      `[${pharmacyId}] Offer created: product=${dto.product_id}, qty=${dto.quantity_offered}, price=${dto.discounted_price}, categories=${categoryIds.length} → offer_id=${offer.offer_id}`
     );
     return offer;
   }
@@ -123,21 +147,7 @@ export class OfferService {
   async findAllForPharmacy(pharmacyId: string, status?: string) {
     return prisma.offer.findMany({
       where: { pharmacy_id: pharmacyId, ...(status ? { status } : {}) },
-      include: {
-        product: {
-          select: {
-            name: true,
-            external_sku: true,
-            category: true,
-            brand: true,
-          },
-        },
-        _count: {
-          select: {
-            orders: { where: { status: { in: [...ACTIVE_HOLD_STATUSES] } } },
-          },
-        },
-      },
+      include: OFFER_INCLUDE,
       orderBy: { created_at: 'desc' },
     });
   }
@@ -189,6 +199,18 @@ export class OfferService {
       }
     }
 
+    // Remplacement complet du jeu de catégories si fourni (set).
+    let categoriesData:
+      | { set: { category_id: string }[] }
+      | undefined;
+    if (dto.category_ids !== undefined) {
+      const unique = [...new Set(dto.category_ids)];
+      await this.categoryService.assertVisibleIds(pharmacyId, unique);
+      categoriesData = {
+        set: unique.map((category_id) => ({ category_id })),
+      };
+    }
+
     this.logger.log(`[${pharmacyId}] Offer ${offerId} updated`);
     return prisma.offer.update({
       where: { offer_id: offerId },
@@ -200,6 +222,10 @@ export class OfferService {
           ? { quantity_offered: dto.quantity_offered }
           : {}),
         ...(dto.expires_at !== undefined ? { expires_at: dto.expires_at } : {}),
+        ...(dto.description !== undefined
+          ? { description: dto.description }
+          : {}),
+        ...(categoriesData ? { categories: categoriesData } : {}),
       },
       include: OFFER_MANAGE_INCLUDE,
     });
@@ -263,7 +289,17 @@ export class OfferService {
     const offers = await prisma.offer.findMany({
       where: {
         status: 'ACTIVE',
-        ...(category ? { product: { is: { category } } } : {}),
+        // Filtre catégorie côté catalogue mobile : sur les catégories de
+        // l'Offer (référentiel global), et non plus sur product.category.
+        ...(category
+          ? {
+              categories: {
+                some: {
+                  OR: [{ slug: category }, { category_id: category }],
+                },
+              },
+            }
+          : {}),
       },
       include: {
         ...OFFER_CUSTOMER_INCLUDE,
@@ -311,6 +347,7 @@ export class OfferService {
         return {
           offer_id: offer.offer_id,
           product: offer.product,
+          categories: (offer as { categories?: unknown }).categories ?? [],
           discounted_price: offer.discounted_price,
           original_price: originalPrice,
           discount_percent: discountPercent,

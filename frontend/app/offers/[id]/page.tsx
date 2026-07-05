@@ -17,6 +17,7 @@ import { useRouter } from 'next/navigation';
 import { use, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { CategoryMultiSelect } from '@/components/categories/category-multi-select';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -33,8 +34,10 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import {
   deleteOfferImage,
+  fetchCategories,
   fetchOfferDetail,
   resolveOfferImageUrl,
   resumeOffer,
@@ -43,7 +46,7 @@ import {
   updateOffer,
   uploadOfferImages,
 } from '@/lib/api';
-import { OfferDetail, OfferStatus } from '@/lib/types';
+import { Category, OfferDetail, OfferStatus } from '@/lib/types';
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_IMAGES_PER_UPLOAD = 10;
@@ -92,6 +95,9 @@ export default function OfferDetailPage({
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
+  const [description, setDescription] = useState('');
+  const [categoryIds, setCategoryIds] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [errors, setErrors] = useState<{ price?: string; quantity?: string }>(
     {}
   );
@@ -106,6 +112,8 @@ export default function OfferDetailPage({
     setPrice(o.discounted_price.toFixed(2));
     setQuantity(String(o.quantity_offered));
     setExpiresAt(toDateInputValue(o.expires_at));
+    setDescription(o.description ?? '');
+    setCategoryIds((o.categories ?? []).map((c) => c.category_id));
     setErrors({});
   };
 
@@ -114,6 +122,12 @@ export default function OfferDetailPage({
       .then(hydrate)
       .catch(() => setOffer(null));
   }, [id]);
+
+  useEffect(() => {
+    fetchCategories()
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
 
   const isTerminated = offer?.status === 'TERMINEE';
 
@@ -140,6 +154,8 @@ export default function OfferDetailPage({
         discounted_price: parseFloat(price),
         quantity_offered: parseInt(quantity, 10),
         expires_at: expiresAt ? new Date(expiresAt).toISOString() : null,
+        description: description.trim() ? description.trim() : null,
+        category_ids: categoryIds,
       });
       hydrate(updated);
       toast.success('Offre mise à jour');
@@ -477,6 +493,38 @@ export default function OfferDetailPage({
                     disabled={isTerminated}
                     value={expiresAt}
                     onChange={(e) => setExpiresAt(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="offer-description">
+                    Description{' '}
+                    <span className="text-xs text-muted-foreground font-normal">
+                      (optionnel)
+                    </span>
+                  </Label>
+                  <Textarea
+                    id="offer-description"
+                    rows={3}
+                    disabled={isTerminated}
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Décrivez l'offre pour le catalogue client…"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>
+                    Catégories{' '}
+                    <span className="text-xs text-muted-foreground font-normal">
+                      (optionnel)
+                    </span>
+                  </Label>
+                  <CategoryMultiSelect
+                    categories={categories}
+                    value={categoryIds}
+                    onChange={setCategoryIds}
+                    disabled={isTerminated}
                   />
                 </div>
 

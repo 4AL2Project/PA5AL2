@@ -3,6 +3,7 @@
 import { Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
+import { CategoryMultiSelect } from '@/components/categories/category-multi-select';
 import { Button } from '@/components/ui/button';
 import {
   Drawer,
@@ -20,12 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { DormantAction } from '@/lib/types';
+import { Textarea } from '@/components/ui/textarea';
+import { fetchCategories } from '@/lib/api';
+import { Category, DormantAction } from '@/lib/types';
 
 export interface ValidateActionPayload {
   type: DormantAction['type'];
   discountedPrice?: number;
   quantityOffered?: number;
+  description?: string;
+  categoryIds?: string[];
 }
 
 const ACTION_OPTIONS: {
@@ -67,15 +72,26 @@ export function ValidateActionDialog({
   );
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('');
+  const [description, setDescription] = useState('');
+  const [categoryIds, setCategoryIds] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [errors, setErrors] = useState<{ price?: string; quantity?: string }>(
     {}
   );
+
+  useEffect(() => {
+    fetchCategories()
+      .then(setCategories)
+      .catch(() => setCategories([]));
+  }, []);
 
   useEffect(() => {
     if (open && action) {
       setSelectedType(action.type);
       setPrice(action.unitPrice.toFixed(2));
       setQuantity(String(action.stock));
+      setDescription('');
+      setCategoryIds([]);
       setErrors({});
     }
   }, [open, action]);
@@ -97,7 +113,13 @@ export function ValidateActionDialog({
 
     setErrors(errs);
     if (Object.keys(errs).length > 0) return null;
-    return { type: 'B2C', discountedPrice: p, quantityOffered: q };
+    return {
+      type: 'B2C',
+      discountedPrice: p,
+      quantityOffered: q,
+      description: description.trim() || undefined,
+      categoryIds,
+    };
   };
 
   const handleConfirm = () => {
@@ -254,6 +276,36 @@ export function ValidateActionDialog({
                         {errors.quantity}
                       </p>
                     )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label>
+                      Catégories{' '}
+                      <span className="text-xs text-muted-foreground font-normal">
+                        (optionnel — « Autres » par défaut)
+                      </span>
+                    </Label>
+                    <CategoryMultiSelect
+                      categories={categories}
+                      value={categoryIds}
+                      onChange={setCategoryIds}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="offer-description">
+                      Description{' '}
+                      <span className="text-xs text-muted-foreground font-normal">
+                        (optionnel)
+                      </span>
+                    </Label>
+                    <Textarea
+                      id="offer-description"
+                      rows={3}
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Décrivez l'offre pour le catalogue client…"
+                    />
                   </div>
                 </div>
               )}

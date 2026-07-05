@@ -66,6 +66,18 @@ export interface RiskDistribution {
   percentage: number;
 }
 
+// ─── Catégories d'offre ───────────────────────────────────────────────────────
+
+export interface Category {
+  category_id: string;
+  pharmacy_id: string | null;
+  name: string;
+  slug: string;
+  is_system: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 // ─── B2C chain ──────────────────────────────────────────────────────────────
 
 export type OfferStatus = 'ACTIVE' | 'SUSPENDUE' | 'TERMINEE';
@@ -85,11 +97,18 @@ export interface OfferImage {
   created_at: string;
 }
 
+export interface OfferCategory {
+  category_id: string;
+  name: string;
+  slug: string;
+}
+
 export interface Offer {
   offer_id: string;
   pharmacy_id: string;
   product_id: string;
   action_id: string | null;
+  description?: string | null;
   discounted_price: number;
   quantity_offered: number;
   status: OfferStatus;
@@ -102,6 +121,7 @@ export interface Offer {
     category?: string;
     brand?: string;
   };
+  categories?: OfferCategory[];
   images?: OfferImage[];
   _count?: { orders: number };
 }
@@ -111,6 +131,7 @@ export interface OfferDetail {
   pharmacy_id: string;
   product_id: string;
   action_id: string | null;
+  description?: string | null;
   discounted_price: number;
   quantity_offered: number;
   status: OfferStatus;
@@ -126,6 +147,7 @@ export interface OfferDetail {
     unit_price: number;
     stock_quantity: number;
   };
+  categories?: OfferCategory[];
   images: OfferImage[];
   _count?: { orders: number };
 }

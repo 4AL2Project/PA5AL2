@@ -11,6 +11,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { AnalysisModule } from './modules/analysis/analysis.module';
 import { AssociationsModule } from './modules/associations/associations.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { CategoryModule } from './modules/category/category.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { DonationsModule } from './modules/donations/donations.module';
@@ -54,6 +55,7 @@ import { ProductModule } from './modules/product/product.module';
     NotificationModule,
     OfferModule,
     OrderModule,
+    CategoryModule,
   ],
   controllers: [HealthController],
   providers: [AnalysisJob],

@@ -1,5 +1,6 @@
 import {
   AnalysisStats,
+  Category,
   DormantAction,
   ImportRecord,
   Offer,
@@ -343,6 +344,8 @@ export async function fetchOffers(status?: string): Promise<Offer[]> {
 export interface CreateOfferPayload {
   product_id: string;
   action_id?: string;
+  description?: string;
+  category_ids?: string[];
   discounted_price: number;
   quantity_offered: number;
 }
@@ -372,6 +375,8 @@ export async function fetchOfferDetail(offerId: string): Promise<OfferDetail> {
 }
 
 export interface UpdateOfferPayload {
+  description?: string | null;
+  category_ids?: string[];
   discounted_price?: number;
   quantity_offered?: number;
   expires_at?: string | null;
@@ -442,4 +447,33 @@ export async function cancelOrder(orderId: string): Promise<Order> {
 
 export async function fetchOrderByQr(qrCode: string): Promise<Order> {
   return apiFetch<Order>(`/api/orders/qr/${qrCode}`);
+}
+
+// ─── Catégories d'offre ────────────────────────────────────────────────────────
+
+export async function fetchCategories(): Promise<Category[]> {
+  return apiFetch<Category[]>('/api/categories');
+}
+
+export async function createCategory(name: string): Promise<Category> {
+  return apiFetch<Category>('/api/categories', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+}
+
+export async function updateCategory(
+  id: string,
+  name: string
+): Promise<Category> {
+  return apiFetch<Category>(`/api/categories/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+}
+
+export async function deleteCategory(id: string): Promise<void> {
+  await apiFetch(`/api/categories/${id}`, { method: 'DELETE' });
 }

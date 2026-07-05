@@ -64,10 +64,7 @@ export class CategoryController {
   @UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
   @Roles(UserRole.TITULAIRE)
   @ApiOperation({ summary: 'Supprimer une catégorie de la pharmacie' })
-  remove(
-    @Req() req: Request & { user: JwtPayload },
-    @Param('id') id: string
-  ) {
+  remove(@Req() req: Request & { user: JwtPayload }, @Param('id') id: string) {
     return this.categoryService.remove(req.user.pharmacy_id, id);
   }
 }

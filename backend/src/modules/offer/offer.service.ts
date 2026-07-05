@@ -200,9 +200,7 @@ export class OfferService {
     }
 
     // Remplacement complet du jeu de catégories si fourni (set).
-    let categoriesData:
-      | { set: { category_id: string }[] }
-      | undefined;
+    let categoriesData: { set: { category_id: string }[] } | undefined;
     if (dto.category_ids !== undefined) {
       const unique = [...new Set(dto.category_ids)];
       await this.categoryService.assertVisibleIds(pharmacyId, unique);

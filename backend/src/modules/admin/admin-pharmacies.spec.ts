@@ -514,7 +514,9 @@ describe('AdminService preparateurs', () => {
     prisma.pharmacy.findUnique.mockResolvedValue({ pharmacy_id: 'p1' });
     prisma.user.findUnique.mockResolvedValue({ user_id: 'autre' });
     await expect(
-      service.addPreparateur('p1', UserRole.ADMIN_SAVELY, { email: prepa.email })
+      service.addPreparateur('p1', UserRole.ADMIN_SAVELY, {
+        email: prepa.email,
+      })
     ).rejects.toThrow(ConflictException);
     expect(prisma.user.create).not.toHaveBeenCalled();
   });

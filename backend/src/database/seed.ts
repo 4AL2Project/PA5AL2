@@ -458,6 +458,45 @@ const ADMIN_PHARMACY_ID = '00000000-0000-0000-0000-000000000001';
 const ADMIN_EMAIL = 'admin@savely.fr';
 const ADMIN_PASSWORD = 'admin1234';
 
+// Les 6 catégories système partagées (pharmacy_id = null). "Autres" (slug
+// `autres`) sert de repli automatique à la création d'une Offer sans catégorie.
+const SYSTEM_CATEGORIES: { name: string; slug: string }[] = [
+  { name: 'Soins du corps', slug: 'soins-du-corps' },
+  {
+    name: 'Compléments alimentaires et nutrition',
+    slug: 'complements-alimentaires-et-nutrition',
+  },
+  {
+    name: 'Matériel médical et orthopédie',
+    slug: 'materiel-medical-et-orthopedie',
+  },
+  { name: 'Hygiène et protection', slug: 'hygiene-et-protection' },
+  { name: 'Bien être', slug: 'bien-etre' },
+  { name: 'Autres', slug: 'autres' },
+];
+
+async function seedCategories() {
+  let created = 0;
+  for (const cat of SYSTEM_CATEGORIES) {
+    const existing = await prisma.category.findFirst({
+      where: { pharmacy_id: null, slug: cat.slug },
+    });
+    if (existing) continue;
+    await prisma.category.create({
+      data: {
+        pharmacy_id: null,
+        name: cat.name,
+        slug: cat.slug,
+        is_system: true,
+      },
+    });
+    created++;
+  }
+  console.log(
+    `✅ Catégories système : ${created} créée(s), ${SYSTEM_CATEGORIES.length - created} déjà présente(s)`
+  );
+}
+
 async function seedAdmin() {
   const adminPharmacy = await prisma.pharmacy.upsert({
     where: { pharmacy_id: ADMIN_PHARMACY_ID },
@@ -520,6 +559,8 @@ async function main() {
   console.log('🌱 Démarrage du seed...\n');
 
   await seedAdmin();
+
+  await seedCategories();
 
   // Idempotence : ne pas recréer si déjà présent
   const existing = await prisma.pharmacy.findFirst({

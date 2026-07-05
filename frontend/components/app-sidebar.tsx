@@ -9,6 +9,7 @@ import {
   Package,
   Settings,
   ShoppingBag,
+  Tag,
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
@@ -55,6 +56,12 @@ export function AppSidebar({ userEmail }: { userEmail?: string }) {
 
   const nav = [...NAV];
   if (role === 'TITULAIRE') {
+    nav.push({
+      href: '/categories',
+      label: 'Catégories',
+      icon: Tag,
+      exact: false,
+    });
     nav.push({
       href: '/team',
       label: 'Préparateurs',

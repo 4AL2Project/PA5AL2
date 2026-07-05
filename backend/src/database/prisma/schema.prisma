@@ -29,6 +29,26 @@ model Pharmacy {
   imports           Import[]
   offers            Offer[]
   orders            Order[]
+  categories        Category[]
+}
+
+// Catégorie de classement d'une Offer B2C (référentiel exposé au catalogue mobile).
+// Portée : `pharmacy_id = null` → catégorie système partagée (les 6 par défaut,
+// dont "Autres" utilisée comme repli). Sinon → catégorie propre à une pharmacie.
+model Category {
+  category_id String   @id @default(uuid())
+  pharmacy_id String?
+  name        String
+  slug        String
+  is_system   Boolean  @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  pharmacy    Pharmacy? @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  offers      Offer[]   @relation("OfferCategories")
+
+  @@unique([pharmacy_id, slug])
+  @@index([pharmacy_id])
 }
 
 model User {
@@ -230,6 +250,7 @@ model Offer {
   pharmacy_id      String
   product_id       String    @unique
   action_id        String?   @unique
+  description      String?
   discounted_price Float
   quantity_offered Int
   status           String    @default("ACTIVE") // ACTIVE|SUSPENDUE|TERMINEE
@@ -242,6 +263,7 @@ model Offer {
   action           Action?   @relation(fields: [action_id], references: [action_id])
   orders           Order[]
   images           OfferImage[]
+  categories       Category[] @relation("OfferCategories")
 
   @@index([pharmacy_id, status])
 }

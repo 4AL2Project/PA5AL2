@@ -70,7 +70,8 @@ export class InvitationController {
   @Post(':token/accept-admin')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Finaliser un compte administrateur Savely (onboarding back-office)',
+    summary:
+      'Finaliser un compte administrateur Savely (onboarding back-office)',
   })
   @ApiOkResponse({ type: AuthTokensDto })
   @ApiGoneResponse({ description: 'Token expire ou deja consomme' })

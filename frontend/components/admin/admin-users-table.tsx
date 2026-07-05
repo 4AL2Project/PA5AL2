@@ -62,7 +62,10 @@ function formatDate(iso: string): string {
 }
 
 function displayName(user: AdminUser): string {
-  const full = [user.first_name, user.last_name].filter(Boolean).join(' ').trim();
+  const full = [user.first_name, user.last_name]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
   return full || user.email;
 }
 
@@ -72,7 +75,11 @@ interface Props {
   totalActiveAdmins: number;
 }
 
-export function AdminUsersTable({ users, currentUserId, totalActiveAdmins }: Props) {
+export function AdminUsersTable({
+  users,
+  currentUserId,
+  totalActiveAdmins,
+}: Props) {
   const router = useRouter();
   const [editTarget, setEditTarget] = useState<AdminUser | null>(null);
   const [firstName, setFirstName] = useState('');
@@ -260,7 +267,7 @@ export function AdminUsersTable({ users, currentUserId, totalActiveAdmins }: Pro
                             <TooltipContent>
                               {self
                                 ? 'Vous ne pouvez pas désactiver votre propre compte'
-                                : "Dernier admin actif — impossible de désactiver"}
+                                : 'Dernier admin actif — impossible de désactiver'}
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -278,7 +285,9 @@ export function AdminUsersTable({ users, currentUserId, totalActiveAdmins }: Pro
       <Dialog open={!!editTarget} onOpenChange={() => setEditTarget(null)}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-sm">Modifier l&apos;administrateur</DialogTitle>
+            <DialogTitle className="text-sm">
+              Modifier l&apos;administrateur
+            </DialogTitle>
           </DialogHeader>
           <div className="grid gap-3 py-2">
             <div className="grid gap-1.5">
@@ -299,7 +308,11 @@ export function AdminUsersTable({ users, currentUserId, totalActiveAdmins }: Pro
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setEditTarget(null)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setEditTarget(null)}
+            >
               Annuler
             </Button>
             <Button size="sm" onClick={handleEdit} disabled={loading}>
@@ -310,15 +323,20 @@ export function AdminUsersTable({ users, currentUserId, totalActiveAdmins }: Pro
       </Dialog>
 
       {/* Dialog confirmation désactivation */}
-      <Dialog open={!!confirmTarget} onOpenChange={() => setConfirmTarget(null)}>
+      <Dialog
+        open={!!confirmTarget}
+        onOpenChange={() => setConfirmTarget(null)}
+      >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-sm">Désactiver cet administrateur ?</DialogTitle>
+            <DialogTitle className="text-sm">
+              Désactiver cet administrateur ?
+            </DialogTitle>
             <DialogDescription className="text-xs">
               {confirmTarget && (
                 <>
-                  Le compte de <strong>{displayName(confirmTarget)}</strong> sera
-                  désactivé. Il ne pourra plus se connecter au back-office.
+                  Le compte de <strong>{displayName(confirmTarget)}</strong>{' '}
+                  sera désactivé. Il ne pourra plus se connecter au back-office.
                 </>
               )}
             </DialogDescription>

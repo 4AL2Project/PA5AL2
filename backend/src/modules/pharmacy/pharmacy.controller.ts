@@ -132,6 +132,9 @@ export class PharmacyController {
     @Req() req: Request & { user: JwtPayload },
     @Param('userId') userId: string
   ) {
-    return this.pharmacyService.deletePreparateur(req.user.pharmacy_id!, userId);
+    return this.pharmacyService.deletePreparateur(
+      req.user.pharmacy_id!,
+      userId
+    );
   }
 }

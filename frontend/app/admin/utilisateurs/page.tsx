@@ -1,8 +1,8 @@
 import { redirect } from 'next/navigation';
 
 import { AddAdminUserDrawer } from '@/components/admin/add-admin-user-drawer';
-import { AdminUsersTable } from '@/components/admin/admin-users-table';
 import { AdminShell } from '@/components/admin/admin-shell';
+import { AdminUsersTable } from '@/components/admin/admin-users-table';
 import { fetchAdminUsers } from '@/lib/api';
 import { getSession } from '@/lib/session';
 

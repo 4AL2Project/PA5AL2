@@ -30,7 +30,11 @@ export function AddAdminUserDrawer() {
     if (!email || !firstName || !lastName) return;
     setLoading(true);
     try {
-      await createAdminUser({ email, first_name: firstName, last_name: lastName });
+      await createAdminUser({
+        email,
+        first_name: firstName,
+        last_name: lastName,
+      });
       toast.success('Invitation envoyée');
       setOpen(false);
       setEmail('');
@@ -57,11 +61,19 @@ export function AddAdminUserDrawer() {
           Inviter un admin
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-sm">
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col gap-0 p-0 sm:max-w-sm"
+      >
         <SheetHeader className="border-b px-5 py-4">
-          <SheetTitle className="text-base">Inviter un administrateur</SheetTitle>
+          <SheetTitle className="text-base">
+            Inviter un administrateur
+          </SheetTitle>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="flex flex-1 flex-col gap-4 px-5 py-4">
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-1 flex-col gap-4 px-5 py-4"
+        >
           <div className="grid gap-1.5">
             <Label htmlFor="admin-email" className="text-xs">
               Email <span className="text-destructive">*</span>
@@ -103,8 +115,8 @@ export function AddAdminUserDrawer() {
             />
           </div>
           <p className="text-[11px] text-muted-foreground">
-            Un email d&apos;invitation sera envoyé. L&apos;admin devra choisir un mot
-            de passe via le lien reçu (valable 48h).
+            Un email d&apos;invitation sera envoyé. L&apos;admin devra choisir
+            un mot de passe via le lien reçu (valable 48h).
           </p>
           <div className="mt-auto flex gap-2 justify-end pt-4">
             <Button
@@ -115,7 +127,11 @@ export function AddAdminUserDrawer() {
             >
               Annuler
             </Button>
-            <Button type="submit" size="sm" disabled={loading || !email || !firstName || !lastName}>
+            <Button
+              type="submit"
+              size="sm"
+              disabled={loading || !email || !firstName || !lastName}
+            >
               Envoyer l&apos;invitation
             </Button>
           </div>

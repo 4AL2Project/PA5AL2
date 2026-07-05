@@ -130,8 +130,8 @@ function OnboardingForm() {
         <div className="space-y-1">
           <h1 className="text-lg font-semibold">Bienvenue sur Savely</h1>
           <p className="text-xs text-muted-foreground">
-            Vous avez été invité(e) en tant qu&apos;administrateur. Choisissez un mot
-            de passe pour activer votre compte.
+            Vous avez été invité(e) en tant qu&apos;administrateur. Choisissez
+            un mot de passe pour activer votre compte.
           </p>
         </div>
 
@@ -141,7 +141,9 @@ function OnboardingForm() {
               .filter(Boolean)
               .join(' ') || info.titulaire.email}
           </p>
-          <p className="text-[11px] text-muted-foreground">{info.titulaire.email}</p>
+          <p className="text-[11px] text-muted-foreground">
+            {info.titulaire.email}
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -250,10 +250,7 @@ export class AdminController {
   @Get('users')
   @ApiOperation({ summary: 'Liste des comptes ADMIN_SAVELY (paginée)' })
   @ApiOkResponse({ type: [AdminUserDto] })
-  listAdminUsers(
-    @Query('page') page?: string,
-    @Query('limit') limit?: string
-  ) {
+  listAdminUsers(@Query('page') page?: string, @Query('limit') limit?: string) {
     return this.adminService.listAdminUsers(
       page ? parseInt(page, 10) : 1,
       limit ? parseInt(limit, 10) : 20

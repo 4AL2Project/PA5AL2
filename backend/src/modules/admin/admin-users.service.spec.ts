@@ -109,10 +109,16 @@ describe('AdminService — Admin Users', () => {
     });
 
     it('409 si un compte existe déjà pour cet email', async () => {
-      prisma.user.findUnique.mockResolvedValue(makeAdmin({ role: UserRole.TITULAIRE }));
+      prisma.user.findUnique.mockResolvedValue(
+        makeAdmin({ role: UserRole.TITULAIRE })
+      );
 
       await expect(
-        service.createAdminUser({ email: 'dup@pharmacy.fr', first_name: 'X', last_name: 'Y' })
+        service.createAdminUser({
+          email: 'dup@pharmacy.fr',
+          first_name: 'X',
+          last_name: 'Y',
+        })
       ).rejects.toBeInstanceOf(ConflictException);
     });
   });
@@ -120,7 +126,7 @@ describe('AdminService — Admin Users', () => {
   // ── setAdminUserStatus ───────────────────────────────────────────────────────
 
   describe('setAdminUserStatus', () => {
-    it("403 si un admin tente de désactiver son propre compte", async () => {
+    it('403 si un admin tente de désactiver son propre compte', async () => {
       prisma.user.findFirst.mockResolvedValue(makeAdmin({ user_id: ACTOR_ID }));
 
       await expect(
@@ -142,7 +148,11 @@ describe('AdminService — Admin Users', () => {
       prisma.user.count.mockResolvedValue(3);
       prisma.user.update.mockResolvedValue(makeAdmin({ status: 'INACTIVE' }));
 
-      const result = await service.setAdminUserStatus(TARGET_ID, 'INACTIVE', ACTOR_ID);
+      const result = await service.setAdminUserStatus(
+        TARGET_ID,
+        'INACTIVE',
+        ACTOR_ID
+      );
       expect(result.status).toBe('INACTIVE');
     });
   });

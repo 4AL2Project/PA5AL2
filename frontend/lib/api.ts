@@ -531,7 +531,9 @@ export async function setAdminUserStatus(
 }
 
 export async function resendAdminUserInvitation(id: string): Promise<void> {
-  await apiFetch(`/api/admin/users/${id}/resend-invitation`, { method: 'POST' });
+  await apiFetch(`/api/admin/users/${id}/resend-invitation`, {
+    method: 'POST',
+  });
 }
 
 export async function deactivateAdminUser(id: string): Promise<AdminUser> {

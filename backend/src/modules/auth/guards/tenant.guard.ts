@@ -39,7 +39,8 @@ export class TenantGuard implements CanActivate {
         : undefined;
 
     if (user.role === UserRole.ADMIN_SAVELY) {
-      request.tenantPharmacyId = claimedFromQuery ?? user.pharmacy_id ?? undefined;
+      request.tenantPharmacyId =
+        claimedFromQuery ?? user.pharmacy_id ?? undefined;
       return true;
     }
 

@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
+import { EmailModule } from '../email/email.module';
 import { CustomerController } from './customer.controller';
 import { CustomerService } from './customer.service';
 import { CustomerJwtGuard } from './guards/customer-jwt.guard';
 
 @Module({
-  imports: [JwtModule.register({})],
+  imports: [JwtModule.register({}), EmailModule],
   controllers: [CustomerController],
   providers: [CustomerService, CustomerJwtGuard],
   exports: [CustomerService, CustomerJwtGuard, JwtModule],

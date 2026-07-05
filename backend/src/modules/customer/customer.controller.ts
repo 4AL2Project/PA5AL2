@@ -16,6 +16,7 @@ import { Request } from 'express';
 
 import { CustomerService } from './customer.service';
 import { CustomerJwtPayload } from './customer-jwt-payload';
+import { UpdateCustomerMeDto } from './dto/customer.dto';
 import { CustomerJwtGuard } from './guards/customer-jwt.guard';
 
 interface AuthBody {
@@ -88,7 +89,7 @@ export class CustomerController {
   @ApiOperation({ summary: 'Mise à jour partielle du profil Customer — US-86' })
   updateMe(
     @Req() req: Request & { customer: CustomerJwtPayload },
-    @Body() body: { first_name?: string; last_name?: string; phone?: string }
+    @Body() body: UpdateCustomerMeDto
   ) {
     return this.customerService.updateProfile(req.customer.sub, body);
   }

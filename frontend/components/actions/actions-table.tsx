@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Pagination,
   PaginationContent,
@@ -35,6 +36,9 @@ interface ActionsTableProps {
   onPageChange: (page: number) => void;
   onOpenValidate: (action: DormantAction) => void;
   loading: boolean;
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
+  onToggleSelectPage: (ids: string[], checked: boolean) => void;
 }
 
 export function ActionsTable({
@@ -43,10 +47,23 @@ export function ActionsTable({
   onPageChange,
   onOpenValidate,
   loading,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectPage,
 }: ActionsTableProps) {
   const totalPages = Math.ceil(actions.length / PAGE_SIZE);
   const slice = actions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const pages = buildPageNumbers(page, totalPages);
+
+  const pageIds = slice.map((a) => a.id);
+  const allPageSelected =
+    pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+  const somePageSelected = pageIds.some((id) => selectedIds.has(id));
+  const headerState: boolean | 'indeterminate' = allPageSelected
+    ? true
+    : somePageSelected
+      ? 'indeterminate'
+      : false;
 
   return (
     <div className="space-y-3">
@@ -54,6 +71,15 @@ export function ActionsTable({
         <Table>
           <TableHeader>
             <TableRow className="hover:bg-transparent border-border/50">
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={headerState}
+                  onCheckedChange={(checked) =>
+                    onToggleSelectPage(pageIds, checked === true)
+                  }
+                  aria-label="Tout sélectionner sur cette page"
+                />
+              </TableHead>
               <TableHead className="text-muted-foreground">Produit</TableHead>
               <TableHead className="text-muted-foreground">SKU</TableHead>
               <TableHead className="text-muted-foreground">Catégorie</TableHead>
@@ -70,57 +96,68 @@ export function ActionsTable({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {slice.map((action) => (
-              <TableRow
-                key={action.id}
-                className="border-border/50 hover:bg-muted/30"
-              >
-                <TableCell className="font-medium max-w-[160px] truncate">
-                  {action.productName}
-                </TableCell>
-                <TableCell className="text-muted-foreground font-mono text-xs">
-                  {action.sku}
-                </TableCell>
-                <TableCell className="text-muted-foreground text-sm">
-                  {action.category || '—'}
-                </TableCell>
-                <TableCell className="text-right tabular-nums text-sm">
-                  {action.daysOfCover > 9999
-                    ? '∞'
-                    : `${Math.round(action.daysOfCover)} j`}
-                </TableCell>
-                <TableCell className="text-right tabular-nums text-sm font-medium">
-                  {action.capitalLocked != null
-                    ? action.capitalLocked.toLocaleString('fr-FR', {
-                        style: 'currency',
-                        currency: 'EUR',
-                        maximumFractionDigits: 0,
-                      })
-                    : '—'}
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    className={cn(
-                      'border text-[10px] font-medium px-1.5 py-0',
-                      TYPE_COLORS[action.type]
-                    )}
-                    variant="outline"
-                  >
-                    {action.type === 'DON' ? 'Don associatif' : 'Vente B2C'}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    disabled={loading}
-                    onClick={() => onOpenValidate(action)}
-                  >
-                    Gérer
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {slice.map((action) => {
+              const isSelected = selectedIds.has(action.id);
+              return (
+                <TableRow
+                  key={action.id}
+                  data-state={isSelected ? 'selected' : undefined}
+                  className="border-border/50 hover:bg-muted/30 data-[state=selected]:bg-muted/40"
+                >
+                  <TableCell className="w-10">
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => onToggleSelect(action.id)}
+                      aria-label={`Sélectionner ${action.productName}`}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium max-w-[160px] truncate">
+                    {action.productName}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground font-mono text-xs">
+                    {action.sku}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
+                    {action.category || '—'}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-sm">
+                    {action.daysOfCover > 9999
+                      ? '∞'
+                      : `${Math.round(action.daysOfCover)} j`}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-sm font-medium">
+                    {action.capitalLocked != null
+                      ? action.capitalLocked.toLocaleString('fr-FR', {
+                          style: 'currency',
+                          currency: 'EUR',
+                          maximumFractionDigits: 0,
+                        })
+                      : '—'}
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      className={cn(
+                        'border text-[10px] font-medium px-1.5 py-0',
+                        TYPE_COLORS[action.type]
+                      )}
+                      variant="outline"
+                    >
+                      {action.type === 'DON' ? 'Don associatif' : 'Vente B2C'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      disabled={loading}
+                      onClick={() => onOpenValidate(action)}
+                    >
+                      Gérer
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>

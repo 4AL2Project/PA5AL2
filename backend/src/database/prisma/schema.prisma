@@ -231,10 +231,13 @@ model Import {
 
 // Compte léger d'un acheteur B2C (app mobile)
 // password optionnel : la connexion mobile se fait par code OTP (voir CustomerOtp)
+// civility : 'MR' | 'MME'. Pas d'adresse stockée (RGPD) : la position vient de
+// la géolocalisation du device au moment de la requête (ex. GET /offers/nearby).
 model Customer {
   customer_id String   @id @default(uuid())
   email       String   @unique
   password    String?
+  civility    String?
   first_name  String?
   last_name   String?
   phone       String?

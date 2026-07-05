@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 
 import { EmptyActions, RoiSummary } from '@/components/actions/action-row';
 import { ActionsTable, PAGE_SIZE } from '@/components/actions/actions-table';
+import { BulkActionsBar } from '@/components/actions/bulk-actions-bar';
 import {
   ValidateActionDialog,
   ValidateActionPayload,
@@ -46,6 +47,8 @@ export default function ActionsPage() {
     null
   );
   const [ignoreTarget, setIgnoreTarget] = useState<DormantAction | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkIgnoreOpen, setBulkIgnoreOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -76,6 +79,7 @@ export default function ActionsPage() {
   const handleFilterChange = (value: FilterLevel) => {
     setFilter(value);
     setPage(1);
+    setSelectedIds(new Set());
   };
 
   const removeAction = useCallback(
@@ -86,8 +90,79 @@ export default function ActionsPage() {
         if (page > maxPage) setPage(maxPage);
         return next;
       });
+      setSelectedIds((prev) => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     },
     [page]
+  );
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectPage = useCallback((ids: string[], checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => (checked ? next.add(id) : next.delete(id)));
+      return next;
+    });
+  }, []);
+
+  const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+
+  const runBulk = useCallback(
+    async (
+      apiCall: (id: string) => Promise<void>,
+      verb: { done: string; failed: string }
+    ) => {
+      const ids = Array.from(selectedIds);
+      if (ids.length === 0) return;
+      setMutating(true);
+      try {
+        const results = await Promise.allSettled(ids.map(apiCall));
+        const ok = results.filter((r) => r.status === 'fulfilled').length;
+        results.forEach((r, i) => {
+          if (r.status === 'fulfilled') removeAction(ids[i]);
+        });
+        if (ok > 0)
+          toast.success(`${ok} produit${ok > 1 ? 's' : ''} ${verb.done}`);
+        const failed = ids.length - ok;
+        if (failed > 0)
+          toast.error(
+            `${failed} produit${failed > 1 ? 's' : ''} ${verb.failed}`
+          );
+      } finally {
+        setMutating(false);
+      }
+    },
+    [selectedIds, removeAction]
+  );
+
+  const handleBulkSnooze = useCallback(
+    () =>
+      runBulk(snoozeAction, {
+        done: 'reporté(s) de 48 h',
+        failed: "n'ont pas pu être reportés",
+      }),
+    [runBulk]
+  );
+
+  const handleBulkIgnore = useCallback(
+    () =>
+      runBulk(ignoreAction, {
+        done: 'ignoré(s)',
+        failed: "n'ont pas pu être ignorés",
+      }),
+    [runBulk]
   );
 
   const handleConfirmValidate = useCallback(
@@ -189,13 +264,27 @@ export default function ActionsPage() {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : filtered.length > 0 ? (
-          <ActionsTable
-            actions={filtered}
-            page={page}
-            onPageChange={setPage}
-            onOpenValidate={setPendingAction}
-            loading={mutating}
-          />
+          <>
+            {selectedIds.size > 0 && (
+              <BulkActionsBar
+                count={selectedIds.size}
+                onSnooze={handleBulkSnooze}
+                onIgnore={() => setBulkIgnoreOpen(true)}
+                onClear={clearSelection}
+                loading={mutating}
+              />
+            )}
+            <ActionsTable
+              actions={filtered}
+              page={page}
+              onPageChange={setPage}
+              onOpenValidate={setPendingAction}
+              loading={mutating}
+              selectedIds={selectedIds}
+              onToggleSelect={toggleSelect}
+              onToggleSelectPage={toggleSelectPage}
+            />
+          </>
         ) : (
           <EmptyActions filtered={filter !== 'all'} />
         )}
@@ -232,6 +321,18 @@ export default function ActionsPage() {
             handleIgnore(ignoreTarget.id);
             setIgnoreTarget(null);
           }
+        }}
+      />
+
+      <ConfirmDialog
+        open={bulkIgnoreOpen}
+        onOpenChange={setBulkIgnoreOpen}
+        title={`Ignorer ${selectedIds.size} produit${selectedIds.size > 1 ? 's' : ''} ?`}
+        description={`${selectedIds.size} produit${selectedIds.size > 1 ? 's' : ''} ne ${selectedIds.size > 1 ? 'seront' : 'sera'} plus suggéré${selectedIds.size > 1 ? 's' : ''} dans le centre d'actions. Vous pourrez les retrouver dans la liste des produits si vous changez d'avis.`}
+        confirmLabel="Ignorer"
+        onConfirm={() => {
+          setBulkIgnoreOpen(false);
+          handleBulkIgnore();
         }}
       />
     </DashboardLayout>

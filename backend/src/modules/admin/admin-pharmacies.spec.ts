@@ -471,22 +471,42 @@ describe('AdminService preparateurs', () => {
     phone: '0612345678',
   };
 
-  it('cree un preparateur ACTIVE sans mot de passe', async () => {
+  it("cree un preparateur PENDING (email seul) et envoie l'invitation", async () => {
     prisma.pharmacy.findUnique.mockResolvedValue({ pharmacy_id: 'p1' });
     prisma.user.findUnique.mockResolvedValue(null);
-    prisma.user.create.mockResolvedValue({ user_id: 'u-prepa', ...prepa });
+    prisma.user.create.mockResolvedValue({
+      user_id: 'u-prepa',
+      email: prepa.email,
+      first_name: null,
+      last_name: null,
+      phone: null,
+      status: 'PENDING',
+    });
 
-    await service.addPreparateur('p1', UserRole.ADMIN_SAVELY, prepa);
+    await service.addPreparateur('p1', UserRole.ADMIN_SAVELY, {
+      email: prepa.email,
+    });
 
     expect(prisma.user.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           pharmacy_id: 'p1',
+          email: prepa.email,
           role: UserRole.PREPARATEUR,
-          status: 'ACTIVE',
+          status: 'PENDING',
           password: null,
+          first_name: null,
         }),
       })
+    );
+    expect(prisma.authToken.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ type: 'INVITATION' }),
+      })
+    );
+    expect(emailMock.sendInvitationEmail).toHaveBeenCalledWith(
+      prepa.email,
+      expect.stringContaining('/preparateur/onboarding?token=')
     );
   });
 
@@ -494,7 +514,9 @@ describe('AdminService preparateurs', () => {
     prisma.pharmacy.findUnique.mockResolvedValue({ pharmacy_id: 'p1' });
     prisma.user.findUnique.mockResolvedValue({ user_id: 'autre' });
     await expect(
-      service.addPreparateur('p1', UserRole.ADMIN_SAVELY, prepa)
+      service.addPreparateur('p1', UserRole.ADMIN_SAVELY, {
+        email: prepa.email,
+      })
     ).rejects.toThrow(ConflictException);
     expect(prisma.user.create).not.toHaveBeenCalled();
   });
@@ -510,6 +532,47 @@ describe('AdminService preparateurs', () => {
         phone: '0600000000',
       })
     ).rejects.toThrow(NotFoundException);
+  });
+
+  it('desactive le compte d un preparateur', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      user_id: 'u-prepa',
+      pharmacy_id: 'p1',
+      role: UserRole.PREPARATEUR,
+      password: 'hash',
+    });
+    prisma.user.update.mockResolvedValue({
+      user_id: 'u-prepa',
+      status: 'INACTIVE',
+    });
+
+    await service.setPreparateurStatus(
+      'p1',
+      UserRole.ADMIN_SAVELY,
+      'u-prepa',
+      'INACTIVE'
+    );
+
+    expect(prisma.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { status: 'INACTIVE' } })
+    );
+  });
+
+  it('refuse de reactiver un preparateur PENDING (sans mot de passe)', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      user_id: 'u-prepa',
+      pharmacy_id: 'p1',
+      role: UserRole.PREPARATEUR,
+      password: null,
+    });
+    await expect(
+      service.setPreparateurStatus(
+        'p1',
+        UserRole.ADMIN_SAVELY,
+        'u-prepa',
+        'ACTIVE'
+      )
+    ).rejects.toThrow(ConflictException);
   });
 
   it('supprime les tokens puis le preparateur', async () => {

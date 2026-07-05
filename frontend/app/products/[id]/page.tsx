@@ -245,6 +245,8 @@ export default function ProductDetailPage({
           action_id: actionId,
           discounted_price: payload.discountedPrice,
           quantity_offered: payload.quantityOffered,
+          description: payload.description,
+          category_ids: payload.categoryIds,
         });
         toast.success('Offre B2C publiée avec succès');
       } else {

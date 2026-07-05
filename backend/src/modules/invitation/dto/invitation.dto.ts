@@ -3,7 +3,9 @@ import { Type } from 'class-transformer';
 import {
   IsBoolean,
   IsNotEmpty,
+  IsOptional,
   IsString,
+  MinLength,
   ValidateNested,
 } from 'class-validator';
 
@@ -43,6 +45,9 @@ export class AcceptInvitationDto {
 }
 
 export class InvitationInfoDto {
+  @ApiProperty({ example: 'PREPARATEUR' })
+  role!: string;
+
   @ApiProperty()
   pharmacy!: {
     pharmacy_id: string;
@@ -61,4 +66,34 @@ export class InvitationInfoDto {
 
   @ApiProperty({ type: String, format: 'date-time' })
   expires_at!: Date;
+}
+
+export class AcceptPreparateurInvitationDto {
+  @ApiProperty({ example: 'MonMotDePasse123', minLength: 8 })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  password!: string;
+
+  @ApiProperty({ required: false, example: 'Jean' })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  first_name?: string;
+
+  @ApiProperty({ required: false, example: 'Martin' })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  last_name?: string;
+
+  @ApiProperty({ required: false, example: '0612345678' })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  phone?: string;
+
+  @ApiProperty({ example: true })
+  @IsBoolean()
+  accepted_terms!: boolean;
 }

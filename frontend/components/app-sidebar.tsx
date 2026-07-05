@@ -9,13 +9,16 @@ import {
   Package,
   Settings,
   ShoppingBag,
+  Tag,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 import { SavelyLogo } from '@/components/savely-logo';
 import { Button } from '@/components/ui/button';
-import { endSession } from '@/lib/auth';
+import { endSession, Role } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
 const NAV = [
@@ -30,11 +33,42 @@ const NAV = [
 export function AppSidebar({ userEmail }: { userEmail?: string }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [role, setRole] = useState<Role | null>(null);
+
+  // Récupère le rôle pour afficher les entrées réservées au titulaire.
+  useEffect(() => {
+    let active = true;
+    fetch('/api/session')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { role?: Role } | null) => {
+        if (active && data?.role) setRole(data.role);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleLogout = async () => {
     await endSession();
     router.replace('/login');
   };
+
+  const nav = [...NAV];
+  if (role === 'TITULAIRE') {
+    nav.push({
+      href: '/categories',
+      label: 'Catégories',
+      icon: Tag,
+      exact: false,
+    });
+    nav.push({
+      href: '/team',
+      label: 'Préparateurs',
+      icon: Users,
+      exact: false,
+    });
+  }
 
   return (
     <aside className="sticky top-0 flex h-screen w-56 flex-shrink-0 flex-col border-r border-border/50 bg-card">
@@ -45,7 +79,7 @@ export function AppSidebar({ userEmail }: { userEmail?: string }) {
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {NAV.map((item) => {
+        {nav.map((item) => {
           const active = item.exact
             ? pathname === item.href
             : pathname.startsWith(item.href);

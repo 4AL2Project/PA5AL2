@@ -3,6 +3,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -10,7 +11,9 @@ import * as bcrypt from 'bcryptjs';
 
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
+import { EmailService } from '../email/email.service';
 import { CustomerJwtPayload } from './customer-jwt-payload';
+import { generateOtpCode, hashOtpCode } from './customer-otp.util';
 
 type CustomerRefreshPayload = {
   sub: string;
@@ -20,7 +23,12 @@ type CustomerRefreshPayload = {
 
 @Injectable()
 export class CustomerService {
-  constructor(private readonly jwtService: JwtService) {}
+  private readonly logger = new Logger(CustomerService.name);
+
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly emailService: EmailService
+  ) {}
 
   async register(
     email: string,
@@ -65,7 +73,9 @@ export class CustomerService {
 
   async login(email: string, password: string) {
     const customer = await prisma.customer.findUnique({ where: { email } });
-    if (!customer) throw new UnauthorizedException('Invalid credentials');
+    if (!customer || !customer.password) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
     const valid = await bcrypt.compare(password, customer.password);
     if (!valid) throw new UnauthorizedException('Invalid credentials');
@@ -73,6 +83,120 @@ export class CustomerService {
     const { password: _pw, ...safe } = customer;
     return {
       customer: safe,
+      access_token: this.signAccessToken(customer.customer_id, customer.email),
+      refresh_token: this.signRefreshToken(
+        customer.customer_id,
+        customer.email
+      ),
+    };
+  }
+
+  /**
+   * Envoie un code OTP à 6 chiffres à l'email fourni (connexion app mobile).
+   * Réponse générique : ne révèle pas l'existence du compte.
+   */
+  async requestCode(email: string): Promise<{ message: string }> {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const windowStart = new Date(
+      Date.now() - config.auth.customerOtpRateLimitWindowMs
+    );
+    const recentCount = await prisma.customerOtp.count({
+      where: { email: normalizedEmail, created_at: { gte: windowStart } },
+    });
+    if (recentCount >= config.auth.customerOtpRateLimit) {
+      this.logger.warn(`OTP rate limit reached for ${normalizedEmail}`);
+      return { message: 'Un code a déjà été envoyé, réessayez plus tard.' };
+    }
+
+    // Invalide les codes précédents non consommés pour cet email
+    await prisma.customerOtp.updateMany({
+      where: { email: normalizedEmail, consumed_at: null },
+      data: { consumed_at: new Date() },
+    });
+
+    const code = generateOtpCode(config.auth.customerOtpLength);
+    await prisma.customerOtp.create({
+      data: {
+        email: normalizedEmail,
+        code_hash: hashOtpCode(code),
+        expires_at: new Date(Date.now() + config.auth.customerOtpTtlMs),
+      },
+    });
+
+    await this.emailService.sendOtpCodeEmail(normalizedEmail, code);
+    this.logger.log(`OTP code sent to ${normalizedEmail}`);
+
+    return { message: 'Code envoyé' };
+  }
+
+  /**
+   * Vérifie le code OTP. Crée le compte Customer s'il n'existe pas encore,
+   * puis retourne { customer, access_token, refresh_token }.
+   * Lève UnauthorizedException('Code invalide') pour la maquette mobile.
+   */
+  async verifyCode(email: string, code: string) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    const otp = await prisma.customerOtp.findFirst({
+      where: { email: normalizedEmail, consumed_at: null },
+      orderBy: { created_at: 'desc' },
+    });
+
+    if (!otp || otp.expires_at < new Date()) {
+      throw new UnauthorizedException('Code invalide');
+    }
+
+    if (otp.attempts >= config.auth.customerOtpMaxAttempts) {
+      await prisma.customerOtp.update({
+        where: { otp_id: otp.otp_id },
+        data: { consumed_at: new Date() },
+      });
+      throw new UnauthorizedException('Code invalide');
+    }
+
+    if (otp.code_hash !== hashOtpCode(code.trim())) {
+      await prisma.customerOtp.update({
+        where: { otp_id: otp.otp_id },
+        data: { attempts: { increment: 1 } },
+      });
+      throw new UnauthorizedException('Code invalide');
+    }
+
+    await prisma.customerOtp.update({
+      where: { otp_id: otp.otp_id },
+      data: { consumed_at: new Date() },
+    });
+
+    let customer = await prisma.customer.findUnique({
+      where: { email: normalizedEmail },
+      select: {
+        customer_id: true,
+        email: true,
+        first_name: true,
+        last_name: true,
+        phone: true,
+        created_at: true,
+      },
+    });
+
+    if (!customer) {
+      customer = await prisma.customer.create({
+        data: { email: normalizedEmail },
+        select: {
+          customer_id: true,
+          email: true,
+          first_name: true,
+          last_name: true,
+          phone: true,
+          created_at: true,
+        },
+      });
+      this.logger.log(`Customer created via OTP: ${normalizedEmail}`);
+    }
+
+    return {
+      customer,
       access_token: this.signAccessToken(customer.customer_id, customer.email),
       refresh_token: this.signRefreshToken(
         customer.customer_id,

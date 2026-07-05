@@ -31,12 +31,18 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       PORT: ${BACKEND_PORT}
       NODE_ENV: production
+      EMAIL_TRANSPORT: smtp
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      EMAIL_FROM: ${EMAIL_FROM}
     ports:
       - '${BACKEND_PORT}:${BACKEND_PORT}'
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_started
+      mailhog:
         condition: service_started
 
   frontend:

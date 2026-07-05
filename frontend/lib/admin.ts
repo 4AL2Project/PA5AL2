@@ -15,6 +15,7 @@ export interface Association {
   categories: string[];
   contact_email: string | null;
   contact_phone: string | null;
+  logo_url: string | null;
   active: boolean;
   created_at: string;
 }

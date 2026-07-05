@@ -98,12 +98,19 @@ export class OfferController {
   update(
     @Req() req: Request & { user: JwtPayload },
     @Param('id') id: string,
-    @Body() body: UpdateOfferDto & { expires_at?: string | null }
+    @Body()
+    body: UpdateOfferDto & { expires_at?: string | null }
   ) {
     const dto: UpdateOfferDto = {
       discounted_price: body.discounted_price,
       quantity_offered: body.quantity_offered,
     };
+    if ('description' in body) {
+      dto.description = body.description;
+    }
+    if ('category_ids' in body) {
+      dto.category_ids = body.category_ids;
+    }
     if ('expires_at' in body) {
       dto.expires_at = body.expires_at ? new Date(body.expires_at) : null;
     }

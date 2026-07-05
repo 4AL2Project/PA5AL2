@@ -29,6 +29,26 @@ model Pharmacy {
   imports           Import[]
   offers            Offer[]
   orders            Order[]
+  categories        Category[]
+}
+
+// Catégorie de classement d'une Offer B2C (référentiel exposé au catalogue mobile).
+// Portée : `pharmacy_id = null` → catégorie système partagée (les 6 par défaut,
+// dont "Autres" utilisée comme repli). Sinon → catégorie propre à une pharmacie.
+model Category {
+  category_id String   @id @default(uuid())
+  pharmacy_id String?
+  name        String
+  slug        String
+  is_system   Boolean  @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  pharmacy    Pharmacy? @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  offers      Offer[]   @relation("OfferCategories")
+
+  @@unique([pharmacy_id, slug])
+  @@index([pharmacy_id])
 }
 
 model User {
@@ -158,6 +178,7 @@ model Association {
   categories     String[]
   contact_email  String?
   contact_phone  String?
+  logo_url       String?
   active         Boolean  @default(true)
   created_at     DateTime @default(now())
 
@@ -209,10 +230,11 @@ model Import {
 }
 
 // Compte léger d'un acheteur B2C (app mobile)
+// password optionnel : la connexion mobile se fait par code OTP (voir CustomerOtp)
 model Customer {
   customer_id String   @id @default(uuid())
   email       String   @unique
-  password    String
+  password    String?
   first_name  String?
   last_name   String?
   phone       String?
@@ -222,6 +244,22 @@ model Customer {
   orders      Order[]
 }
 
+// Code OTP à usage unique pour la connexion Customer B2C (app mobile).
+// Le code (6 chiffres) n'est jamais stocké en clair : seul son hash SHA-256 l'est.
+// Indexé par email car le compte Customer peut ne pas encore exister au moment
+// de la demande de code (création à la vérification).
+model CustomerOtp {
+  otp_id      String    @id @default(uuid())
+  email       String
+  code_hash   String
+  expires_at  DateTime
+  attempts    Int       @default(0)
+  consumed_at DateTime?
+  created_at  DateTime  @default(now())
+
+  @@index([email, created_at])
+}
+
 // Offre B2C publiée par le Titulaire sur un produit dormant
 // Un seul produit = une seule Offer active à la fois
 model Offer {
@@ -229,6 +267,7 @@ model Offer {
   pharmacy_id      String
   product_id       String    @unique
   action_id        String?   @unique
+  description      String?
   discounted_price Float
   quantity_offered Int
   status           String    @default("ACTIVE") // ACTIVE|SUSPENDUE|TERMINEE
@@ -241,6 +280,7 @@ model Offer {
   action           Action?   @relation(fields: [action_id], references: [action_id])
   orders           Order[]
   images           OfferImage[]
+  categories       Category[] @relation("OfferCategories")
 
   @@index([pharmacy_id, status])
 }

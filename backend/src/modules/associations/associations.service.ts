@@ -13,6 +13,7 @@ export interface CreateAssociationDto {
   categories?: string[];
   contact_email?: string;
   contact_phone?: string;
+  logo_url?: string;
 }
 
 export interface FindAllOptions {
@@ -81,6 +82,14 @@ export class AssociationsService {
     return prisma.association.update({
       where: { association_id: id },
       data: { active: false },
+    });
+  }
+
+  async setLogo(id: string, logoUrl: string) {
+    await this.findOne(id);
+    return prisma.association.update({
+      where: { association_id: id },
+      data: { logo_url: logoUrl },
     });
   }
 }

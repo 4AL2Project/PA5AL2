@@ -8,3 +8,8 @@ coverage
 .env
 .env.local
 .env.*.local
+
+# Fichiers générés (à ne pas reformater)
+pnpm-lock.yaml
+*.tsbuildinfo
+next-env.d.ts

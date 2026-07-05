@@ -3,6 +3,7 @@
 import { Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import { CreatePharmacyForm } from '@/app/admin/pharmacies/new/create-pharmacy-form';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,7 @@ export function AddPharmacyDrawer({ className }: { className?: string }) {
             onCancel={() => setOpen(false)}
             onCreated={() => {
               setOpen(false);
+              toast.success('Officine créée avec succès');
               router.refresh();
             }}
           />

@@ -206,24 +206,15 @@ export class UpdatePharmacyStatusDto {
 // ─── Preparateurs ────────────────────────────────────────────────────────────
 
 export class CreatePreparateurDto {
-  @ApiProperty({ example: 'Jean' })
-  @IsString()
-  @IsNotEmpty()
-  first_name!: string;
-
-  @ApiProperty({ example: 'Martin' })
-  @IsString()
-  @IsNotEmpty()
-  last_name!: string;
-
   @ApiProperty({ example: 'jean.martin@pharmacie.fr', format: 'email' })
   @IsEmail()
   email!: string;
+}
 
-  @ApiProperty({ example: '0612345678' })
-  @IsString()
-  @IsNotEmpty()
-  phone!: string;
+export class UpdatePreparateurStatusDto {
+  @ApiProperty({ enum: ['ACTIVE', 'INACTIVE'], example: 'INACTIVE' })
+  @IsIn(['ACTIVE', 'INACTIVE'])
+  status!: 'ACTIVE' | 'INACTIVE';
 }
 
 export class UpdatePreparateurDto {

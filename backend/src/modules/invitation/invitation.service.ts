@@ -1,5 +1,6 @@
 import { BadRequestException, GoneException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcryptjs';
 
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
@@ -14,6 +15,7 @@ export class InvitationService {
   async getByToken(rawToken: string) {
     const record = await this.findValid(rawToken);
     return {
+      role: record.user.role,
       pharmacy: record.user.pharmacy,
       titulaire: {
         first_name: record.user.first_name,
@@ -57,6 +59,65 @@ export class InvitationService {
         first_name: body.titulaire.first_name,
         last_name: body.titulaire.last_name,
         phone: body.titulaire.phone,
+        status: 'ACTIVE',
+        accepted_terms_at: new Date(),
+      },
+    });
+
+    await prisma.authToken.update({
+      where: { id: record.id },
+      data: { consumed_at: new Date() },
+    });
+
+    return this.issueTokens({
+      sub: updatedUser.user_id,
+      email: updatedUser.email,
+      pharmacy_id: updatedUser.pharmacy_id,
+      role: updatedUser.role as UserRole,
+    });
+  }
+
+  /**
+   * Finalise le compte d'un preparateur invite : il choisit son mot de passe
+   * depuis l'onboarding web. Le compte passe de PENDING a ACTIVE.
+   */
+  async acceptPreparateur(
+    rawToken: string,
+    body: {
+      password: string;
+      accepted_terms: unknown;
+      first_name?: string;
+      last_name?: string;
+      phone?: string;
+    }
+  ) {
+    if (body.accepted_terms !== true) {
+      throw new BadRequestException(
+        'Vous devez accepter les CGU pour finaliser votre compte'
+      );
+    }
+
+    const record = await this.findValid(rawToken);
+    const user = record.user;
+
+    if (user.role !== UserRole.PREPARATEUR) {
+      throw new BadRequestException(
+        'Cette invitation ne concerne pas un compte preparateur'
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(
+      body.password,
+      config.auth.bcryptRounds
+    );
+
+    const updatedUser = await prisma.user.update({
+      where: { user_id: user.user_id },
+      data: {
+        password: passwordHash,
+        first_name: body.first_name ?? user.first_name,
+        last_name: body.last_name ?? user.last_name,
+        phone: body.phone ?? user.phone,
         status: 'ACTIVE',
         accepted_terms_at: new Date(),
       },

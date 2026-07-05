@@ -50,6 +50,25 @@ export class CustomerController {
     return this.customerService.login(body.email, body.password);
   }
 
+  @Post('auth/request-code')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Envoie un code de connexion à 6 chiffres par email (app mobile)',
+  })
+  requestCode(@Body() body: { email: string }) {
+    return this.customerService.requestCode(body.email);
+  }
+
+  @Post('auth/verify-code')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Vérifie le code OTP, crée le compte si nouveau et retourne les tokens',
+  })
+  verifyCode(@Body() body: { email: string; code: string }) {
+    return this.customerService.verifyCode(body.email, body.code);
+  }
+
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Renouveler les tokens Customer — US-83' })

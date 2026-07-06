@@ -108,18 +108,20 @@ export function AppSidebar({ userEmail }: { userEmail?: string }) {
             {userEmail}
           </p>
         )}
-        <Link
-          href="/settings"
-          className={cn(
-            'flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-medium transition-colors',
-            pathname.startsWith('/settings')
-              ? 'bg-primary/10 text-primary'
-              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-          )}
-        >
-          <Settings className="h-3.5 w-3.5" />
-          Paramètres
-        </Link>
+        {role === 'TITULAIRE' && (
+          <Link
+            href="/settings"
+            className={cn(
+              'flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-medium transition-colors',
+              pathname.startsWith('/settings')
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            )}
+          >
+            <Settings className="h-3.5 w-3.5" />
+            Paramètres
+          </Link>
+        )}
         <Button
           variant="ghost"
           size="sm"

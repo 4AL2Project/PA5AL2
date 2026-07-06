@@ -12,6 +12,7 @@ import { prisma } from '../../database/client';
 import { UserRole } from '../auth/roles.enum';
 import { generateToken, hashToken } from '../auth/token.util';
 import { EmailService } from '../email/email.service';
+import { GeocodingService } from '../geocoding/geocoding.service';
 
 export interface TitulaireSummary {
   first_name: string | null;
@@ -92,7 +93,10 @@ type PharmacyWithTitulaire = Prisma.PharmacyGetPayload<{
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly emailService: EmailService) {}
+  constructor(
+    private readonly emailService: EmailService,
+    private readonly geocoding: GeocodingService
+  ) {}
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 
@@ -253,12 +257,16 @@ export class AdminService {
       throw new ConflictException('Un compte existe deja pour cet email');
     }
 
+    const coords = await this.geocoding.geocode(pharmacyData.address);
+
     const pharmacy = await prisma.pharmacy.create({
       data: {
         name: pharmacyData.name,
         address: pharmacyData.address,
         siret: pharmacyData.siret,
         email: titulaireData.email,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
       },
     });
 

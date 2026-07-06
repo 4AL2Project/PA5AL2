@@ -14,13 +14,14 @@ import {
 import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { useImportPolling } from '@/hooks/use-import-polling';
 import { ImportRecord } from '@/lib/types';
+import { importFileTypeLabel } from '@/lib/utils';
 
 interface ImportDetailSheetProps {
   importRecord: ImportRecord | null;
   open: boolean;
   onClose: () => void;
-  /** Ouvre le wizard pour relancer un import du même type */
-  onRelaunch?: (fileType: 'products' | 'sales') => void;
+  /** Ouvre le wizard pour relancer un import */
+  onRelaunch?: () => void;
 }
 
 function formatDate(iso: string) {
@@ -67,7 +68,7 @@ export function ImportDetailSheet({
   const record = polled ?? importRecord;
   if (!record) return null;
 
-  const fileTypeLabel = record.file_type === 'products' ? 'Produits' : 'Ventes';
+  const fileTypeLabel = importFileTypeLabel(record.file_type);
   const isFailed = record.status === 'ÉCHOUÉ';
   const errors: string[] = Array.isArray(record.errors) ? record.errors : [];
 
@@ -144,7 +145,7 @@ export function ImportDetailSheet({
               className="w-full"
               onClick={() => {
                 onClose();
-                onRelaunch(record.file_type);
+                onRelaunch();
               }}
             >
               <RotateCcw className="h-4 w-4 mr-2" />

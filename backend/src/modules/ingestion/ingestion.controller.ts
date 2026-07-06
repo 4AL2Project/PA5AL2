@@ -40,7 +40,7 @@ export class IngestionController {
   @HttpCode(HttpStatus.ACCEPTED)
   @ApiOperation({
     summary:
-      'Enqueue CSV/Excel products + sales import — responds 202 immediately, track via WebSocket or GET /imports/:id',
+      'Enqueue a single CSV/Excel import bundling products + sales (all-or-nothing) — responds 202 immediately, track via WebSocket or GET /imports/:id',
   })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
@@ -66,16 +66,12 @@ export class IngestionController {
       );
     }
 
-    const results = await Promise.all([
-      productsFile
-        ? this.ingestionService.enqueue(pharmacyId, productsFile, 'products')
-        : null,
-      salesFile
-        ? this.ingestionService.enqueue(pharmacyId, salesFile, 'sales')
-        : null,
-    ]);
+    const imp = await this.ingestionService.enqueue(pharmacyId, {
+      products: productsFile,
+      sales: salesFile,
+    });
 
-    return { imports: results.filter(Boolean) };
+    return { import: imp };
   }
 
   @Get('imports/:id')

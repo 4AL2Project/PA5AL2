@@ -20,7 +20,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { ImportStatusBadge } from '@/components/upload/import-status-badge';
 import { useImportPolling } from '@/hooks/use-import-polling';
-import { ImportFileType, ImportStatus } from '@/lib/types';
+import { ImportStatus } from '@/lib/types';
+import { importFileTypeLabel } from '@/lib/utils';
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('fr-FR', {
@@ -30,10 +31,6 @@ function formatDate(iso: string) {
     hour: '2-digit',
     minute: '2-digit',
   });
-}
-
-function fileTypeLabel(t: ImportFileType) {
-  return t === 'products' ? 'Produits' : 'Ventes';
 }
 
 function StatCard({
@@ -101,7 +98,7 @@ export default function ImportDetailPage({
   return (
     <DashboardLayout
       title={record.file_name}
-      description={`${fileTypeLabel(record.file_type)} · ${formatDate(record.uploaded_at)}`}
+      description={`${importFileTypeLabel(record.file_type)} · ${formatDate(record.uploaded_at)}`}
     >
       <div className="space-y-6">
         {/* Navigation */}
@@ -140,7 +137,7 @@ export default function ImportDetailPage({
                     {record.file_name}
                   </h1>
                   <div className="flex flex-wrap items-center gap-2 mt-1 text-sm text-muted-foreground">
-                    <span>{fileTypeLabel(record.file_type)}</span>
+                    <span>{importFileTypeLabel(record.file_type)}</span>
                     <Separator orientation="vertical" className="h-3" />
                     <span>{formatDate(record.uploaded_at)}</span>
                     <Separator orientation="vertical" className="h-3" />

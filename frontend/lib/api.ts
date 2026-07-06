@@ -106,7 +106,7 @@ export interface UploadFileResult {
 }
 
 export interface UploadResponse {
-  imports: ImportRecord[];
+  import: ImportRecord;
 }
 
 // ─── Adapteurs ────────────────────────────────────────────────────────────────
@@ -218,16 +218,24 @@ export async function fetchProducts(filters?: {
   };
 }
 
-export async function uploadFile(
-  file: File,
-  fileType: 'products' | 'sales'
-): Promise<UploadResponse> {
+export async function uploadImport(files: {
+  products?: File;
+  sales?: File;
+}): Promise<UploadResponse> {
   const form = new FormData();
-  form.append(fileType, file);
+  if (files.products) form.append('products', files.products);
+  if (files.sales) form.append('sales', files.sales);
   return apiFetch<UploadResponse>(`/api/upload`, {
     method: 'POST',
     body: form,
   });
+}
+
+export async function uploadFile(
+  file: File,
+  fileType: 'products' | 'sales'
+): Promise<UploadResponse> {
+  return uploadImport({ [fileType]: file });
 }
 
 export async function fetchImports(): Promise<ImportRecord[]> {

@@ -338,12 +338,18 @@ export class AdminService {
 
     await prisma.$transaction(async (tx) => {
       if (dto.pharmacy) {
+        const coords = dto.pharmacy.address
+          ? await this.geocoding.geocode(dto.pharmacy.address)
+          : null;
         await tx.pharmacy.update({
           where: { pharmacy_id: pharmacyId },
           data: {
             name: dto.pharmacy.name,
             address: dto.pharmacy.address,
             siret: dto.pharmacy.siret,
+            ...(dto.pharmacy.address
+              ? { lat: coords?.lat ?? null, lng: coords?.lng ?? null }
+              : {}),
           },
         });
       }

@@ -6,6 +6,7 @@
 import { BadRequestException, GoneException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
+import { GeocodingService } from '../geocoding/geocoding.service';
 import { InvitationService } from './invitation.service';
 
 // --- Mocks -------------------------------------------------------------------
@@ -67,7 +68,10 @@ describe('InvitationService.getByToken', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new InvitationService(new JwtService());
+    service = new InvitationService(
+      new JwtService(),
+      { geocode: jest.fn().mockResolvedValue(null) } as unknown as GeocodingService
+    );
   });
 
   it('retourne pharmacy + titulaire + expires_at pour un token valide', async () => {
@@ -135,7 +139,10 @@ describe('InvitationService.accept', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new InvitationService(new JwtService());
+    service = new InvitationService(
+      new JwtService(),
+      { geocode: jest.fn().mockResolvedValue(null) } as unknown as GeocodingService
+    );
     prisma.authToken.findFirst.mockResolvedValue(makeValidToken());
     prisma.user.update.mockResolvedValue({
       user_id: 'user-uuid',
@@ -154,6 +161,27 @@ describe('InvitationService.accept', () => {
     >;
     expect(result).toHaveProperty('access_token');
     expect(result).toHaveProperty('refresh_token');
+  });
+
+  it("geocode l'adresse via la BAN et stocke lat/lng de l'officine", async () => {
+    const geocodingMock = {
+      geocode: jest.fn().mockResolvedValue({ lat: 48.8566, lng: 2.3522 }),
+    };
+    service = new InvitationService(
+      new JwtService(),
+      geocodingMock as unknown as GeocodingService
+    );
+
+    await service.accept('valid-token', validBody);
+
+    expect(geocodingMock.geocode).toHaveBeenCalledWith(
+      validBody.pharmacy.address
+    );
+    expect(prisma.pharmacy.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ lat: 48.8566, lng: 2.3522 }),
+      })
+    );
   });
 
   it('passe le user en status ACTIVE', async () => {
@@ -265,7 +293,10 @@ describe('InvitationService.acceptPreparateur', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new InvitationService(new JwtService());
+    service = new InvitationService(
+      new JwtService(),
+      { geocode: jest.fn().mockResolvedValue(null) } as unknown as GeocodingService
+    );
     prisma.authToken.findFirst.mockResolvedValue(makePreparateurToken());
     prisma.user.update.mockResolvedValue({
       user_id: 'prepa-uuid',

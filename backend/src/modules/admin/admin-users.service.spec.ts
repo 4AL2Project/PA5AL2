@@ -7,6 +7,7 @@ import {
 
 import { UserRole } from '../auth/roles.enum';
 import { EmailService } from '../email/email.service';
+import { GeocodingService } from '../geocoding/geocoding.service';
 import { AdminService } from './admin.service';
 
 jest.mock('../../database/client', () => {
@@ -72,7 +73,10 @@ describe('AdminService — Admin Users', () => {
   let service: AdminService;
 
   beforeEach(() => {
-    service = new AdminService(emailMock as EmailService);
+    service = new AdminService(
+      emailMock as EmailService,
+      { geocode: jest.fn().mockResolvedValue(null) } as unknown as GeocodingService
+    );
     jest.clearAllMocks();
   });
 

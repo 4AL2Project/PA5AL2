@@ -17,18 +17,51 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { MyPharmacy } from '@/lib/pharmacy';
 
+interface Coords {
+  lat: number;
+  lng: number;
+}
+
 interface AddressSuggestion {
   label: string;
   postcode: string;
   city: string;
+  coords: Coords | null;
 }
 
 interface BanFeature {
+  geometry?: { coordinates: [number, number] };
   properties: {
     label: string;
     postcode?: string;
     city?: string;
   };
+}
+
+/** Extrait les coordonnées WGS84 (lat/lng) d'une feature GeoJSON de la BAN. */
+function coordsFromFeature(f: BanFeature): Coords | null {
+  const c = f.geometry?.coordinates;
+  if (!c) return null;
+  const [lng, lat] = c;
+  return { lat, lng };
+}
+
+/** Géocode une adresse libre via la BAN et renvoie ses coordonnées (ou null). */
+async function geocodeAddress(query: string): Promise<Coords | null> {
+  try {
+    const res = await fetch(
+      `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(
+        query
+      )}&limit=1`
+    );
+    const payload = (await res.json().catch(() => null)) as {
+      features?: BanFeature[];
+    } | null;
+    const first = payload?.features?.[0];
+    return first ? coordsFromFeature(first) : null;
+  } catch {
+    return null;
+  }
 }
 
 export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
@@ -39,6 +72,13 @@ export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
   const [searching, setSearching] = useState(false);
   const [picked, setPicked] = useState(false);
+  // Coordonnées issues de la BAN, synchronisées avec `address`. Réinitialisées
+  // dès que l'utilisateur ressaisit manuellement (elles seront alors re-géocodées au submit).
+  const [coords, setCoords] = useState<Coords | null>(
+    pharmacy.lat != null && pharmacy.lng != null
+      ? { lat: pharmacy.lat, lng: pharmacy.lng }
+      : null
+  );
 
   // Autocomplétion d'adresse via la Base Adresse Nationale (api-adresse.data.gouv.fr),
   // avec debounce + annulation de la requête obsolète — même pattern que le drawer de création.
@@ -66,6 +106,7 @@ export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
             label: f.properties.label,
             postcode: f.properties.postcode ?? '',
             city: f.properties.city ?? '',
+            coords: coordsFromFeature(f),
           })
         );
         setSuggestions(list);
@@ -84,6 +125,7 @@ export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
   const pickAddress = (s: AddressSuggestion) => {
     setPicked(true);
     setAddress(s.label);
+    setCoords(s.coords);
     setSuggestions([]);
   };
 
@@ -97,10 +139,33 @@ export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
     if (!canSave) return;
     setSaving(true);
     try {
+      const trimmedAddress = address.trim();
+      const addressChanged = trimmedAddress !== (pharmacy.address ?? '');
+
+      const body: {
+        name: string;
+        address: string;
+        lat?: number;
+        lng?: number;
+      } = {
+        name: name.trim(),
+        address: trimmedAddress,
+      };
+
+      // Quand l'adresse change, on (re)synchronise lat/lng depuis la BAN : coordonnées
+      // de la suggestion choisie, sinon géocodage de l'adresse saisie manuellement.
+      if (addressChanged && trimmedAddress.length > 0) {
+        const resolved = coords ?? (await geocodeAddress(trimmedAddress));
+        if (resolved) {
+          body.lat = resolved.lat;
+          body.lng = resolved.lng;
+        }
+      }
+
       const res = await fetch('/api/be/api/pharmacies/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), address: address.trim() }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         toast.error("Impossible d'enregistrer les modifications");
@@ -144,6 +209,7 @@ export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
               autoComplete="off"
               onChange={(e) => {
                 setPicked(false);
+                setCoords(null);
                 setAddress(e.target.value);
               }}
               placeholder="12 rue de la Paix, 75002 Paris"

@@ -20,14 +20,25 @@ jest.mock('../../database/client', () => {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
     user: {
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
+      deleteMany: jest.fn(),
     },
     authToken: { create: jest.fn(), deleteMany: jest.fn() },
+    order: { deleteMany: jest.fn() },
+    donation: { deleteMany: jest.fn() },
+    offer: { deleteMany: jest.fn() },
+    action: { deleteMany: jest.fn() },
+    riskAnalysis: { deleteMany: jest.fn() },
+    sale: { deleteMany: jest.fn() },
+    import: { deleteMany: jest.fn() },
+    product: { deleteMany: jest.fn() },
+    category: { deleteMany: jest.fn() },
     // Supporte les deux formes: $transaction(cb) et $transaction([...])
     $transaction: jest.fn((arg: unknown) =>
       typeof arg === 'function'
@@ -46,14 +57,25 @@ const { prisma } = require('../../database/client') as {
       findMany: jest.Mock;
       findUnique: jest.Mock;
       update: jest.Mock;
+      delete: jest.Mock;
     };
     user: {
       findUnique: jest.Mock;
       create: jest.Mock;
       update: jest.Mock;
       delete: jest.Mock;
+      deleteMany: jest.Mock;
     };
     authToken: { create: jest.Mock; deleteMany: jest.Mock };
+    order: { deleteMany: jest.Mock };
+    donation: { deleteMany: jest.Mock };
+    offer: { deleteMany: jest.Mock };
+    action: { deleteMany: jest.Mock };
+    riskAnalysis: { deleteMany: jest.Mock };
+    sale: { deleteMany: jest.Mock };
+    import: { deleteMany: jest.Mock };
+    product: { deleteMany: jest.Mock };
+    category: { deleteMany: jest.Mock };
     $transaction: jest.Mock;
   };
 };
@@ -594,6 +616,58 @@ describe('AdminService preparateurs', () => {
     expect(prisma.user.delete).toHaveBeenCalledWith({
       where: { user_id: 'u-prepa' },
     });
+    expect(result).toEqual({ deleted: true });
+  });
+});
+
+describe('AdminService.deletePharmacy', () => {
+  let service: AdminService;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    service = new AdminService(emailMock as unknown as EmailService);
+  });
+
+  it('refuse de supprimer une officine encore active', async () => {
+    prisma.pharmacy.findUnique.mockResolvedValue({
+      pharmacy_id: 'p1',
+      status: 'ACTIVE',
+    });
+    await expect(
+      service.deletePharmacy('p1', UserRole.ADMIN_SAVELY)
+    ).rejects.toThrow(BadRequestException);
+    expect(prisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('renvoie NotFound quand l’officine n’existe pas', async () => {
+    prisma.pharmacy.findUnique.mockResolvedValue(null);
+    await expect(
+      service.deletePharmacy('inconnu', UserRole.ADMIN_SAVELY)
+    ).rejects.toThrow(NotFoundException);
+  });
+
+  it('supprime toutes les entites rattachees, y compris offers/orders/imports, avant l’officine', async () => {
+    prisma.pharmacy.findUnique.mockResolvedValue({
+      pharmacy_id: 'p1',
+      status: 'INACTIVE',
+    });
+
+    const result = await service.deletePharmacy('p1', UserRole.ADMIN_SAVELY);
+
+    const where = { where: { pharmacy_id: 'p1' } };
+    // Les entites B2C et les imports doivent etre purges, sinon la suppression
+    // de l’officine viole une contrainte de cle etrangere (bug corrige).
+    expect(prisma.order.deleteMany).toHaveBeenCalledWith(where);
+    expect(prisma.offer.deleteMany).toHaveBeenCalledWith(where);
+    expect(prisma.import.deleteMany).toHaveBeenCalledWith(where);
+    expect(prisma.donation.deleteMany).toHaveBeenCalledWith(where);
+    expect(prisma.action.deleteMany).toHaveBeenCalledWith(where);
+    expect(prisma.riskAnalysis.deleteMany).toHaveBeenCalledWith(where);
+    expect(prisma.sale.deleteMany).toHaveBeenCalledWith(where);
+    expect(prisma.product.deleteMany).toHaveBeenCalledWith(where);
+    expect(prisma.category.deleteMany).toHaveBeenCalledWith(where);
+    expect(prisma.user.deleteMany).toHaveBeenCalledWith(where);
+    expect(prisma.pharmacy.delete).toHaveBeenCalledWith(where);
     expect(result).toEqual({ deleted: true });
   });
 });

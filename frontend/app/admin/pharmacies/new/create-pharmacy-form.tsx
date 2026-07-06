@@ -4,6 +4,7 @@ import { CheckCircle2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -270,11 +271,11 @@ export function CreatePharmacyForm({
           <Label htmlFor="pharmacy-address" className="text-xs">
             Adresse
           </Label>
-          <Input
+          <AddressAutocomplete
             id="pharmacy-address"
             required
             value={form.pharmacy_address}
-            onChange={(e) => update('pharmacy_address', e.target.value)}
+            onChange={(value) => update('pharmacy_address', value)}
             disabled={submitting}
           />
         </div>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -15,6 +16,7 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Coords, geocodeAddress } from '@/lib/address';
 import { MyPharmacy } from '@/lib/pharmacy';
 
 export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
@@ -22,6 +24,13 @@ export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
   const [name, setName] = useState(pharmacy.name ?? '');
   const [address, setAddress] = useState(pharmacy.address ?? '');
   const [saving, setSaving] = useState(false);
+  // Coordonnées issues de la BAN, synchronisées avec `address`. Réinitialisées
+  // dès que l'utilisateur ressaisit manuellement (elles seront alors re-géocodées au submit).
+  const [coords, setCoords] = useState<Coords | null>(
+    pharmacy.lat != null && pharmacy.lng != null
+      ? { lat: pharmacy.lat, lng: pharmacy.lng }
+      : null
+  );
 
   const dirty =
     name.trim() !== (pharmacy.name ?? '') ||
@@ -33,10 +42,33 @@ export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
     if (!canSave) return;
     setSaving(true);
     try {
+      const trimmedAddress = address.trim();
+      const addressChanged = trimmedAddress !== (pharmacy.address ?? '');
+
+      const body: {
+        name: string;
+        address: string;
+        lat?: number;
+        lng?: number;
+      } = {
+        name: name.trim(),
+        address: trimmedAddress,
+      };
+
+      // Quand l'adresse change, on (re)synchronise lat/lng depuis la BAN : coordonnées
+      // de la suggestion choisie, sinon géocodage de l'adresse saisie manuellement.
+      if (addressChanged && trimmedAddress.length > 0) {
+        const resolved = coords ?? (await geocodeAddress(trimmedAddress));
+        if (resolved) {
+          body.lat = resolved.lat;
+          body.lng = resolved.lng;
+        }
+      }
+
       const res = await fetch('/api/be/api/pharmacies/me', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), address: address.trim() }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         toast.error("Impossible d'enregistrer les modifications");
@@ -74,10 +106,13 @@ export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="address">Adresse</Label>
-            <Input
+            <AddressAutocomplete
               id="address"
               value={address}
-              onChange={(e) => setAddress(e.target.value)}
+              onChange={(value, nextCoords) => {
+                setAddress(value);
+                setCoords(nextCoords);
+              }}
               placeholder="12 rue de la Paix, 75002 Paris"
               disabled={saving}
             />

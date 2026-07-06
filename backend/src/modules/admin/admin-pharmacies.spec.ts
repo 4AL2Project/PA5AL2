@@ -10,6 +10,7 @@ import {
 
 import { UserRole } from '../auth/roles.enum';
 import { EmailService } from '../email/email.service';
+import { GeocodingService } from '../geocoding/geocoding.service';
 import { AdminService } from './admin.service';
 
 // --- Mocks -------------------------------------------------------------------
@@ -59,6 +60,7 @@ const { prisma } = require('../../database/client') as {
 };
 
 const emailMock = { sendInvitationEmail: jest.fn() };
+const geocodingMock = { geocode: jest.fn() };
 
 // --- Tests -------------------------------------------------------------------
 describe('AdminService.createPharmacyWithTitulaire', () => {
@@ -78,7 +80,10 @@ describe('AdminService.createPharmacyWithTitulaire', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AdminService(emailMock as unknown as EmailService);
+    service = new AdminService(
+      emailMock as unknown as EmailService,
+      geocodingMock as unknown as GeocodingService
+    );
     prisma.user.findUnique.mockResolvedValue(null);
     prisma.pharmacy.create.mockResolvedValue({
       pharmacy_id: 'pharma-uuid',
@@ -119,6 +124,39 @@ describe('AdminService.createPharmacyWithTitulaire', () => {
     );
     expect(result).not.toHaveProperty('token');
     expect(result).toHaveProperty('pharmacy_id');
+  });
+
+  it("geocode l'adresse via la BAN et stocke lat/lng de l'officine", async () => {
+    geocodingMock.geocode.mockResolvedValue({ lat: 48.8566, lng: 2.3522 });
+
+    await service.createPharmacyWithTitulaire(
+      validPharmacy,
+      validTitulaire,
+      UserRole.ADMIN_SAVELY
+    );
+
+    expect(geocodingMock.geocode).toHaveBeenCalledWith(validPharmacy.address);
+    expect(prisma.pharmacy.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ lat: 48.8566, lng: 2.3522 }),
+      })
+    );
+  });
+
+  it("stocke lat/lng a null si la BAN ne resout pas l'adresse", async () => {
+    geocodingMock.geocode.mockResolvedValue(null);
+
+    await service.createPharmacyWithTitulaire(
+      validPharmacy,
+      validTitulaire,
+      UserRole.ADMIN_SAVELY
+    );
+
+    expect(prisma.pharmacy.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ lat: null, lng: null }),
+      })
+    );
   });
 
   it('stocke uniquement le hash SHA-256 du token, jamais le token en clair', async () => {
@@ -185,7 +223,10 @@ describe('AdminService.listPharmacies', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AdminService(emailMock as unknown as EmailService);
+    service = new AdminService(
+      emailMock as unknown as EmailService,
+      geocodingMock as unknown as GeocodingService
+    );
   });
 
   it('leve ForbiddenException si le role acteur nest pas ADMIN_SAVELY', async () => {
@@ -247,7 +288,10 @@ describe('AdminService.getPharmacy', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AdminService(emailMock as unknown as EmailService);
+    service = new AdminService(
+      emailMock as unknown as EmailService,
+      geocodingMock as unknown as GeocodingService
+    );
   });
 
   it('leve ForbiddenException si le role acteur nest pas ADMIN_SAVELY', async () => {
@@ -331,7 +375,10 @@ describe('AdminService.updatePharmacy', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AdminService(emailMock as unknown as EmailService);
+    service = new AdminService(
+      emailMock as unknown as EmailService,
+      geocodingMock as unknown as GeocodingService
+    );
     // Sert l'appel de updatePharmacy ET le getPharmacy final (meme objet).
     prisma.pharmacy.findUnique.mockResolvedValue({
       pharmacy_id: 'p1',
@@ -381,7 +428,10 @@ describe('AdminService.setPharmacyStatus', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AdminService(emailMock as unknown as EmailService);
+    service = new AdminService(
+      emailMock as unknown as EmailService,
+      geocodingMock as unknown as GeocodingService
+    );
   });
 
   it('desactive une officine et renvoie le detail', async () => {
@@ -423,7 +473,10 @@ describe('AdminService.resendInvitation', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AdminService(emailMock as unknown as EmailService);
+    service = new AdminService(
+      emailMock as unknown as EmailService,
+      geocodingMock as unknown as GeocodingService
+    );
     emailMock.sendInvitationEmail.mockResolvedValue(undefined);
     prisma.authToken.create.mockResolvedValue({ id: 't' });
   });
@@ -461,7 +514,10 @@ describe('AdminService preparateurs', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AdminService(emailMock as unknown as EmailService);
+    service = new AdminService(
+      emailMock as unknown as EmailService,
+      geocodingMock as unknown as GeocodingService
+    );
   });
 
   const prepa = {

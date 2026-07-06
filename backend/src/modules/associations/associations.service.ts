@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { prisma } from '../../database/client';
-import { GeocodingService } from './geocoding.service';
+import { GeocodingService } from '../geocoding/geocoding.service';
 
 export interface CreateAssociationDto {
   name: string;

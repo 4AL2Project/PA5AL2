@@ -7,10 +7,14 @@ import { prisma } from '../../database/client';
 import { JwtPayload } from '../auth/jwt-payload';
 import { UserRole } from '../auth/roles.enum';
 import { hashToken } from '../auth/token.util';
+import { GeocodingService } from '../geocoding/geocoding.service';
 
 @Injectable()
 export class InvitationService {
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly geocoding: GeocodingService
+  ) {}
 
   async getByToken(rawToken: string) {
     const record = await this.findValid(rawToken);
@@ -44,12 +48,16 @@ export class InvitationService {
     const record = await this.findValid(rawToken);
     const user = record.user;
 
+    const coords = await this.geocoding.geocode(body.pharmacy.address);
+
     await prisma.pharmacy.update({
       where: { pharmacy_id: user.pharmacy_id! },
       data: {
         name: body.pharmacy.name,
         address: body.pharmacy.address,
         siret: body.pharmacy.siret,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
       },
     });
 

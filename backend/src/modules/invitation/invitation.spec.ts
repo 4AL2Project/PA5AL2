@@ -68,10 +68,9 @@ describe('InvitationService.getByToken', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new InvitationService(
-      new JwtService(),
-      { geocode: jest.fn().mockResolvedValue(null) } as unknown as GeocodingService
-    );
+    service = new InvitationService(new JwtService(), {
+      geocode: jest.fn().mockResolvedValue(null),
+    } as unknown as GeocodingService);
   });
 
   it('retourne pharmacy + titulaire + expires_at pour un token valide', async () => {
@@ -139,10 +138,9 @@ describe('InvitationService.accept', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new InvitationService(
-      new JwtService(),
-      { geocode: jest.fn().mockResolvedValue(null) } as unknown as GeocodingService
-    );
+    service = new InvitationService(new JwtService(), {
+      geocode: jest.fn().mockResolvedValue(null),
+    } as unknown as GeocodingService);
     prisma.authToken.findFirst.mockResolvedValue(makeValidToken());
     prisma.user.update.mockResolvedValue({
       user_id: 'user-uuid',
@@ -293,10 +291,9 @@ describe('InvitationService.acceptPreparateur', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new InvitationService(
-      new JwtService(),
-      { geocode: jest.fn().mockResolvedValue(null) } as unknown as GeocodingService
-    );
+    service = new InvitationService(new JwtService(), {
+      geocode: jest.fn().mockResolvedValue(null),
+    } as unknown as GeocodingService);
     prisma.authToken.findFirst.mockResolvedValue(makePreparateurToken());
     prisma.user.update.mockResolvedValue({
       user_id: 'prepa-uuid',

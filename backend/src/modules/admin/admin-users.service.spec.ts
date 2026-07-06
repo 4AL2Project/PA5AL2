@@ -75,7 +75,9 @@ describe('AdminService — Admin Users', () => {
   beforeEach(() => {
     service = new AdminService(
       emailMock as EmailService,
-      { geocode: jest.fn().mockResolvedValue(null) } as unknown as GeocodingService
+      {
+        geocode: jest.fn().mockResolvedValue(null),
+      } as unknown as GeocodingService
     );
     jest.clearAllMocks();
   });

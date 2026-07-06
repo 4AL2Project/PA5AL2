@@ -45,7 +45,7 @@ export class InvitationService {
     const user = record.user;
 
     await prisma.pharmacy.update({
-      where: { pharmacy_id: user.pharmacy_id },
+      where: { pharmacy_id: user.pharmacy_id! },
       data: {
         name: body.pharmacy.name,
         address: body.pharmacy.address,
@@ -118,6 +118,52 @@ export class InvitationService {
         first_name: body.first_name ?? user.first_name,
         last_name: body.last_name ?? user.last_name,
         phone: body.phone ?? user.phone,
+        status: 'ACTIVE',
+        accepted_terms_at: new Date(),
+      },
+    });
+
+    await prisma.authToken.update({
+      where: { id: record.id },
+      data: { consumed_at: new Date() },
+    });
+
+    return this.issueTokens({
+      sub: updatedUser.user_id,
+      email: updatedUser.email,
+      pharmacy_id: updatedUser.pharmacy_id,
+      role: updatedUser.role as UserRole,
+    });
+  }
+
+  /**
+   * Finalise le compte d'un admin Savely invite : il choisit son mot de passe.
+   * Pas de mise a jour d'officine (pharmacy_id = null pour ADMIN_SAVELY).
+   */
+  async acceptAdmin(
+    rawToken: string,
+    body: { password: string; first_name?: string; last_name?: string }
+  ) {
+    const record = await this.findValid(rawToken);
+    const user = record.user;
+
+    if (user.role !== UserRole.ADMIN_SAVELY) {
+      throw new BadRequestException(
+        'Cette invitation ne concerne pas un compte administrateur'
+      );
+    }
+
+    const passwordHash = await bcrypt.hash(
+      body.password,
+      config.auth.bcryptRounds
+    );
+
+    const updatedUser = await prisma.user.update({
+      where: { user_id: user.user_id },
+      data: {
+        password: passwordHash,
+        first_name: body.first_name ?? user.first_name,
+        last_name: body.last_name ?? user.last_name,
         status: 'ACTIVE',
         accepted_terms_at: new Date(),
       },

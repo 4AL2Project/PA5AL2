@@ -53,7 +53,8 @@ model Category {
 
 model User {
   user_id           String    @id @default(uuid())
-  pharmacy_id       String
+  // null quand role = ADMIN_SAVELY (pas d'officine rattachée)
+  pharmacy_id       String?
   email             String    @unique
   password          String?
   role              String    @default("TITULAIRE")
@@ -64,7 +65,7 @@ model User {
   accepted_terms_at DateTime?
   created_at        DateTime  @default(now())
 
-  pharmacy    Pharmacy    @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  pharmacy    Pharmacy?   @relation(fields: [pharmacy_id], references: [pharmacy_id])
   auth_tokens AuthToken[]
 }
 

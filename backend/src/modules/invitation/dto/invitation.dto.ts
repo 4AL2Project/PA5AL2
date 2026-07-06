@@ -97,3 +97,23 @@ export class AcceptPreparateurInvitationDto {
   @IsBoolean()
   accepted_terms!: boolean;
 }
+
+export class AcceptAdminInvitationDto {
+  @ApiProperty({ example: 'MonMotDePasse123', minLength: 8 })
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  password!: string;
+
+  @ApiProperty({ required: false, example: 'Alice' })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  first_name?: string;
+
+  @ApiProperty({ required: false, example: 'Martin' })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  last_name?: string;
+}

@@ -485,3 +485,65 @@ export async function updateCategory(
 export async function deleteCategory(id: string): Promise<void> {
   await apiFetch(`/api/categories/${id}`, { method: 'DELETE' });
 }
+
+// ─── Admin Users ──────────────────────────────────────────────────────────────
+
+export interface AdminUser {
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string;
+  status: string;
+  created_at: string;
+}
+
+export async function fetchAdminUsers(): Promise<{
+  users: AdminUser[];
+  total: number;
+}> {
+  return apiFetch('/api/admin/users');
+}
+
+export async function createAdminUser(payload: {
+  email: string;
+  first_name: string;
+  last_name: string;
+}): Promise<AdminUser> {
+  return apiFetch('/api/admin/users', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateAdminUser(
+  id: string,
+  payload: { first_name?: string; last_name?: string }
+): Promise<AdminUser> {
+  return apiFetch(`/api/admin/users/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function setAdminUserStatus(
+  id: string,
+  status: 'ACTIVE' | 'INACTIVE'
+): Promise<AdminUser> {
+  return apiFetch(`/api/admin/users/${id}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status }),
+  });
+}
+
+export async function resendAdminUserInvitation(id: string): Promise<void> {
+  await apiFetch(`/api/admin/users/${id}/resend-invitation`, {
+    method: 'POST',
+  });
+}
+
+export async function deactivateAdminUser(id: string): Promise<AdminUser> {
+  return apiFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+}

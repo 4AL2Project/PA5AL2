@@ -68,7 +68,7 @@ export class OfferController {
     @Req() req: Request & { user: JwtPayload },
     @Body() body: CreateOfferDto
   ) {
-    return this.offerService.create(req.user.pharmacy_id, body);
+    return this.offerService.create(req.user.pharmacy_id!, body);
   }
 
   @Get()
@@ -78,7 +78,7 @@ export class OfferController {
     @Req() req: Request & { user: JwtPayload },
     @Query('status') status?: string
   ) {
-    return this.offerService.findAllForPharmacy(req.user.pharmacy_id, status);
+    return this.offerService.findAllForPharmacy(req.user.pharmacy_id!, status);
   }
 
   @Get(':id/manage')
@@ -88,7 +88,7 @@ export class OfferController {
     @Req() req: Request & { user: JwtPayload },
     @Param('id') id: string
   ) {
-    return this.offerService.findOneForPharmacy(req.user.pharmacy_id, id);
+    return this.offerService.findOneForPharmacy(req.user.pharmacy_id!, id);
   }
 
   @Patch(':id')
@@ -114,7 +114,7 @@ export class OfferController {
     if ('expires_at' in body) {
       dto.expires_at = body.expires_at ? new Date(body.expires_at) : null;
     }
-    return this.offerService.update(req.user.pharmacy_id, id, dto);
+    return this.offerService.update(req.user.pharmacy_id!, id, dto);
   }
 
   @Post(':id/images')
@@ -142,7 +142,7 @@ export class OfferController {
       );
     }
     return this.offerService.addImages(
-      req.user.pharmacy_id,
+      req.user.pharmacy_id!,
       id,
       files.map((f) => offerImagePublicUrl(f.filename))
     );
@@ -157,7 +157,7 @@ export class OfferController {
     @Param('id') id: string,
     @Param('imageId') imageId: string
   ) {
-    return this.offerService.removeImage(req.user.pharmacy_id, id, imageId);
+    return this.offerService.removeImage(req.user.pharmacy_id!, id, imageId);
   }
 
   @Patch(':id/suspend')
@@ -165,7 +165,7 @@ export class OfferController {
   @Roles(UserRole.TITULAIRE)
   @ApiOperation({ summary: 'Suspendre une Offer' })
   suspend(@Req() req: Request & { user: JwtPayload }, @Param('id') id: string) {
-    return this.offerService.suspend(req.user.pharmacy_id, id);
+    return this.offerService.suspend(req.user.pharmacy_id!, id);
   }
 
   @Patch(':id/resume')
@@ -173,7 +173,7 @@ export class OfferController {
   @Roles(UserRole.TITULAIRE)
   @ApiOperation({ summary: 'Réactiver une Offer suspendue' })
   resume(@Req() req: Request & { user: JwtPayload }, @Param('id') id: string) {
-    return this.offerService.resume(req.user.pharmacy_id, id);
+    return this.offerService.resume(req.user.pharmacy_id!, id);
   }
 
   @Delete(':id')
@@ -184,7 +184,7 @@ export class OfferController {
     @Req() req: Request & { user: JwtPayload },
     @Param('id') id: string
   ) {
-    return this.offerService.terminate(req.user.pharmacy_id, id);
+    return this.offerService.terminate(req.user.pharmacy_id!, id);
   }
 
   // ─── Customer endpoints (mobile) ────────────────────────────────────────────

@@ -233,6 +233,25 @@ export async function acceptPreparateurInvitation(
   );
 }
 
+export interface AcceptAdminPayload {
+  password: string;
+  first_name?: string;
+  last_name?: string;
+}
+
+export async function acceptAdminInvitation(
+  token: string,
+  payload: AcceptAdminPayload
+): Promise<AuthTokens> {
+  return backendFetch<AuthTokens>(
+    `/api/auth/invitations/${encodeURIComponent(token)}/accept-admin`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }
+  );
+}
+
 export async function adminLogin(
   email: string,
   password: string

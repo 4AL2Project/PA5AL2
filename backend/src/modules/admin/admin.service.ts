@@ -152,7 +152,11 @@ export class AdminService {
     });
 
     const path =
-      role === UserRole.PREPARATEUR ? '/preparateur/onboarding' : '/onboarding';
+      role === UserRole.PREPARATEUR
+        ? '/preparateur/onboarding'
+        : role === UserRole.ADMIN_SAVELY
+          ? '/admin/onboarding'
+          : '/onboarding';
     const link = `${config.frontUrl}${path}?token=${rawToken}`;
     await this.emailService.sendInvitationEmail(email, link);
   }
@@ -549,5 +553,141 @@ export class AdminService {
       throw new NotFoundException('Preparateur introuvable');
     }
     return user;
+  }
+
+  // ─── Admin Users CRUD ────────────────────────────────────────────────────────
+
+  async listAdminUsers(page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where: { role: UserRole.ADMIN_SAVELY },
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: limit,
+        select: {
+          user_id: true,
+          first_name: true,
+          last_name: true,
+          email: true,
+          status: true,
+          created_at: true,
+        },
+      }),
+      prisma.user.count({ where: { role: UserRole.ADMIN_SAVELY } }),
+    ]);
+    return { users, total, page, limit };
+  }
+
+  async createAdminUser(dto: {
+    email: string;
+    first_name: string;
+    last_name: string;
+  }) {
+    const existing = await prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+    if (existing) {
+      throw new ConflictException('Un compte existe déjà pour cet email');
+    }
+
+    const user = await prisma.user.create({
+      data: {
+        pharmacy_id: null,
+        email: dto.email,
+        first_name: dto.first_name,
+        last_name: dto.last_name,
+        role: UserRole.ADMIN_SAVELY,
+        status: 'PENDING',
+        password: null,
+      },
+    });
+
+    await this.issueInvitation(user.user_id, user.email, UserRole.ADMIN_SAVELY);
+    return this.toAdminUserItem(user);
+  }
+
+  async updateAdminUser(
+    id: string,
+    dto: { first_name?: string; last_name?: string }
+  ) {
+    const user = await this.findAdminUser(id);
+    const updated = await prisma.user.update({
+      where: { user_id: user.user_id },
+      data: { first_name: dto.first_name, last_name: dto.last_name },
+    });
+    return this.toAdminUserItem(updated);
+  }
+
+  async setAdminUserStatus(
+    id: string,
+    status: 'ACTIVE' | 'INACTIVE',
+    actorId: string
+  ) {
+    const user = await this.findAdminUser(id);
+
+    if (user.user_id === actorId) {
+      throw new ForbiddenException(
+        'Vous ne pouvez pas modifier le statut de votre propre compte'
+      );
+    }
+
+    if (status === 'INACTIVE') {
+      const activeCount = await prisma.user.count({
+        where: { role: UserRole.ADMIN_SAVELY, status: 'ACTIVE' },
+      });
+      if (activeCount <= 1) {
+        throw new ForbiddenException(
+          'Impossible de désactiver le dernier administrateur actif'
+        );
+      }
+    }
+
+    const updated = await prisma.user.update({
+      where: { user_id: id },
+      data: { status },
+    });
+    return this.toAdminUserItem(updated);
+  }
+
+  async resendAdminUserInvitation(id: string) {
+    const user = await this.findAdminUser(id);
+    if (user.status !== 'PENDING') {
+      throw new BadRequestException(
+        'Impossible de renvoyer une invitation à un compte déjà actif'
+      );
+    }
+    await this.issueInvitation(user.user_id, user.email, UserRole.ADMIN_SAVELY);
+    return { email: user.email };
+  }
+
+  async deactivateAdminUser(id: string, actorId: string) {
+    return this.setAdminUserStatus(id, 'INACTIVE', actorId);
+  }
+
+  private async findAdminUser(id: string) {
+    const user = await prisma.user.findFirst({
+      where: { user_id: id, role: UserRole.ADMIN_SAVELY },
+    });
+    if (!user) throw new NotFoundException('Administrateur introuvable');
+    return user;
+  }
+
+  private toAdminUserItem(user: {
+    user_id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string;
+    status: string;
+    created_at: Date;
+  }) {
+    return {
+      user_id: user.user_id,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      email: user.email,
+      status: user.status,
+      created_at: user.created_at,
+    };
   }
 }

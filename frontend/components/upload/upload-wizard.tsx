@@ -11,7 +11,8 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { ImportStatusBadge } from '@/components/upload/import-status-badge';
@@ -306,7 +307,12 @@ function Step1({
         </div>
       )}
 
-      <div className="flex justify-end">
+      <div className="flex items-center justify-end gap-3">
+        {!canContinue && (
+          <p className="text-xs text-muted-foreground">
+            Importez les deux fichiers (produits et ventes) pour continuer.
+          </p>
+        )}
         <Button onClick={onContinue} disabled={!canContinue}>
           Continuer
         </Button>
@@ -439,6 +445,23 @@ function Step3({
 }: Step3Props) {
   const record = useImportPolling(importId);
   const fileLabel = fileNames.join(' + ');
+  const notifiedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!record || notifiedRef.current === record.import_id) return;
+    if (record.status === 'TERMINÉ') {
+      notifiedRef.current = record.import_id;
+      const count = record.rows_ok ?? 0;
+      toast.success('Import terminé', {
+        description: `${count} ligne${count !== 1 ? 's' : ''} importée${count !== 1 ? 's' : ''}.`,
+      });
+    } else if (record.status === 'ÉCHOUÉ') {
+      notifiedRef.current = record.import_id;
+      toast.error('Import échoué', {
+        description: 'Aucune donnée enregistrée (import tout-ou-rien).',
+      });
+    }
+  }, [record]);
 
   if (uploadError) {
     return (
@@ -655,7 +678,7 @@ export function UploadWizard({
           sales={state.sales}
           defaultFileType={defaultFileType}
           parseError={state.parseError}
-          canContinue={Boolean(state.products || state.sales)}
+          canContinue={Boolean(state.products && state.sales)}
           onFile={handleFile}
           onClear={handleClear}
           onContinue={() => update({ step: 2 })}

@@ -13,8 +13,15 @@ import { config } from '../../core/config';
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
-  private readonly resend = new Resend(config.email.apiKey);
+  private resendClient: Resend | null = null;
   private smtpTransport: Transporter | null = null;
+
+  private getResend(): Resend {
+    if (!this.resendClient) {
+      this.resendClient = new Resend(config.email.apiKey);
+    }
+    return this.resendClient;
+  }
 
   private getSmtpTransport(): Transporter {
     if (!this.smtpTransport) {
@@ -50,7 +57,7 @@ export class EmailService {
       return;
     }
 
-    const { data, error } = await this.resend.emails.send(payload);
+    const { data, error } = await this.getResend().emails.send(payload);
     if (error) {
       this.logger.error(
         `Resend error sending to ${payload.to}: ${error.message}`

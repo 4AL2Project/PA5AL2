@@ -3,6 +3,7 @@
 import { ImagePlus, Loader2, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 
+import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -280,11 +281,11 @@ export function AssociationForm({
         <Label htmlFor="asso-address" className="text-xs">
           Adresse *
         </Label>
-        <Input
+        <AddressAutocomplete
           id="asso-address"
           required
           value={form.address}
-          onChange={(e) => update('address', e.target.value)}
+          onChange={(value) => update('address', value)}
           disabled={submitting}
           placeholder="1 rue de la Paix"
         />

@@ -4,8 +4,8 @@
 
 import { NotFoundException } from '@nestjs/common';
 
+import { GeocodingService } from '../geocoding/geocoding.service';
 import { AssociationsService } from './associations.service';
-import { GeocodingService } from './geocoding.service';
 
 jest.mock('../../database/client', () => ({
   prisma: {

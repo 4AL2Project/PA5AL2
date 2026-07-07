@@ -11,10 +11,11 @@ export class GeocodingService {
 
   async geocode(
     address: string,
-    postalCode: string,
-    city: string
+    postalCode = '',
+    city = ''
   ): Promise<{ lat: number; lng: number } | null> {
-    const q = `${address} ${postalCode} ${city}`;
+    const q = `${address} ${postalCode} ${city}`.trim();
+    if (!q) return null;
     try {
       const res = await fetch(`${this.API}?q=${encodeURIComponent(q)}&limit=1`);
       if (!res.ok) return null;

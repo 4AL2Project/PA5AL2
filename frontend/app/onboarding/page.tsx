@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
+import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { AuthShell } from '@/components/auth/auth-shell';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -188,11 +189,11 @@ function OnboardingContent() {
             <Label htmlFor="pharmacy-address" className="text-xs">
               Adresse
             </Label>
-            <Input
+            <AddressAutocomplete
               id="pharmacy-address"
               required
               value={form.pharmacy_address}
-              onChange={(e) => update('pharmacy_address', e.target.value)}
+              onChange={(value) => update('pharmacy_address', value)}
               disabled={submitting}
             />
           </div>

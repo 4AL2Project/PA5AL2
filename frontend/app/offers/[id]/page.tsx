@@ -55,12 +55,12 @@ const STATUS_META: Record<OfferStatus, { label: string; className: string }> = {
   ACTIVE: {
     label: 'Active',
     className:
-      'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      'bg-emerald-100 text-emerald-700',
   },
   SUSPENDUE: {
     label: 'Suspendue',
     className:
-      'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      'bg-yellow-100 text-yellow-700',
   },
   TERMINEE: {
     label: 'Terminée',
@@ -325,7 +325,7 @@ export default function OfferDetailPage({
                     type="button"
                     disabled={uploading}
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex h-32 w-32 shrink-0 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50/50 text-emerald-600 transition-colors hover:bg-emerald-50 disabled:opacity-60 dark:border-emerald-800 dark:bg-emerald-950/20"
+                    className="flex h-32 w-32 shrink-0 flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-emerald-300 bg-emerald-50/50 text-emerald-600 transition-colors hover:bg-emerald-50 disabled:opacity-60"
                   >
                     {uploading ? (
                       <Loader2 className="h-6 w-6 animate-spin" />

@@ -217,7 +217,7 @@ export default function ImportsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm whitespace-nowrap">
                       {imp.status === 'TERMINÉ' && imp.rows_ok != null ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                        <span className="text-emerald-600 font-medium">
                           {imp.rows_ok} ok
                         </span>
                       ) : imp.status === 'ÉCHOUÉ' && imp.rows_failed != null ? (

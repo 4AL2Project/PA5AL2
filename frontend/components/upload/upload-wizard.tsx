@@ -191,7 +191,7 @@ function FileSlotZone({
           </div>
         )}
         {missing.length > 0 && (
-          <p className="mt-2 flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400">
+          <p className="mt-2 flex items-start gap-1.5 text-xs text-amber-700">
             <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             Colonnes manquantes : <strong>{missing.join(', ')}</strong>
           </p>
@@ -401,7 +401,7 @@ function Step2({ products, sales, hasMissing, onBack, onConfirm }: Step2Props) {
             </div>
 
             {missing.length > 0 && (
-              <div className="flex items-start gap-2 rounded-md border border-amber-300/50 bg-amber-50/50 dark:bg-amber-950/20 p-3 text-sm text-amber-700 dark:text-amber-400">
+              <div className="flex items-start gap-2 rounded-md border border-amber-300/50 bg-amber-50/50 p-3 text-sm text-amber-700">
                 <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
                 <span>
                   Colonnes manquantes : <strong>{missing.join(', ')}</strong>

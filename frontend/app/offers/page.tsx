@@ -53,12 +53,12 @@ function OfferStatusBadge({ status }: { status: OfferStatus }) {
     ACTIVE: {
       label: 'Active',
       className:
-        'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+        'bg-emerald-100 text-emerald-700',
     },
     SUSPENDUE: {
       label: 'Suspendue',
       className:
-        'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+        'bg-yellow-100 text-yellow-700',
     },
     TERMINEE: {
       label: 'Terminée',
@@ -168,12 +168,12 @@ export default function OffersPage() {
             <div className="flex items-center gap-3">
               <h2 className="text-base font-medium">Liste des offres</h2>
               {activeCount > 0 && (
-                <Badge className="text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0">
+                <Badge className="text-xs bg-emerald-100 text-emerald-700 border-0">
                   {activeCount} active{activeCount !== 1 ? 's' : ''}
                 </Badge>
               )}
               {suspendedCount > 0 && (
-                <Badge className="text-xs bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border-0">
+                <Badge className="text-xs bg-yellow-100 text-yellow-700 border-0">
                   {suspendedCount} suspendue{suspendedCount !== 1 ? 's' : ''}
                 </Badge>
               )}

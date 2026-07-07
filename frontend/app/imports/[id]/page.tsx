@@ -46,7 +46,7 @@ function StatCard({
 }) {
   const valueClass =
     accent === 'green'
-      ? 'text-emerald-600 dark:text-emerald-400'
+      ? 'text-emerald-600'
       : accent === 'red'
         ? 'text-destructive'
         : '';

@@ -681,7 +681,10 @@ describe('AdminService.deletePharmacy', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AdminService(emailMock as unknown as EmailService);
+    service = new AdminService(
+      emailMock as unknown as EmailService,
+      geocodingMock as unknown as GeocodingService
+    );
   });
 
   it('refuse de supprimer une officine encore active', async () => {

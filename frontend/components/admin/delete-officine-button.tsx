@@ -3,6 +3,7 @@
 import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import {
   AlertDialog,
@@ -21,38 +22,33 @@ export function DeleteOfficineButton({ pharmacyId }: { pharmacyId: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const onConfirm = async () => {
     setPending(true);
-    setError(null);
     try {
       const res = await fetch(`/api/admin/pharmacies/${pharmacyId}`, {
         method: 'DELETE',
       });
       if (res.ok) {
         setOpen(false);
+        toast.success('Officine supprimée avec succès');
         router.push('/admin');
         router.refresh();
         return;
       }
       const body = await res.json().catch(() => null);
-      setError(body?.message ?? 'La suppression a échoué. Veuillez réessayer.');
+      toast.error(
+        body?.message ?? 'La suppression a échoué. Veuillez réessayer.'
+      );
     } catch {
-      setError('La suppression a échoué. Veuillez réessayer.');
+      toast.error('La suppression a échoué. Veuillez réessayer.');
     } finally {
       setPending(false);
     }
   };
 
   return (
-    <AlertDialog
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next);
-        if (!next) setError(null);
-      }}
-    >
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger asChild>
         <Button variant="destructive" size="sm" className="gap-1.5">
           <Trash2 className="h-3.5 w-3.5" />
@@ -68,11 +64,6 @@ export function DeleteOfficineButton({ pharmacyId }: { pharmacyId: string }) {
             définitivement supprimées.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        {error && (
-          <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs text-destructive">
-            {error}
-          </p>
-        )}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>Annuler</AlertDialogCancel>
           <AlertDialogAction

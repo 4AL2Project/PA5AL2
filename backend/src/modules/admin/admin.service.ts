@@ -525,16 +525,24 @@ export class AdminService {
       );
     }
 
+    // Supprime toutes les entites rattachees a l'officine avant l'officine
+    // elle-meme. L'ordre respecte les cles etrangeres (enfants avant parents) :
+    // Order -> Offer, Donation/Offer -> Action, tout -> Product, puis Pharmacy.
+    // Les categories systeme (pharmacy_id null) sont preservees.
     await prisma.$transaction([
+      prisma.order.deleteMany({ where: { pharmacy_id: pharmacyId } }),
       prisma.donation.deleteMany({ where: { pharmacy_id: pharmacyId } }),
+      prisma.offer.deleteMany({ where: { pharmacy_id: pharmacyId } }),
       prisma.action.deleteMany({ where: { pharmacy_id: pharmacyId } }),
       prisma.riskAnalysis.deleteMany({ where: { pharmacy_id: pharmacyId } }),
       prisma.sale.deleteMany({ where: { pharmacy_id: pharmacyId } }),
+      prisma.import.deleteMany({ where: { pharmacy_id: pharmacyId } }),
       prisma.authToken.deleteMany({
         where: { user: { pharmacy_id: pharmacyId } },
       }),
       prisma.user.deleteMany({ where: { pharmacy_id: pharmacyId } }),
       prisma.product.deleteMany({ where: { pharmacy_id: pharmacyId } }),
+      prisma.category.deleteMany({ where: { pharmacy_id: pharmacyId } }),
       prisma.pharmacy.delete({ where: { pharmacy_id: pharmacyId } }),
     ]);
 

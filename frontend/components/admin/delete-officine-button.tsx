@@ -3,6 +3,7 @@
 import { Loader2, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import {
   AlertDialog,
@@ -30,8 +31,17 @@ export function DeleteOfficineButton({ pharmacyId }: { pharmacyId: string }) {
       });
       if (res.ok) {
         setOpen(false);
+        toast.success('Officine supprimée avec succès');
         router.push('/admin');
+        router.refresh();
+        return;
       }
+      const body = await res.json().catch(() => null);
+      toast.error(
+        body?.message ?? 'La suppression a échoué. Veuillez réessayer.'
+      );
+    } catch {
+      toast.error('La suppression a échoué. Veuillez réessayer.');
     } finally {
       setPending(false);
     }

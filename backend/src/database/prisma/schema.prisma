@@ -12,6 +12,10 @@ model Pharmacy {
   name              String
   email             String    @unique
   address           String?
+  siret             String?
+  status            String    @default("ACTIVE")
+  lat               Float?
+  lng               Float?
   created_at        DateTime  @default(now())
   last_upload_at    DateTime?
   subscription_tier String    @default("free")
@@ -19,16 +23,75 @@ model Pharmacy {
   products          Product[]
   sales             Sale[]
   analyses          RiskAnalysis[]
+  users             User[]
+  actions           Action[]
+  donations         Donation[]
+  imports           Import[]
+  offers            Offer[]
+  orders            Order[]
+  categories        Category[]
+}
+
+// Catégorie de classement d'une Offer B2C (référentiel exposé au catalogue mobile).
+// Portée : `pharmacy_id = null` → catégorie système partagée (les 6 par défaut,
+// dont "Autres" utilisée comme repli). Sinon → catégorie propre à une pharmacie.
+model Category {
+  category_id String   @id @default(uuid())
+  pharmacy_id String?
+  name        String
+  slug        String
+  is_system   Boolean  @default(false)
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  pharmacy    Pharmacy? @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  offers      Offer[]   @relation("OfferCategories")
+
+  @@unique([pharmacy_id, slug])
+  @@index([pharmacy_id])
+}
+
+model User {
+  user_id           String    @id @default(uuid())
+  // null quand role = ADMIN_SAVELY (pas d'officine rattachée)
+  pharmacy_id       String?
+  email             String    @unique
+  password          String?
+  role              String    @default("TITULAIRE")
+  status            String    @default("ACTIVE")
+  first_name        String?
+  last_name         String?
+  phone             String?
+  accepted_terms_at DateTime?
+  created_at        DateTime  @default(now())
+
+  pharmacy    Pharmacy?   @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  auth_tokens AuthToken[]
+}
+
+model AuthToken {
+  id          String    @id @default(uuid())
+  user_id     String
+  token_hash  String    @unique
+  type        String
+  expires_at  DateTime
+  consumed_at DateTime?
+  created_at  DateTime  @default(now())
+
+  user        User      @relation(fields: [user_id], references: [user_id])
+
+  @@index([token_hash])
 }
 
 model Product {
   product_id     String   @id @default(uuid())
   pharmacy_id    String
-  external_sku   String?
+  external_sku   String
+  lot_number     String?
   name           String
   category       String?
   brand          String?
-  expiry_date    DateTime
+  expiry_date    DateTime?
   stock_quantity Int
   unit_price     Float
   cost_price     Float?
@@ -38,9 +101,12 @@ model Product {
   pharmacy       Pharmacy      @relation(fields: [pharmacy_id], references: [pharmacy_id])
   sales          Sale[]
   analyses       RiskAnalysis[]
+  action         Action?
+  donations      Donation[]
+  offer          Offer?
 
+  @@unique([pharmacy_id, external_sku])
   @@index([pharmacy_id, expiry_date])
-  @@index([pharmacy_id, external_sku])
 }
 
 model Sale {
@@ -55,6 +121,7 @@ model Sale {
   product         Product  @relation(fields: [product_id], references: [product_id])
   pharmacy        Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
 
+  @@unique([product_id, sale_date, quantity_sold])
   @@index([product_id, sale_date])
 }
 
@@ -64,14 +131,11 @@ model RiskAnalysis {
   pharmacy_id        String
   analysis_date      DateTime @default(now())
 
-  days_to_expiry     Int
+  days_of_cover      Float
   sales_velocity_30d Float
-  expected_sales     Float
-  excess_stock       Int
-  risk_score         Float
+  capital_locked     Float
   risk_level         String
-
-  suggested_discount Int
+  suggested_action   String
   recoverable_value  Float
   potential_loss     Float
 
@@ -79,4 +143,189 @@ model RiskAnalysis {
   pharmacy           Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
 
   @@unique([product_id, analysis_date])
+}
+
+// Centre d'actions : une action de remédiation par produit dormant
+model Action {
+  action_id         String    @id @default(uuid())
+  product_id        String    @unique
+  pharmacy_id       String
+  type              String    // 'B2C' | 'DON'
+  status            String    @default("EN_ATTENTE") // EN_ATTENTE|VALIDEE|IGNOREE|SNOOZEE
+  snooze_until      DateTime?
+  days_of_cover     Float
+  capital_locked    Float
+  recoverable_value Float
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  product           Product   @relation(fields: [product_id], references: [product_id])
+  pharmacy          Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  donations         Donation[]
+  offer             Offer?
+
+  @@index([pharmacy_id, status])
+}
+
+// Associations bénéficiaires de dons médicamenteux
+model Association {
+  association_id String   @id @default(uuid())
+  name           String
+  address        String
+  city           String
+  postal_code    String
+  lat            Float?
+  lng            Float?
+  categories     String[]
+  contact_email  String?
+  contact_phone  String?
+  logo_url       String?
+  active         Boolean  @default(true)
+  created_at     DateTime @default(now())
+
+  donations      Donation[]
+}
+
+// Don médicamenteux : machine à états PROPOSEE→ACCEPTEE→RETIREE|REFUSEE
+model Donation {
+  donation_id     String    @id @default(uuid())
+  product_id      String
+  pharmacy_id     String
+  association_id  String
+  action_id       String?
+  quantity        Int
+  status          String    @default("PROPOSEE") // PROPOSEE|ACCEPTEE|RETIREE|REFUSEE
+  estimated_value Float
+  cerfa_number    String?
+  cerfa_pdf_url   String?
+  proposed_at     DateTime  @default(now())
+  accepted_at     DateTime?
+  withdrawn_at    DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+
+  product         Product     @relation(fields: [product_id], references: [product_id])
+  pharmacy        Pharmacy    @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  association     Association @relation(fields: [association_id], references: [association_id])
+  action          Action?     @relation(fields: [action_id], references: [action_id])
+
+  @@index([pharmacy_id, status])
+}
+
+// Trace métier persistante de chaque dépôt de fichier (≠ Job BullMQ éphémère)
+model Import {
+  import_id   String   @id @default(uuid())
+  pharmacy_id String
+  file_name   String
+  file_type   String   // 'products' | 'sales'
+  uploaded_at DateTime @default(now())
+  status      String   @default("EN_ATTENTE") // EN_ATTENTE|EN_COURS|TERMINÉ|ÉCHOUÉ
+  rows_total  Int?
+  rows_ok     Int?
+  rows_failed Int?
+  errors      Json?
+
+  pharmacy    Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
+
+  @@index([pharmacy_id, uploaded_at])
+}
+
+// Compte léger d'un acheteur B2C (app mobile)
+// password optionnel : la connexion mobile se fait par code OTP (voir CustomerOtp)
+// civility : 'MR' | 'MME'. Pas d'adresse stockée (RGPD) : la position vient de
+// la géolocalisation du device au moment de la requête (ex. GET /offers/nearby).
+model Customer {
+  customer_id String   @id @default(uuid())
+  email       String   @unique
+  password    String?
+  civility    String?
+  first_name  String?
+  last_name   String?
+  phone       String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  orders      Order[]
+}
+
+// Code OTP à usage unique pour la connexion Customer B2C (app mobile).
+// Le code (6 chiffres) n'est jamais stocké en clair : seul son hash SHA-256 l'est.
+// Indexé par email car le compte Customer peut ne pas encore exister au moment
+// de la demande de code (création à la vérification).
+model CustomerOtp {
+  otp_id      String    @id @default(uuid())
+  email       String
+  code_hash   String
+  expires_at  DateTime
+  attempts    Int       @default(0)
+  consumed_at DateTime?
+  created_at  DateTime  @default(now())
+
+  @@index([email, created_at])
+}
+
+// Offre B2C publiée par le Titulaire sur un produit dormant
+// Un seul produit = une seule Offer active à la fois
+model Offer {
+  offer_id         String    @id @default(uuid())
+  pharmacy_id      String
+  product_id       String    @unique
+  action_id        String?   @unique
+  description      String?
+  discounted_price Float
+  quantity_offered Int
+  status           String    @default("ACTIVE") // ACTIVE|SUSPENDUE|TERMINEE
+  expires_at       DateTime?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  pharmacy         Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  product          Product   @relation(fields: [product_id], references: [product_id])
+  action           Action?   @relation(fields: [action_id], references: [action_id])
+  orders           Order[]
+  images           OfferImage[]
+  categories       Category[] @relation("OfferCategories")
+
+  @@index([pharmacy_id, status])
+}
+
+// Image produit rattachée à une Offer (galerie, ordonnée par position)
+model OfferImage {
+  image_id   String   @id @default(uuid())
+  offer_id   String
+  url        String
+  position   Int      @default(0)
+  created_at DateTime @default(now())
+
+  offer      Offer    @relation(fields: [offer_id], references: [offer_id], onDelete: Cascade)
+
+  @@index([offer_id])
+}
+
+// Réservation d'une Offer par un Customer
+// Machine à états : RESERVEE→EN_PREPARATION→PRETE→RETIREE|ANNULEE|EXPIREE
+model Order {
+  order_id     String    @id @default(uuid())
+  customer_id  String
+  offer_id     String
+  pharmacy_id  String
+  quantity     Int
+  status       String    @default("RESERVEE")
+  qr_code      String    @unique @default(uuid())
+  expires_at   DateTime  // reserved_at + 24h
+  reserved_at  DateTime  @default(now())
+  prepared_at  DateTime?
+  ready_at     DateTime?
+  withdrawn_at DateTime?
+  cancelled_at DateTime?
+  created_at   DateTime  @default(now())
+  updated_at   DateTime  @updatedAt
+
+  customer     Customer  @relation(fields: [customer_id], references: [customer_id])
+  offer        Offer     @relation(fields: [offer_id], references: [offer_id])
+  pharmacy     Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
+
+  @@index([pharmacy_id, status])
+  @@index([offer_id, status])
+  @@index([expires_at, status])
 }

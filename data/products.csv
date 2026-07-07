@@ -1,0 +1,31 @@
+external_sku,name,stock_quantity,unit_price,lot_number,category,brand,expiry_date,cost_price
+DOLI-500-60,Doliprane 500mg x60 cp,320,4.9,L2601A,Médicaments OTC,Sanofi,2026-06-25,2.8
+IBU-400-30,Ibuprofène 400mg x30 cp,280,3.5,L2603B,Médicaments OTC,Générique,2026-07-01,1.9
+VIT-C-1G-20,Vitamine C 1g effervescent x20,450,6.2,L2605C,Compléments,Bayer,2026-07-05,3.4
+OMEPRA-20-14,Oméprazole 20mg x14 gél,190,5.8,L2604D,Médicaments OTC,Générique,2026-06-23,3.2
+MUC-SIR-200,Mucolytique sirop 200ml,160,7.4,L2602E,Pédiatrie,UPSA,2026-07-11,4.1
+BIAFIN-93G,Biafine émulsion 93g,240,9.8,L2607F,Dermatologie,Johnson & Johnson,2026-06-28,5.5
+CETI-10-7,Cétirizine 10mg x7 cp,300,4.2,L2606G,Médicaments OTC,Générique,2026-06-21,2.3
+ZINC-GEL-50,Gel zinc 50ml,180,8.3,L2608H,Dermatologie,A-Derma,2026-07-08,4.6
+SPF20-40ML,Crème SPF20 hydratante 40ml,90,18.5,,Solaire,La Roche-Posay,2026-08-12,11.0
+XYLO-SPR-50,Xylocaïne spray 10% 50ml,55,12.9,,Médicaments OTC,AstraZeneca,2026-08-27,7.5
+BISAC-5-30,Bisacodyl 5mg x30 cp,120,3.8,,Médicaments OTC,Générique,2026-08-02,2.1
+MAG-B6-60,Magnésium + B6 x60 cp,85,9.9,,Compléments,Arkopharma,2026-09-01,5.8
+AQUA-GEL-50,Aquagel hydratant 50ml,110,14.9,,Dermatologie,Bioderma,2026-08-07,8.8
+LACTI-30CP,Lactibiane probiotiques x30,70,19.9,,Compléments,Pileje,2026-09-11,12.0
+MELA-1MG-30,Mélatonine 1mg x30 cp,95,7.5,,Compléments,Natrol,2026-08-17,4.2
+SPF50-100ML,Crème solaire SPF50 100ml,60,22.5,,Solaire,Avène,2026-07-31,14.0
+OMEGA3-90G,Oméga-3 EPA DHA x90 gél,75,24.9,,Compléments,Pileje,2026-08-22,15.5
+NASAL-SPR,Spray nasal décongestionnant,80,6.8,,Pédiatrie,Pédiatrie+,2026-08-10,3.8
+SER-HA-30ML,Sérum acide hyaluronique 30ml,45,16.9,,Cosmétique,The Ordinary,2026-12-30,9.5
+CRE-ANTI-50,Crème anti-âge visage 50ml,30,42.0,,Cosmétique,Clarins,2026-12-10,26.0
+SHAM-REP-250,Shampooing réparateur 250ml,50,28.9,,Capillaire,Kérastase,2027-06-13,18.0
+SER-RET-30,Sérum Rétinol 0.3% 30ml,35,29.9,,Cosmétique,Vichy,2027-02-08,18.5
+COND-LIS-200,Après-shampoing lissant 200ml,55,11.9,,Capillaire,L'Oréal,2027-07-18,7.5
+FOND-TEINT,Fond de teint fluide 30ml,40,14.9,,Maquillage,Maybelline,2027-04-09,9.5
+CONT-YEU-15,Contour des yeux 15ml,25,38.9,,Cosmétique,Clarins,2027-03-10,24.0
+PARFUM-50ML,Eau de parfum florale 50ml,80,75.0,,Parfumerie,Lancôme,2028-06-12,42.0
+MASC-VOL-9,Mascara volume noir 9ml,60,12.9,,Maquillage,Maybelline,2027-01-09,8.0
+GOMM-100ML,Gommage corps sucré 100ml,45,8.9,,Cosmétique,Garnier,2026-11-10,5.2
+BAUME-LEV-15,Baume lèvres hydratant 15ml,70,9.9,,Cosmétique,Nuxe,2027-10-26,5.8
+HUIL-SEC-100,Huile sèche corps 100ml,35,22.9,,Cosmétique,Nuxe,2027-04-29,14.5

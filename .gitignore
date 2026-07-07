@@ -1,12 +1,13 @@
-node_modules/
-dist/
-.env
+node_modules
+*.tsbuildinfo
+dist
+build
+.next
+coverage
 *.log
 .DS_Store
-
-# IDE
-.idea/
-.vscode/
-
-# Claude Code
-.claude/
+.env
+.env.local
+.env.*.local
+package-lock.json
+backend/openapi.json

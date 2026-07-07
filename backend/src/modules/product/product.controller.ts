@@ -1,16 +1,48 @@
-import { Controller, Get, Query, BadRequestException } from '@nestjs/common';
-import { prisma } from '../../database/client';
+import {
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Query,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
+import { prisma } from '../../database/client';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { TenantPharmacyId } from '../auth/decorators/tenant-pharmacy.decorator';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { TenantGuard } from '../auth/guards/tenant.guard';
+import { MaskFinancialInterceptor } from '../auth/interceptors/mask-financial.interceptor';
+import { UserRole } from '../auth/roles.enum';
+
+@ApiTags('products')
+@ApiBearerAuth('access-token')
 @Controller('api/products')
+@UseGuards(JwtAuthGuard, RolesGuard, TenantGuard)
+@Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR, UserRole.ADMIN_SAVELY)
+@UseInterceptors(MaskFinancialInterceptor)
 export class ProductController {
   @Get()
+  @ApiOperation({ summary: 'List products with their latest risk analysis' })
+  @ApiQuery({
+    name: 'risk_level',
+    required: false,
+    enum: ['critical', 'high', 'safe'],
+  })
+  @ApiQuery({ name: 'category', required: false })
   async getProducts(
-    @Query('pharmacy_id') pharmacyId: string,
+    @TenantPharmacyId() pharmacyId: string,
     @Query('risk_level') riskLevel?: string,
-    @Query('category') category?: string,
+    @Query('category') category?: string
   ) {
-    if (!pharmacyId) throw new BadRequestException('pharmacy_id is required');
-
     const analyses = await prisma.riskAnalysis.findMany({
       where: {
         pharmacy_id: pharmacyId,
@@ -39,5 +71,55 @@ export class ProductController {
       : analyses;
 
     return { products: filtered, total: filtered.length };
+  }
+
+  @Get('sku/:external_sku')
+  @ApiOperation({ summary: 'Lookup produit par external_sku — US-87' })
+  async getProductBySku(
+    @TenantPharmacyId() pharmacyId: string,
+    @Param('external_sku') externalSku: string
+  ) {
+    const product = await prisma.product.findFirst({
+      where: { external_sku: externalSku, pharmacy_id: pharmacyId },
+      select: {
+        product_id: true,
+        external_sku: true,
+        name: true,
+        category: true,
+        brand: true,
+        expiry_date: true,
+        stock_quantity: true,
+        unit_price: true,
+        cost_price: true,
+      },
+    });
+
+    if (!product) throw new NotFoundException('Product not found');
+    return product;
+  }
+
+  @Get(':product_id')
+  @ApiOperation({ summary: 'Fetch a single product by id (tenant-scoped)' })
+  async getProduct(
+    @TenantPharmacyId() pharmacyId: string,
+    @Param('product_id') productId: string
+  ) {
+    const product = await prisma.product.findFirst({
+      where: { product_id: productId, pharmacy_id: pharmacyId },
+      select: {
+        product_id: true,
+        external_sku: true,
+        name: true,
+        category: true,
+        brand: true,
+        expiry_date: true,
+        stock_quantity: true,
+        unit_price: true,
+        cost_price: true,
+      },
+    });
+
+    if (!product) throw new NotFoundException('Product not found');
+    return product;
   }
 }

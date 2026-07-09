@@ -10,12 +10,14 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { Separator } from '@/components/ui/separator';
 import {
   acceptPreparateurInvitation,
   getInvitation,
   InvitationInfo,
 } from '@/lib/auth';
+import { isValidFrenchPhone } from '@/lib/validation';
 
 const MIN_PASSWORD_LENGTH = 8;
 
@@ -197,7 +199,8 @@ function PreparateurOnboardingContent() {
     !!form.first_name.trim() &&
     !!form.last_name.trim() &&
     !!form.password &&
-    !!form.confirm_password;
+    !!form.confirm_password &&
+    (form.phone.trim() === '' || isValidFrenchPhone(form.phone));
 
   return (
     <AuthShell
@@ -252,11 +255,10 @@ function PreparateurOnboardingContent() {
               Téléphone{' '}
               <span className="text-muted-foreground">(facultatif)</span>
             </Label>
-            <Input
+            <PhoneInput
               id="phone"
-              type="tel"
               value={form.phone}
-              onChange={(e) => update('phone', e.target.value)}
+              onChange={(value) => update('phone', value)}
               disabled={submitting}
             />
           </div>

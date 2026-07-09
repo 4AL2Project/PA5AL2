@@ -6,10 +6,13 @@ import { useEffect, useState } from 'react';
 
 import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { Button } from '@/components/ui/button';
+import { EmailInput } from '@/components/ui/email-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { Separator } from '@/components/ui/separator';
 import { CreatePharmacyResponse } from '@/lib/auth';
+import { isValidEmail, isValidFrenchPhone } from '@/lib/validation';
 
 interface FormState {
   pharmacy_name: string;
@@ -208,7 +211,10 @@ export function CreatePharmacyForm({
     );
   }
 
-  const canSubmit = Object.values(form).every((v) => v.trim().length > 0);
+  const canSubmit =
+    Object.values(form).every((v) => v.trim().length > 0) &&
+    isValidEmail(form.email) &&
+    isValidFrenchPhone(form.phone);
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
@@ -317,12 +323,11 @@ export function CreatePharmacyForm({
           <Label htmlFor="email" className="text-xs">
             Email
           </Label>
-          <Input
+          <EmailInput
             id="email"
-            type="email"
             required
             value={form.email}
-            onChange={(e) => update('email', e.target.value)}
+            onChange={(value) => update('email', value)}
             disabled={submitting}
           />
         </div>
@@ -330,12 +335,11 @@ export function CreatePharmacyForm({
           <Label htmlFor="phone" className="text-xs">
             Téléphone
           </Label>
-          <Input
+          <PhoneInput
             id="phone"
-            type="tel"
             required
             value={form.phone}
-            onChange={(e) => update('phone', e.target.value)}
+            onChange={(value) => update('phone', value)}
             disabled={submitting}
           />
         </div>

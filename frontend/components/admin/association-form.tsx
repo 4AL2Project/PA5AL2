@@ -5,9 +5,12 @@ import { useRef, useState } from 'react';
 
 import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { Button } from '@/components/ui/button';
+import { EmailInput } from '@/components/ui/email-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { Association } from '@/lib/admin';
+import { isValidEmail, isValidFrenchPhone } from '@/lib/validation';
 
 const CATEGORY_OPTIONS = [
   'medicaments',
@@ -187,7 +190,10 @@ export function AssociationForm({
     form.address.trim() &&
     form.city.trim() &&
     form.postal_code.trim() &&
-    form.categories.length > 0;
+    form.categories.length > 0 &&
+    (form.contact_email.trim() === '' || isValidEmail(form.contact_email)) &&
+    (form.contact_phone.trim() === '' ||
+      isValidFrenchPhone(form.contact_phone));
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
@@ -355,11 +361,10 @@ export function AssociationForm({
         <Label htmlFor="asso-email" className="text-xs">
           Email de contact
         </Label>
-        <Input
+        <EmailInput
           id="asso-email"
-          type="email"
           value={form.contact_email}
-          onChange={(e) => update('contact_email', e.target.value)}
+          onChange={(value) => update('contact_email', value)}
           disabled={submitting}
           placeholder="contact@association.fr"
         />
@@ -369,11 +374,10 @@ export function AssociationForm({
         <Label htmlFor="asso-phone" className="text-xs">
           Téléphone
         </Label>
-        <Input
+        <PhoneInput
           id="asso-phone"
-          type="tel"
           value={form.contact_phone}
-          onChange={(e) => update('contact_phone', e.target.value)}
+          onChange={(value) => update('contact_phone', value)}
           disabled={submitting}
           placeholder="01 23 45 67 89"
         />

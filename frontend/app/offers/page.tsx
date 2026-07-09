@@ -52,13 +52,11 @@ function OfferStatusBadge({ status }: { status: OfferStatus }) {
   const map: Record<OfferStatus, { label: string; className: string }> = {
     ACTIVE: {
       label: 'Active',
-      className:
-        'bg-emerald-100 text-emerald-700',
+      className: 'bg-emerald-100 text-emerald-700',
     },
     SUSPENDUE: {
       label: 'Suspendue',
-      className:
-        'bg-yellow-100 text-yellow-700',
+      className: 'bg-yellow-100 text-yellow-700',
     },
     TERMINEE: {
       label: 'Terminée',

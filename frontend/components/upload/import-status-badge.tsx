@@ -14,21 +14,18 @@ const CONFIG: Record<
   },
   EN_COURS: {
     label: 'En cours',
-    className:
-      'bg-blue-50 text-blue-700 border-blue-200',
+    className: 'bg-blue-50 text-blue-700 border-blue-200',
     icon: Loader2,
     spin: true,
   },
   TERMINÉ: {
     label: 'Terminé',
-    className:
-      'bg-emerald-50 text-emerald-700 border-emerald-200',
+    className: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     icon: CheckCircle2,
   },
   ÉCHOUÉ: {
     label: 'Échoué',
-    className:
-      'bg-red-50 text-red-700 border-red-200',
+    className: 'bg-red-50 text-red-700 border-red-200',
     icon: XCircle,
   },
 };

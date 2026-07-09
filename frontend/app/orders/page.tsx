@@ -70,18 +70,15 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> =
   {
     RESERVEE: {
       label: 'Réservée',
-      className:
-        'bg-blue-100 text-blue-700',
+      className: 'bg-blue-100 text-blue-700',
     },
     EN_PREPARATION: {
       label: 'En préparation',
-      className:
-        'bg-yellow-100 text-yellow-700',
+      className: 'bg-yellow-100 text-yellow-700',
     },
     PRETE: {
       label: 'Prête',
-      className:
-        'bg-emerald-100 text-emerald-700',
+      className: 'bg-emerald-100 text-emerald-700',
     },
     RETIREE: { label: 'Retirée', className: 'bg-muted text-muted-foreground' },
     ANNULEE: {

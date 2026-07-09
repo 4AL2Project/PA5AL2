@@ -76,3 +76,90 @@ export class RegisteredUserDto {
   @ApiProperty({ type: String, format: 'date-time' })
   created_at!: Date;
 }
+
+export class MePermissionsDto {
+  @ApiProperty() can_view_financials!: boolean;
+  @ApiProperty() can_manage_pharmacy!: boolean;
+  @ApiProperty() can_manage_offers!: boolean;
+  @ApiProperty() can_manage_categories!: boolean;
+  @ApiProperty() can_validate_actions!: boolean;
+  @ApiProperty() can_upload_data!: boolean;
+  @ApiProperty() can_manage_orders!: boolean;
+  @ApiProperty() can_manage_associations!: boolean;
+  @ApiProperty() can_access_admin!: boolean;
+}
+
+export class MePharmacyDto {
+  @ApiProperty({ format: 'uuid' })
+  pharmacy_id!: string;
+
+  @ApiProperty()
+  name!: string;
+
+  @ApiProperty({ format: 'email' })
+  email!: string;
+
+  @ApiPropertyOptional({ nullable: true })
+  address?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  siret?: string | null;
+
+  @ApiProperty()
+  status!: string;
+
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true })
+  last_upload_at?: Date | null;
+
+  @ApiPropertyOptional({
+    description:
+      'Réservé au titulaire (donnée commerciale, masquée au préparateur)',
+  })
+  subscription_tier?: string;
+}
+
+export class MeResponseDto {
+  @ApiProperty({ format: 'uuid' })
+  user_id!: string;
+
+  @ApiProperty({ format: 'email' })
+  email!: string;
+
+  @ApiProperty({ enum: UserRole })
+  role!: UserRole;
+
+  @ApiPropertyOptional({ nullable: true })
+  first_name?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  last_name?: string | null;
+
+  @ApiPropertyOptional({ nullable: true })
+  phone?: string | null;
+
+  @ApiProperty()
+  status!: string;
+
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true })
+  accepted_terms_at?: Date | null;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  created_at!: Date;
+
+  @ApiProperty({
+    enum: ['PHARMACY', 'PLATFORM'],
+    description:
+      "PLATFORM pour ADMIN_SAVELY, PHARMACY pour les rôles d'officine",
+  })
+  scope!: 'PHARMACY' | 'PLATFORM';
+
+  @ApiProperty({ type: MePermissionsDto })
+  permissions!: MePermissionsDto;
+
+  @ApiPropertyOptional({
+    type: MePharmacyDto,
+    nullable: true,
+    description: 'null pour ADMIN_SAVELY (aucune officine rattachée)',
+  })
+  pharmacy?: MePharmacyDto | null;
+}

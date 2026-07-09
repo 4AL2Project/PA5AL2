@@ -10,7 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
 import { AuthTokens, JwtPayload } from './jwt-payload';
-import { UserRole } from './roles.enum';
+import { permissionsForRole, scopeForRole, UserRole } from './roles.enum';
 
 @Injectable()
 export class AuthService {
@@ -75,6 +75,78 @@ export class AuthService {
       pharmacy_id: user.pharmacy_id,
       role: user.role as UserRole,
     });
+  }
+
+  /**
+   * Profil centralisé de l'utilisateur courant, adapté à son rôle.
+   *
+   * Spécificités par rôle :
+   * - ADMIN_SAVELY : compte plateforme, aucune officine rattachée
+   *   (`pharmacy = null`, scope `PLATFORM`).
+   * - TITULAIRE : officine complète, incluant l'abonnement (donnée commerciale).
+   * - PREPARATEUR : officine sans l'abonnement (donnée commerciale du titulaire)
+   *   et sans visibilité financière.
+   */
+  async me(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { user_id: userId },
+      include: {
+        pharmacy: {
+          select: {
+            pharmacy_id: true,
+            name: true,
+            email: true,
+            address: true,
+            siret: true,
+            status: true,
+            subscription_tier: true,
+            last_upload_at: true,
+          },
+        },
+      },
+    });
+
+    if (!user) throw new UnauthorizedException('User not found');
+
+    const role = user.role as UserRole;
+    const permissions = permissionsForRole(role);
+
+    const profile = {
+      user_id: user.user_id,
+      email: user.email,
+      role,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      phone: user.phone,
+      status: user.status,
+      accepted_terms_at: user.accepted_terms_at,
+      created_at: user.created_at,
+      scope: scopeForRole(role),
+      permissions,
+    };
+
+    // ADMIN_SAVELY n'est rattaché à aucune officine.
+    if (role === UserRole.ADMIN_SAVELY) {
+      return { ...profile, pharmacy: null };
+    }
+
+    const pharmacy = user.pharmacy
+      ? {
+          pharmacy_id: user.pharmacy.pharmacy_id,
+          name: user.pharmacy.name,
+          email: user.pharmacy.email,
+          address: user.pharmacy.address,
+          siret: user.pharmacy.siret,
+          status: user.pharmacy.status,
+          last_upload_at: user.pharmacy.last_upload_at,
+          // L'abonnement est une donnée commerciale réservée au titulaire.
+          ...(permissions.can_view_financials
+            ? { subscription_tier: user.pharmacy.subscription_tier }
+            : {}),
+        }
+      : null;
+
+    return { ...profile, pharmacy };
   }
 
   async refresh(refreshToken: string): Promise<AuthTokens> {

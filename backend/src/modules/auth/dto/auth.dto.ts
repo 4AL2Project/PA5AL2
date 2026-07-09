@@ -77,18 +77,6 @@ export class RegisteredUserDto {
   created_at!: Date;
 }
 
-export class MePermissionsDto {
-  @ApiProperty() can_view_financials!: boolean;
-  @ApiProperty() can_manage_pharmacy!: boolean;
-  @ApiProperty() can_manage_offers!: boolean;
-  @ApiProperty() can_manage_categories!: boolean;
-  @ApiProperty() can_validate_actions!: boolean;
-  @ApiProperty() can_upload_data!: boolean;
-  @ApiProperty() can_manage_orders!: boolean;
-  @ApiProperty() can_manage_associations!: boolean;
-  @ApiProperty() can_access_admin!: boolean;
-}
-
 export class MePharmacyDto {
   @ApiProperty({ format: 'uuid' })
   pharmacy_id!: string;
@@ -152,9 +140,6 @@ export class MeResponseDto {
       "PLATFORM pour ADMIN_SAVELY, PHARMACY pour les rôles d'officine",
   })
   scope!: 'PHARMACY' | 'PLATFORM';
-
-  @ApiProperty({ type: MePermissionsDto })
-  permissions!: MePermissionsDto;
 
   @ApiPropertyOptional({
     type: MePharmacyDto,

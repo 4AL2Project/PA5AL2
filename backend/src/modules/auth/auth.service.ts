@@ -10,7 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
 import { AuthTokens, JwtPayload } from './jwt-payload';
-import { permissionsForRole, scopeForRole, UserRole } from './roles.enum';
+import { scopeForRole, UserRole } from './roles.enum';
 
 @Injectable()
 export class AuthService {
@@ -109,7 +109,6 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('User not found');
 
     const role = user.role as UserRole;
-    const permissions = permissionsForRole(role);
 
     const profile = {
       user_id: user.user_id,
@@ -122,7 +121,6 @@ export class AuthService {
       accepted_terms_at: user.accepted_terms_at,
       created_at: user.created_at,
       scope: scopeForRole(role),
-      permissions,
     };
 
     // ADMIN_SAVELY n'est rattaché à aucune officine.
@@ -140,7 +138,7 @@ export class AuthService {
           status: user.pharmacy.status,
           last_upload_at: user.pharmacy.last_upload_at,
           // L'abonnement est une donnée commerciale réservée au titulaire.
-          ...(permissions.can_view_financials
+          ...(role === UserRole.TITULAIRE
             ? { subscription_tier: user.pharmacy.subscription_tier }
             : {}),
         }

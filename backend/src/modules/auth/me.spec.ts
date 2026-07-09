@@ -66,8 +66,6 @@ describe('AuthService.me', () => {
 
     expect(result.scope).toBe('PHARMACY');
     expect(result.pharmacy?.subscription_tier).toBe('premium');
-    expect(result.permissions.can_view_financials).toBe(true);
-    expect(result.permissions.can_manage_pharmacy).toBe(true);
   });
 
   it('PREPARATEUR sees pharmacy but not the subscription_tier', async () => {
@@ -83,9 +81,6 @@ describe('AuthService.me', () => {
     expect(result.scope).toBe('PHARMACY');
     expect(result.pharmacy).not.toBeNull();
     expect(result.pharmacy).not.toHaveProperty('subscription_tier');
-    expect(result.permissions.can_view_financials).toBe(false);
-    expect(result.permissions.can_manage_pharmacy).toBe(false);
-    expect(result.permissions.can_upload_data).toBe(true);
   });
 
   it('ADMIN_SAVELY is a platform account with no pharmacy attached', async () => {
@@ -100,7 +95,5 @@ describe('AuthService.me', () => {
 
     expect(result.scope).toBe('PLATFORM');
     expect(result.pharmacy).toBeNull();
-    expect(result.permissions.can_access_admin).toBe(true);
-    expect(result.permissions.can_manage_associations).toBe(true);
   });
 });

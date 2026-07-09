@@ -244,19 +244,28 @@ export class CustomerService {
     const orders = await prisma.order.findMany({
       where: { customer_id: customerId, status: 'RETIREE' },
       include: {
-        offer: {
-          select: {
-            discounted_price: true,
-            product: { select: { unit_price: true } },
+        lines: {
+          include: {
+            offer: {
+              select: {
+                discounted_price: true,
+                product: { select: { unit_price: true } },
+              },
+            },
           },
         },
       },
     });
 
     const totalSaved = orders.reduce((acc, order) => {
-      const original = (order.offer.product as { unit_price: number })
-        .unit_price;
-      return acc + (original - order.offer.discounted_price) * order.quantity;
+      const orderSaved = order.lines.reduce((lineAcc, line) => {
+        const original = (line.offer.product as { unit_price: number })
+          .unit_price;
+        return (
+          lineAcc + (original - line.offer.discounted_price) * line.quantity
+        );
+      }, 0);
+      return acc + orderSaved;
     }, 0);
 
     return {

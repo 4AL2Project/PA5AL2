@@ -20,7 +20,7 @@ import { JwtPayload } from '../auth/jwt-payload';
 import { UserRole } from '../auth/roles.enum';
 import { CustomerJwtPayload } from '../customer/customer-jwt-payload';
 import { CustomerJwtGuard } from '../customer/guards/customer-jwt.guard';
-import { OrderService } from './order.service';
+import { CheckoutLineDto, OrderService } from './order.service';
 
 @ApiTags('orders')
 @Controller('api/orders')
@@ -31,16 +31,14 @@ export class OrderController {
 
   @Post()
   @UseGuards(CustomerJwtGuard)
-  @ApiOperation({ summary: 'Réserver une Offer (Customer)' })
+  @ApiOperation({
+    summary: 'Checkout du panier (Customer) — une pharmacie par panier',
+  })
   create(
     @Req() req: Request & { customer: CustomerJwtPayload },
-    @Body() body: { offer_id: string; quantity: number }
+    @Body() body: { lines: CheckoutLineDto[] }
   ) {
-    return this.orderService.createOrder(
-      req.customer.sub,
-      body.offer_id,
-      body.quantity
-    );
+    return this.orderService.createOrder(req.customer.sub, body.lines);
   }
 
   @Get('my')

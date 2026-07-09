@@ -1,21 +1,41 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Inject,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 
 import { prisma } from '../../database/client';
 import {
   INotificationService,
   NOTIFICATION_SERVICE,
+  OrderLineSummary,
 } from '../notification/notification.interface';
 
 const HOLD_DURATION_HOURS = 24;
 
 const ACTIVE_STATUSES = ['RESERVEE', 'EN_PREPARATION', 'PRETE'] as const;
+
+const ORDER_LINE_INCLUDE = {
+  lines: {
+    include: {
+      offer: {
+        include: {
+          product: { select: { name: true, external_sku: true } },
+        },
+      },
+    },
+  },
+} as const;
+
+export interface CheckoutLineDto {
+  offer_id: string;
+  quantity: number;
+}
 
 @Injectable()
 export class OrderService {
@@ -26,47 +46,104 @@ export class OrderService {
     private readonly notifications: INotificationService
   ) {}
 
-  async createOrder(customerId: string, offerId: string, quantity: number) {
-    const offer = await prisma.offer.findUnique({
-      where: { offer_id: offerId },
-      include: {
-        product: { select: { name: true } },
-        pharmacy: { select: { name: true } },
-      },
-    });
-    if (!offer) throw new NotFoundException('Offer not found');
-    if (offer.status !== 'ACTIVE')
-      throw new BadRequestException('Offer is not active');
-
-    // Compute available quantity
-    const holds = await prisma.order.aggregate({
-      where: { offer_id: offerId, status: { in: [...ACTIVE_STATUSES] } },
-      _sum: { quantity: true },
-    });
-    const reserved = holds._sum.quantity ?? 0;
-    const available = offer.quantity_offered - reserved;
-    if (quantity > available) {
-      throw new BadRequestException(`Only ${available} unit(s) available`);
+  /** Checkout atomique d'un panier multi-offres (une seule pharmacie) — tout ou rien. */
+  async createOrder(customerId: string, lines: CheckoutLineDto[]) {
+    if (!lines || lines.length === 0) {
+      throw new BadRequestException('Le panier est vide');
     }
+    const offerIds = lines.map((l) => l.offer_id);
+    if (new Set(offerIds).size !== offerIds.length) {
+      throw new BadRequestException(
+        'Une offre ne peut apparaître qu’une seule fois dans le panier'
+      );
+    }
+    // Ordre déterministe : réduit le risque de deadlock entre deux paniers
+    // concurrents qui se chevauchent sur les mêmes offres.
+    const sortedOfferIds = [...offerIds].sort();
+    const quantityByOffer = new Map(lines.map((l) => [l.offer_id, l.quantity]));
+
+    const order = await this.runCheckoutTransaction(async (tx) => {
+      const offers = await tx.offer.findMany({
+        where: { offer_id: { in: sortedOfferIds } },
+      });
+      if (offers.length !== sortedOfferIds.length) {
+        throw new NotFoundException(
+          'Une ou plusieurs offres du panier sont introuvables'
+        );
+      }
+
+      const pharmacyIds = new Set(offers.map((o) => o.pharmacy_id));
+      if (pharmacyIds.size > 1) {
+        throw new BadRequestException(
+          'Toutes les offres d’un panier doivent venir de la même pharmacie'
+        );
+      }
+
+      const holds = await tx.orderLine.groupBy({
+        by: ['offer_id'],
+        where: {
+          offer_id: { in: sortedOfferIds },
+          order: { status: { in: [...ACTIVE_STATUSES] } },
+        },
+        _sum: { quantity: true },
+      });
+      const reservedByOffer = new Map(
+        holds.map((h) => [h.offer_id, h._sum.quantity ?? 0])
+      );
+
+      const unavailable = offers
+        .map((offer) => {
+          const requested = quantityByOffer.get(offer.offer_id)!;
+          const reserved = reservedByOffer.get(offer.offer_id) ?? 0;
+          const available =
+            offer.status === 'ACTIVE' ? offer.quantity_offered - reserved : 0;
+          return { offer_id: offer.offer_id, available, requested };
+        })
+        .filter((x) => x.requested > x.available);
+
+      if (unavailable.length > 0) {
+        throw new BadRequestException({
+          message: 'Certaines offres du panier ne sont plus disponibles',
+          unavailable: unavailable.map(({ offer_id, available }) => ({
+            offer_id,
+            available,
+          })),
+        });
+      }
+
+      const expiresAt = new Date(
+        Date.now() + HOLD_DURATION_HOURS * 60 * 60 * 1000
+      );
+
+      return tx.order.create({
+        data: {
+          customer_id: customerId,
+          pharmacy_id: offers[0].pharmacy_id,
+          expires_at: expiresAt,
+          lines: {
+            create: offers.map((offer) => ({
+              offer_id: offer.offer_id,
+              quantity: quantityByOffer.get(offer.offer_id)!,
+              unit_price_snapshot: offer.discounted_price,
+            })),
+          },
+        },
+        include: {
+          pharmacy: { select: { name: true } },
+          ...ORDER_LINE_INCLUDE,
+        },
+      });
+    });
 
     const customer = await prisma.customer.findUniqueOrThrow({
       where: { customer_id: customerId },
       select: { email: true, first_name: true, last_name: true },
     });
 
-    const expiresAt = new Date(
-      Date.now() + HOLD_DURATION_HOURS * 60 * 60 * 1000
-    );
-
-    const order = await prisma.order.create({
-      data: {
-        customer_id: customerId,
-        offer_id: offerId,
-        pharmacy_id: offer.pharmacy_id,
-        quantity,
-        expires_at: expiresAt,
-      },
-    });
+    const lineSummaries: OrderLineSummary[] = order.lines.map((l) => ({
+      product_name: l.offer.product.name,
+      quantity: l.quantity,
+    }));
 
     const notifPayload = {
       order_id: order.order_id,
@@ -74,9 +151,8 @@ export class OrderService {
       customer_name: [customer.first_name, customer.last_name]
         .filter(Boolean)
         .join(' '),
-      product_name: offer.product.name,
-      pharmacy_name: offer.pharmacy.name,
-      quantity,
+      pharmacy_name: order.pharmacy.name,
+      lines: lineSummaries,
       qr_code: order.qr_code,
     };
 
@@ -86,7 +162,7 @@ export class OrderService {
     ]);
 
     this.logger.log(
-      `[${offer.pharmacy_id}] Order created: offer=${offerId}, customer=${customerId}, qty=${quantity} → order_id=${order.order_id}`
+      `[${order.pharmacy_id}] Order created: customer=${customerId}, lines=${order.lines.length} → order_id=${order.order_id}`
     );
 
     return order;
@@ -107,11 +183,7 @@ export class OrderService {
             phone: true,
           },
         },
-        offer: {
-          include: {
-            product: { select: { name: true, external_sku: true } },
-          },
-        },
+        ...ORDER_LINE_INCLUDE,
       },
       orderBy: { reserved_at: 'desc' },
     });
@@ -121,10 +193,12 @@ export class OrderService {
     return prisma.order.findMany({
       where: { customer_id: customerId },
       include: {
-        offer: {
+        pharmacy: { select: { name: true, address: true } },
+        lines: {
           include: {
-            product: { select: { name: true, category: true } },
-            pharmacy: { select: { name: true, address: true } },
+            offer: {
+              include: { product: { select: { name: true, category: true } } },
+            },
           },
         },
       },
@@ -137,10 +211,12 @@ export class OrderService {
     const order = await prisma.order.findUnique({
       where: { order_id: orderId },
       include: {
-        offer: {
+        pharmacy: { select: { name: true, address: true } },
+        lines: {
           include: {
-            product: { select: { name: true, category: true } },
-            pharmacy: { select: { name: true, address: true } },
+            offer: {
+              include: { product: { select: { name: true, category: true } } },
+            },
           },
         },
       },
@@ -149,9 +225,7 @@ export class OrderService {
     if (order.customer_id !== customerId)
       throw new ForbiddenException('Not your order');
 
-    // Retourner pharmacy + qr_code, masquer les infos client
-    const { pharmacy_id: _pid, ...orderData } = order;
-    return { ...orderData, pharmacy_id: _pid };
+    return order;
   }
 
   /** Détail d'un Order pour la Pharmacie — US-82 */
@@ -167,9 +241,7 @@ export class OrderService {
             phone: true,
           },
         },
-        offer: {
-          include: { product: { select: { name: true, external_sku: true } } },
-        },
+        ...ORDER_LINE_INCLUDE,
         activities: {
           orderBy: { created_at: 'asc' },
           include: {
@@ -196,7 +268,7 @@ export class OrderService {
         customer: {
           select: { email: true, first_name: true, last_name: true },
         },
-        offer: { include: { product: { select: { name: true } } } },
+        ...ORDER_LINE_INCLUDE,
       },
     });
     if (!order) throw new NotFoundException('QR code not found');
@@ -230,17 +302,8 @@ export class OrderService {
       actorId
     );
 
-    const customer = await prisma.customer.findUniqueOrThrow({
-      where: { customer_id: order.customer_id },
-      select: { email: true, first_name: true, last_name: true },
-    });
-    const offer = await prisma.offer.findUniqueOrThrow({
-      where: { offer_id: order.offer_id },
-      include: {
-        product: { select: { name: true } },
-        pharmacy: { select: { name: true } },
-      },
-    });
+    const { customer, lineSummaries, pharmacyName, qrCode } =
+      await this.buildNotificationContext(order.order_id, order.customer_id);
 
     await this.notifications.orderReady({
       order_id: order.order_id,
@@ -248,16 +311,15 @@ export class OrderService {
       customer_name: [customer.first_name, customer.last_name]
         .filter(Boolean)
         .join(' '),
-      product_name: offer.product.name,
-      pharmacy_name: offer.pharmacy.name,
-      quantity: order.quantity,
-      qr_code: order.qr_code,
+      pharmacy_name: pharmacyName,
+      lines: lineSummaries,
+      qr_code: qrCode,
     });
 
     return order;
   }
 
-  /** Préparateur: valide le retrait (scan QR) — décrémente le stock */
+  /** Préparateur: valide le retrait (scan QR) — décrémente le stock de chaque ligne */
   async withdraw(pharmacyId: string, orderId: string, actorId: string) {
     this.logger.log(`[${pharmacyId}] Order ${orderId} → RETIREE`);
     const order = await this.transition(
@@ -269,14 +331,20 @@ export class OrderService {
       actorId
     );
 
-    // Decrement stock only at withdrawal
-    const offer = await prisma.offer.findUniqueOrThrow({
-      where: { offer_id: order.offer_id },
+    const lines = await prisma.orderLine.findMany({
+      where: { order_id: order.order_id },
+      select: { quantity: true, offer: { select: { product_id: true } } },
     });
-    await prisma.product.update({
-      where: { product_id: offer.product_id },
-      data: { stock_quantity: { decrement: order.quantity } },
-    });
+
+    // Décrément stock uniquement au retrait, ligne par ligne
+    await Promise.all(
+      lines.map((line) =>
+        prisma.product.update({
+          where: { product_id: line.offer.product_id },
+          data: { stock_quantity: { decrement: line.quantity } },
+        })
+      )
+    );
 
     return order;
   }
@@ -295,12 +363,8 @@ export class OrderService {
         customer: {
           select: { email: true, first_name: true, last_name: true },
         },
-        offer: {
-          include: {
-            product: { select: { name: true } },
-            pharmacy: { select: { name: true } },
-          },
-        },
+        pharmacy: { select: { name: true } },
+        ...ORDER_LINE_INCLUDE,
       },
     });
     if (!order) throw new NotFoundException('Order not found');
@@ -339,9 +403,11 @@ export class OrderService {
         customer_name: [order.customer.first_name, order.customer.last_name]
           .filter(Boolean)
           .join(' '),
-        product_name: order.offer.product.name,
-        pharmacy_name: order.offer.pharmacy.name,
-        quantity: order.quantity,
+        pharmacy_name: order.pharmacy.name,
+        lines: order.lines.map((l) => ({
+          product_name: l.offer.product.name,
+          quantity: l.quantity,
+        })),
       },
       requesterType === 'customer'
         ? 'Annulé par le client'
@@ -363,12 +429,8 @@ export class OrderService {
         customer: {
           select: { email: true, first_name: true, last_name: true },
         },
-        offer: {
-          include: {
-            product: { select: { name: true } },
-            pharmacy: { select: { name: true } },
-          },
-        },
+        pharmacy: { select: { name: true } },
+        ...ORDER_LINE_INCLUDE,
       },
     });
 
@@ -400,9 +462,11 @@ export class OrderService {
             customer_name: [order.customer.first_name, order.customer.last_name]
               .filter(Boolean)
               .join(' '),
-            product_name: order.offer.product.name,
-            pharmacy_name: order.offer.pharmacy.name,
-            quantity: order.quantity,
+            pharmacy_name: order.pharmacy.name,
+            lines: order.lines.map((l) => ({
+              product_name: l.offer.product.name,
+              quantity: l.quantity,
+            })),
           },
           'Réservation expirée (24h dépassées)'
         )
@@ -410,6 +474,33 @@ export class OrderService {
     );
 
     return expired.length;
+  }
+
+  /** Reconstitue le contexte nécessaire à une notification à partir de l'order_id. */
+  private async buildNotificationContext(orderId: string, customerId: string) {
+    const [customer, order] = await Promise.all([
+      prisma.customer.findUniqueOrThrow({
+        where: { customer_id: customerId },
+        select: { email: true, first_name: true, last_name: true },
+      }),
+      prisma.order.findUniqueOrThrow({
+        where: { order_id: orderId },
+        include: {
+          pharmacy: { select: { name: true } },
+          ...ORDER_LINE_INCLUDE,
+        },
+      }),
+    ]);
+
+    return {
+      customer,
+      pharmacyName: order.pharmacy.name,
+      qrCode: order.qr_code,
+      lineSummaries: order.lines.map((l) => ({
+        product_name: l.offer.product.name,
+        quantity: l.quantity,
+      })) satisfies OrderLineSummary[],
+    };
   }
 
   private async transition(
@@ -443,5 +534,37 @@ export class OrderService {
     await prisma.orderActivity.create({
       data: { order_id: orderId, action, actor_id: actorId ?? null },
     });
+  }
+
+  /**
+   * Exécute le checkout en isolation Serializable : Postgres détecte les
+   * conflits d'écriture entre paniers concurrents sur les mêmes offres et
+   * abandonne l'un des deux (P2034) plutôt que de laisser survendre le stock.
+   * Un court retry absorbe les faux conflits ; au-delà, on redemande au client.
+   */
+  private async runCheckoutTransaction<T>(
+    fn: (tx: Prisma.TransactionClient) => Promise<T>
+  ): Promise<T> {
+    const MAX_ATTEMPTS = 3;
+    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      try {
+        return await prisma.$transaction(fn, {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+          maxWait: 5000,
+          timeout: 10000,
+        });
+      } catch (err) {
+        const isConflict =
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2034';
+        if (!isConflict) throw err;
+        if (attempt === MAX_ATTEMPTS) {
+          throw new ConflictException(
+            'Une autre réservation est en cours sur ces offres, merci de réessayer'
+          );
+        }
+      }
+    }
+    throw new ConflictException('Réservation impossible, merci de réessayer');
   }
 }

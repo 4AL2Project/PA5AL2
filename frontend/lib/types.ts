@@ -152,12 +152,22 @@ export interface OfferDetail {
   _count?: { orders: number };
 }
 
+export interface OrderLine {
+  order_line_id: string;
+  order_id: string;
+  offer_id: string;
+  quantity: number;
+  unit_price_snapshot: number;
+  offer: {
+    discounted_price: number;
+    product: { name: string; external_sku: string };
+  };
+}
+
 export interface Order {
   order_id: string;
   customer_id: string;
-  offer_id: string;
   pharmacy_id: string;
-  quantity: number;
   status: OrderStatus;
   qr_code: string;
   expires_at: string;
@@ -172,8 +182,5 @@ export interface Order {
     last_name: string | null;
     phone: string | null;
   };
-  offer: {
-    discounted_price: number;
-    product: { name: string; external_sku: string };
-  };
+  lines: OrderLine[];
 }

@@ -146,40 +146,45 @@ export class IngestionWorker extends WorkerHost {
     });
 
     for (const product of products) {
-      // Sum active holds on offers linked to this product
-      const offerWithHolds = await prisma.offer.findFirst({
+      const offer = await prisma.offer.findFirst({
         where: {
           product_id: product.product_id,
           status: { in: ['ACTIVE', 'SUSPENDUE'] },
         },
-        include: {
-          orders: {
-            where: { status: { in: ['RESERVEE', 'EN_PREPARATION', 'PRETE'] } },
-            orderBy: { reserved_at: 'desc' },
-          },
-        },
+        select: { offer_id: true },
       });
-      if (!offerWithHolds || offerWithHolds.orders.length === 0) continue;
+      if (!offer) continue;
 
-      const totalHeld = offerWithHolds.orders.reduce(
-        (sum, o) => sum + o.quantity,
-        0
-      );
+      // Lignes de panier actives portant sur cette offre, les plus récentes
+      // en premier. Limite connue : on annule le panier entier de la ligne,
+      // même s'il contient d'autres offres non concernées par cette
+      // réconciliation — cf. tension stock-truth documentée dans CLAUDE.md.
+      const activeLines = await prisma.orderLine.findMany({
+        where: {
+          offer_id: offer.offer_id,
+          order: { status: { in: ['RESERVEE', 'EN_PREPARATION', 'PRETE'] } },
+        },
+        orderBy: { order: { reserved_at: 'desc' } },
+        select: { order_id: true, quantity: true },
+      });
+      if (activeLines.length === 0) continue;
+
+      const totalHeld = activeLines.reduce((sum, l) => sum + l.quantity, 0);
       const available = product.stock_quantity - totalHeld;
 
       if (available >= 0) continue;
 
       // Cancel most recent orders until balance is restored
       let deficit = Math.abs(available);
-      for (const order of offerWithHolds.orders) {
+      for (const line of activeLines) {
         if (deficit <= 0) break;
         await prisma.order.update({
-          where: { order_id: order.order_id },
+          where: { order_id: line.order_id },
           data: { status: 'ANNULEE', cancelled_at: new Date() },
         });
-        deficit -= order.quantity;
+        deficit -= line.quantity;
         this.logger.warn(
-          `Cancelled order ${order.order_id} due to stock reconciliation (new stock=${product.stock_quantity})`
+          `Cancelled order ${line.order_id} due to stock reconciliation (new stock=${product.stock_quantity})`
         );
       }
     }

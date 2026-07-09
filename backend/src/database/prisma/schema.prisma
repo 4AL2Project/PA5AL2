@@ -283,7 +283,7 @@ model Offer {
   pharmacy         Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
   product          Product   @relation(fields: [product_id], references: [product_id])
   action           Action?   @relation(fields: [action_id], references: [action_id])
-  orders           Order[]
+  orderLines       OrderLine[]
   images           OfferImage[]
   categories       Category[] @relation("OfferCategories")
 
@@ -303,14 +303,13 @@ model OfferImage {
   @@index([offer_id])
 }
 
-// Réservation d'une Offer par un Customer
+// Réservation d'un panier (une pharmacie par panier) par un Customer
 // Machine à états : RESERVEE→EN_PREPARATION→PRETE→RETIREE|ANNULEE|EXPIREE
+// Un seul QR pour tout le panier — les OrderLine avancent ensemble.
 model Order {
   order_id     String    @id @default(uuid())
   customer_id  String
-  offer_id     String
   pharmacy_id  String
-  quantity     Int
   status       String    @default("RESERVEE")
   qr_code      String    @unique @default(uuid())
   expires_at   DateTime  // reserved_at + 24h
@@ -323,13 +322,29 @@ model Order {
   updated_at   DateTime  @updatedAt
 
   customer     Customer  @relation(fields: [customer_id], references: [customer_id])
-  offer        Offer     @relation(fields: [offer_id], references: [offer_id])
   pharmacy     Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  lines        OrderLine[]
   activities   OrderActivity[]
 
   @@index([pharmacy_id, status])
-  @@index([offer_id, status])
   @@index([expires_at, status])
+}
+
+// Ligne d'un panier : une Offer réservée avec sa quantité. unit_price_snapshot
+// fige le prix affiché à la réservation (indicatif — le règlement se fait en
+// officine, ce n'est pas une transaction de paiement).
+model OrderLine {
+  order_line_id       String @id @default(uuid())
+  order_id            String
+  offer_id            String
+  quantity            Int
+  unit_price_snapshot Float
+
+  order               Order  @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  offer               Offer  @relation(fields: [offer_id], references: [offer_id])
+
+  @@index([order_id])
+  @@index([offer_id])
 }
 
 // Historique des transitions d'un Order : qui a fait quoi et quand.

@@ -24,13 +24,6 @@ const OFFER_INCLUDE = {
     select: { name: true, external_sku: true, category: true, brand: true },
   },
   categories: CATEGORY_SELECT,
-  _count: {
-    select: {
-      orders: {
-        where: { status: { in: ACTIVE_HOLD_STATUSES as unknown as string[] } },
-      },
-    },
-  },
 };
 
 const OFFER_CUSTOMER_INCLUDE = {
@@ -55,11 +48,6 @@ const OFFER_MANAGE_INCLUDE = {
   },
   categories: CATEGORY_SELECT,
   images: { orderBy: { position: 'asc' as const } },
-  _count: {
-    select: {
-      orders: { where: { status: { in: [...ACTIVE_HOLD_STATUSES] } } },
-    },
-  },
 };
 
 export interface CreateOfferDto {
@@ -141,15 +129,21 @@ export class OfferService {
     this.logger.log(
       `[${pharmacyId}] Offer created: product=${dto.product_id}, qty=${dto.quantity_offered}, price=${dto.discounted_price}, categories=${categoryIds.length} → offer_id=${offer.offer_id}`
     );
-    return offer;
+    // Offre neuve : aucune réservation possible encore.
+    return { ...offer, _count: { orders: 0 } };
   }
 
   async findAllForPharmacy(pharmacyId: string, status?: string) {
-    return prisma.offer.findMany({
+    const offers = await prisma.offer.findMany({
       where: { pharmacy_id: pharmacyId, ...(status ? { status } : {}) },
       include: OFFER_INCLUDE,
       orderBy: { created_at: 'desc' },
     });
+    const holds = await this.getActiveHolds(offers.map((o) => o.offer_id));
+    return offers.map((offer) => ({
+      ...offer,
+      _count: { orders: holds.get(offer.offer_id)?.count ?? 0 },
+    }));
   }
 
   /** Détail d'une offre pour le Titulaire (page de gestion) */
@@ -162,13 +156,14 @@ export class OfferService {
     if (offer.pharmacy_id !== pharmacyId)
       throw new ForbiddenException('Not your offer');
 
-    const holds = await prisma.order.aggregate({
-      where: { offer_id: offerId, status: { in: [...ACTIVE_HOLD_STATUSES] } },
-      _sum: { quantity: true },
-    });
-    const reserved = holds._sum.quantity ?? 0;
+    const holds = await this.getActiveHolds([offerId]);
+    const h = holds.get(offerId) ?? { quantity: 0, count: 0 };
 
-    return { ...offer, reserved_quantity: reserved };
+    return {
+      ...offer,
+      reserved_quantity: h.quantity,
+      _count: { orders: h.count },
+    };
   }
 
   /** Modification des informations d'une offre (prix, quantité, expiration) */
@@ -210,7 +205,7 @@ export class OfferService {
     }
 
     this.logger.log(`[${pharmacyId}] Offer ${offerId} updated`);
-    return prisma.offer.update({
+    const updated = await prisma.offer.update({
       where: { offer_id: offerId },
       data: {
         ...(dto.discounted_price != null
@@ -227,6 +222,8 @@ export class OfferService {
       },
       include: OFFER_MANAGE_INCLUDE,
     });
+    const holds = await this.getActiveHolds([offerId]);
+    return { ...updated, _count: { orders: holds.get(offerId)?.count ?? 0 } };
   }
 
   /** Ajoute une ou plusieurs images produit à une offre (append, ordonnées) */
@@ -299,67 +296,55 @@ export class OfferService {
             }
           : {}),
       },
-      include: {
-        ...OFFER_CUSTOMER_INCLUDE,
-        _count: {
-          select: {
-            orders: { where: { status: { in: [...ACTIVE_HOLD_STATUSES] } } },
-          },
-        },
-      },
+      include: OFFER_CUSTOMER_INCLUDE,
     });
 
-    const enriched = await Promise.all(
-      offers.map(async (offer) => {
-        const pharmacy = offer.pharmacy as {
-          lat: number | null;
-          lng: number | null;
-          name: string;
-          address: string;
-        };
-        if (pharmacy.lat == null || pharmacy.lng == null) return null;
+    // Un seul aller-retour pour les holds de toutes les offres de la page,
+    // au lieu d'un aggregate par offre (évite le N+1).
+    const holds = await this.getActiveHolds(offers.map((o) => o.offer_id));
 
-        const distanceKm = haversineKm(lat, lng, pharmacy.lat, pharmacy.lng);
-        if (distanceKm > maxDist) return null;
+    const enriched = offers.map((offer) => {
+      const pharmacy = offer.pharmacy as {
+        lat: number | null;
+        lng: number | null;
+        name: string;
+        address: string;
+      };
+      if (pharmacy.lat == null || pharmacy.lng == null) return null;
 
-        const originalPrice = (offer.product as { unit_price: number })
-          .unit_price;
-        const discountPercent =
-          originalPrice > 0
-            ? Math.round(
-                ((originalPrice - offer.discounted_price) / originalPrice) * 100
-              )
-            : 0;
+      const distanceKm = haversineKm(lat, lng, pharmacy.lat, pharmacy.lng);
+      if (distanceKm > maxDist) return null;
 
-        if (minDiscount != null && discountPercent < minDiscount) return null;
+      const originalPrice = (offer.product as { unit_price: number })
+        .unit_price;
+      const discountPercent =
+        originalPrice > 0
+          ? Math.round(
+              ((originalPrice - offer.discounted_price) / originalPrice) * 100
+            )
+          : 0;
 
-        const holds = await prisma.order.aggregate({
-          where: {
-            offer_id: offer.offer_id,
-            status: { in: [...ACTIVE_HOLD_STATUSES] },
-          },
-          _sum: { quantity: true },
-        });
-        const reserved = holds._sum.quantity ?? 0;
+      if (minDiscount != null && discountPercent < minDiscount) return null;
 
-        return {
-          offer_id: offer.offer_id,
-          product: offer.product,
-          categories: (offer as { categories?: unknown }).categories ?? [],
-          discounted_price: offer.discounted_price,
-          original_price: originalPrice,
-          discount_percent: discountPercent,
-          available_quantity: offer.quantity_offered - reserved,
-          distanceKm: Math.round(distanceKm * 10) / 10,
-          pharmacy: {
-            name: pharmacy.name,
-            address: pharmacy.address,
-            pharmacy_id: offer.pharmacy_id,
-          },
-          expires_at: offer.expires_at,
-        };
-      })
-    );
+      const reserved = holds.get(offer.offer_id)?.quantity ?? 0;
+
+      return {
+        offer_id: offer.offer_id,
+        product: offer.product,
+        categories: (offer as { categories?: unknown }).categories ?? [],
+        discounted_price: offer.discounted_price,
+        original_price: originalPrice,
+        discount_percent: discountPercent,
+        available_quantity: offer.quantity_offered - reserved,
+        distanceKm: Math.round(distanceKm * 10) / 10,
+        pharmacy: {
+          name: pharmacy.name,
+          address: pharmacy.address,
+          pharmacy_id: offer.pharmacy_id,
+        },
+        expires_at: offer.expires_at,
+      };
+    });
 
     const filtered = enriched.filter(Boolean) as NonNullable<
       (typeof enriched)[number]
@@ -378,19 +363,14 @@ export class OfferService {
   async findActiveById(offerId: string) {
     const offer = await prisma.offer.findUnique({
       where: { offer_id: offerId },
-      include: {
-        ...OFFER_CUSTOMER_INCLUDE,
-      },
+      include: OFFER_CUSTOMER_INCLUDE,
     });
     if (!offer) throw new NotFoundException('Offer not found');
     if (offer.status !== 'ACTIVE')
       throw new NotFoundException('Offer not available');
 
-    const holds = await prisma.order.aggregate({
-      where: { offer_id: offerId, status: { in: [...ACTIVE_HOLD_STATUSES] } },
-      _sum: { quantity: true },
-    });
-    const reserved = holds._sum.quantity ?? 0;
+    const holds = await this.getActiveHolds([offerId]);
+    const reserved = holds.get(offerId)?.quantity ?? 0;
     const originalPrice = (offer.product as { unit_price: number }).unit_price;
 
     return {
@@ -414,22 +394,12 @@ export class OfferService {
       orderBy: { created_at: 'desc' },
     });
 
-    return Promise.all(
-      offers.map(async (offer) => {
-        const holds = await prisma.order.aggregate({
-          where: {
-            offer_id: offer.offer_id,
-            status: { in: [...ACTIVE_HOLD_STATUSES] },
-          },
-          _sum: { quantity: true },
-        });
-        const reserved = holds._sum.quantity ?? 0;
-        return {
-          ...offer,
-          available_quantity: offer.quantity_offered - reserved,
-        };
-      })
-    );
+    const holds = await this.getActiveHolds(offers.map((o) => o.offer_id));
+    return offers.map((offer) => ({
+      ...offer,
+      available_quantity:
+        offer.quantity_offered - (holds.get(offer.offer_id)?.quantity ?? 0),
+    }));
   }
 
   async suspend(pharmacyId: string, offerId: string) {
@@ -442,21 +412,37 @@ export class OfferService {
     return this.updateStatus(pharmacyId, offerId, 'SUSPENDUE', 'ACTIVE');
   }
 
+  /**
+   * Ferme définitivement l'offre et annule les paniers actifs qui la
+   * contiennent. Limite connue : un panier multi-offres est annulé en
+   * intégralité même si une seule de ses lignes provient de cette offre
+   * (pas d'annulation partielle au niveau de la ligne) — cf. tension
+   * stock-truth documentée dans CLAUDE.md.
+   */
   async terminate(pharmacyId: string, offerId: string) {
     await this.findOwned(pharmacyId, offerId);
-    await prisma.order.updateMany({
+
+    const affectedLines = await prisma.orderLine.findMany({
       where: {
         offer_id: offerId,
-        status: { in: ['RESERVEE', 'EN_PREPARATION'] },
+        order: { status: { in: ['RESERVEE', 'EN_PREPARATION'] } },
       },
-      data: { status: 'ANNULEE', cancelled_at: new Date() },
+      select: { order_id: true },
     });
+    if (affectedLines.length > 0) {
+      await prisma.order.updateMany({
+        where: { order_id: { in: affectedLines.map((l) => l.order_id) } },
+        data: { status: 'ANNULEE', cancelled_at: new Date() },
+      });
+    }
+
     this.logger.log(`[${pharmacyId}] Offer ${offerId} → TERMINEE`);
-    return prisma.offer.update({
+    const offer = await prisma.offer.update({
       where: { offer_id: offerId },
       data: { status: 'TERMINEE' },
       include: OFFER_INCLUDE,
     });
+    return { ...offer, _count: { orders: 0 } };
   }
 
   private async findOwned(pharmacyId: string, offerId: string) {
@@ -481,10 +467,37 @@ export class OfferService {
         `Offer status must be ${from} to transition to ${to}`
       );
     }
-    return prisma.offer.update({
+    const updated = await prisma.offer.update({
       where: { offer_id: offerId },
       data: { status: to },
       include: OFFER_INCLUDE,
     });
+    const holds = await this.getActiveHolds([offerId]);
+    return { ...updated, _count: { orders: holds.get(offerId)?.count ?? 0 } };
+  }
+
+  /**
+   * Quantité réservée (holds actifs) et nombre de réservations actives, par
+   * offre — une seule requête groupée au lieu d'un aggregate par offre.
+   */
+  private async getActiveHolds(
+    offerIds: string[]
+  ): Promise<Map<string, { quantity: number; count: number }>> {
+    if (offerIds.length === 0) return new Map();
+    const rows = await prisma.orderLine.groupBy({
+      by: ['offer_id'],
+      where: {
+        offer_id: { in: offerIds },
+        order: { status: { in: [...ACTIVE_HOLD_STATUSES] } },
+      },
+      _sum: { quantity: true },
+      _count: { _all: true },
+    });
+    return new Map(
+      rows.map((r) => [
+        r.offer_id,
+        { quantity: r._sum.quantity ?? 0, count: r._count._all },
+      ])
+    );
   }
 }

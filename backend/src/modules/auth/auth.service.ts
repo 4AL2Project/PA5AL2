@@ -10,7 +10,7 @@ import * as bcrypt from 'bcryptjs';
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
 import { AuthTokens, JwtPayload } from './jwt-payload';
-import { scopeForRole, UserRole } from './roles.enum';
+import { UserRole } from './roles.enum';
 
 @Injectable()
 export class AuthService {
@@ -82,7 +82,7 @@ export class AuthService {
    *
    * Spécificités par rôle :
    * - ADMIN_SAVELY : compte plateforme, aucune officine rattachée
-   *   (`pharmacy = null`, scope `PLATFORM`).
+   *   (`pharmacy = null`).
    * - TITULAIRE : officine complète, incluant l'abonnement (donnée commerciale).
    * - PREPARATEUR : officine sans l'abonnement (donnée commerciale du titulaire)
    *   et sans visibilité financière.
@@ -120,7 +120,6 @@ export class AuthService {
       status: user.status,
       accepted_terms_at: user.accepted_terms_at,
       created_at: user.created_at,
-      scope: scopeForRole(role),
     };
 
     // ADMIN_SAVELY n'est rattaché à aucune officine.

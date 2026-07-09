@@ -64,7 +64,6 @@ describe('AuthService.me', () => {
 
     const result = await makeService().me('u-1');
 
-    expect(result.scope).toBe('PHARMACY');
     expect(result.pharmacy?.subscription_tier).toBe('premium');
   });
 
@@ -78,7 +77,6 @@ describe('AuthService.me', () => {
 
     const result = await makeService().me('u-1');
 
-    expect(result.scope).toBe('PHARMACY');
     expect(result.pharmacy).not.toBeNull();
     expect(result.pharmacy).not.toHaveProperty('subscription_tier');
   });
@@ -93,7 +91,6 @@ describe('AuthService.me', () => {
 
     const result = await makeService().me('u-1');
 
-    expect(result.scope).toBe('PLATFORM');
     expect(result.pharmacy).toBeNull();
   });
 });

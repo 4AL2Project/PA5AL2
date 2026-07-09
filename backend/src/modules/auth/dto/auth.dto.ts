@@ -134,13 +134,6 @@ export class MeResponseDto {
   @ApiProperty({ type: String, format: 'date-time' })
   created_at!: Date;
 
-  @ApiProperty({
-    enum: ['PHARMACY', 'PLATFORM'],
-    description:
-      "PLATFORM pour ADMIN_SAVELY, PHARMACY pour les rôles d'officine",
-  })
-  scope!: 'PHARMACY' | 'PLATFORM';
-
   @ApiPropertyOptional({
     type: MePharmacyDto,
     nullable: true,

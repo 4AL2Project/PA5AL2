@@ -196,7 +196,9 @@ export class OrderService {
         pharmacy: { select: { name: true, address: true } },
         lines: {
           include: {
-            offer: { include: { product: { select: { name: true, category: true } } } },
+            offer: {
+              include: { product: { select: { name: true, category: true } } },
+            },
           },
         },
       },
@@ -212,7 +214,9 @@ export class OrderService {
         pharmacy: { select: { name: true, address: true } },
         lines: {
           include: {
-            offer: { include: { product: { select: { name: true, category: true } } } },
+            offer: {
+              include: { product: { select: { name: true, category: true } } },
+            },
           },
         },
       },
@@ -481,7 +485,10 @@ export class OrderService {
       }),
       prisma.order.findUniqueOrThrow({
         where: { order_id: orderId },
-        include: { pharmacy: { select: { name: true } }, ...ORDER_LINE_INCLUDE },
+        include: {
+          pharmacy: { select: { name: true } },
+          ...ORDER_LINE_INCLUDE,
+        },
       }),
     ]);
 

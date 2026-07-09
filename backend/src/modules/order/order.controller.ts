@@ -31,7 +31,9 @@ export class OrderController {
 
   @Post()
   @UseGuards(CustomerJwtGuard)
-  @ApiOperation({ summary: 'Checkout du panier (Customer) — une pharmacie par panier' })
+  @ApiOperation({
+    summary: 'Checkout du panier (Customer) — une pharmacie par panier',
+  })
   create(
     @Req() req: Request & { customer: CustomerJwtPayload },
     @Body() body: { lines: CheckoutLineDto[] }

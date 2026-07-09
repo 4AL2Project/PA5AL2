@@ -159,7 +159,11 @@ export class OfferService {
     const holds = await this.getActiveHolds([offerId]);
     const h = holds.get(offerId) ?? { quantity: 0, count: 0 };
 
-    return { ...offer, reserved_quantity: h.quantity, _count: { orders: h.count } };
+    return {
+      ...offer,
+      reserved_quantity: h.quantity,
+      _count: { orders: h.count },
+    };
   }
 
   /** Modification des informations d'une offre (prix, quantité, expiration) */

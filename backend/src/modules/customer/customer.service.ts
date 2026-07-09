@@ -261,7 +261,9 @@ export class CustomerService {
       const orderSaved = order.lines.reduce((lineAcc, line) => {
         const original = (line.offer.product as { unit_price: number })
           .unit_price;
-        return lineAcc + (original - line.offer.discounted_price) * line.quantity;
+        return (
+          lineAcc + (original - line.offer.discounted_price) * line.quantity
+        );
       }, 0);
       return acc + orderSaved;
     }, 0);

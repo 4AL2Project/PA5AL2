@@ -255,7 +255,10 @@ export default function OrdersPage() {
                 <div className="mt-3 rounded-lg border border-border/50 bg-muted/30 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     {qrOrder.lines.map((line) => (
-                      <p key={line.order_line_id} className="font-medium text-sm">
+                      <p
+                        key={line.order_line_id}
+                        className="font-medium text-sm"
+                      >
                         {line.quantity}× {line.offer.product.name}
                       </p>
                     ))}
@@ -377,7 +380,10 @@ export default function OrdersPage() {
                           >
                             <TableCell className="font-medium max-w-[220px]">
                               {order.lines.map((line) => (
-                                <div key={line.order_line_id} className="truncate">
+                                <div
+                                  key={line.order_line_id}
+                                  className="truncate"
+                                >
                                   {line.offer.product.name}
                                   <span className="block text-xs text-muted-foreground font-mono">
                                     {line.offer.product.external_sku}
@@ -396,7 +402,9 @@ export default function OrdersPage() {
                             </TableCell>
                             <TableCell>
                               {order.lines.map((line) => (
-                                <div key={line.order_line_id}>{line.quantity}</div>
+                                <div key={line.order_line_id}>
+                                  {line.quantity}
+                                </div>
                               ))}
                             </TableCell>
                             <TableCell>

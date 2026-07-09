@@ -254,13 +254,14 @@ export default function OrdersPage() {
               {qrOrder && (
                 <div className="mt-3 rounded-lg border border-border/50 bg-muted/30 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
-                    <p className="font-medium text-sm">
-                      {qrOrder.offer.product.name}
-                    </p>
+                    {qrOrder.lines.map((line) => (
+                      <p key={line.order_line_id} className="font-medium text-sm">
+                        {line.quantity}× {line.offer.product.name}
+                      </p>
+                    ))}
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {qrOrder.customer.first_name} {qrOrder.customer.last_name}{' '}
-                      · {qrOrder.customer.email} · {qrOrder.quantity} unité
-                      {qrOrder.quantity !== 1 ? 's' : ''}
+                      · {qrOrder.customer.email}
                     </p>
                     <div className="mt-1">
                       <OrderStatusBadge status={qrOrder.status} />
@@ -374,11 +375,15 @@ export default function OrdersPage() {
                             key={order.order_id}
                             className="border-border/50 hover:bg-muted/30"
                           >
-                            <TableCell className="font-medium max-w-[160px] truncate">
-                              {order.offer.product.name}
-                              <span className="block text-xs text-muted-foreground font-mono">
-                                {order.offer.product.external_sku}
-                              </span>
+                            <TableCell className="font-medium max-w-[220px]">
+                              {order.lines.map((line) => (
+                                <div key={line.order_line_id} className="truncate">
+                                  {line.offer.product.name}
+                                  <span className="block text-xs text-muted-foreground font-mono">
+                                    {line.offer.product.external_sku}
+                                  </span>
+                                </div>
+                              ))}
                             </TableCell>
                             <TableCell>
                               <span className="text-sm">
@@ -389,7 +394,11 @@ export default function OrdersPage() {
                                 {order.customer.email}
                               </span>
                             </TableCell>
-                            <TableCell>{order.quantity}</TableCell>
+                            <TableCell>
+                              {order.lines.map((line) => (
+                                <div key={line.order_line_id}>{line.quantity}</div>
+                              ))}
+                            </TableCell>
                             <TableCell>
                               <OrderStatusBadge status={order.status} />
                             </TableCell>
@@ -551,7 +560,7 @@ export default function OrdersPage() {
         title="Annuler cette commande ?"
         description={
           confirmOrder
-            ? `La réservation de ${confirmOrder.quantity} unité${confirmOrder.quantity !== 1 ? 's' : ''} de "${confirmOrder.offer.product.name}" par ${confirmOrder.customer.first_name} ${confirmOrder.customer.last_name} sera annulée. Le stock sera libéré et le client notifié.`
+            ? `La réservation de ${confirmOrder.lines.map((l) => `${l.quantity} × "${l.offer.product.name}"`).join(', ')} par ${confirmOrder.customer.first_name} ${confirmOrder.customer.last_name} sera annulée. Le stock sera libéré et le client notifié.`
             : ''
         }
         confirmLabel="Annuler la commande"

@@ -9,15 +9,17 @@ jest.mock('../../database/client', () => ({
     order: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
+      findUniqueOrThrow: jest.fn(),
       update: jest.fn(),
       updateMany: jest.fn(),
-      aggregate: jest.fn(),
+    },
+    orderLine: {
+      findMany: jest.fn(),
     },
     orderActivity: {
       create: jest.fn(),
       createMany: jest.fn(),
     },
-    offer: { findUniqueOrThrow: jest.fn() },
     product: { update: jest.fn() },
     customer: { findUniqueOrThrow: jest.fn() },
   },
@@ -29,12 +31,12 @@ const { prisma } = require('../../database/client') as {
     order: {
       findUnique: jest.Mock;
       findMany: jest.Mock;
+      findUniqueOrThrow: jest.Mock;
       update: jest.Mock;
       updateMany: jest.Mock;
-      aggregate: jest.Mock;
     };
+    orderLine: { findMany: jest.Mock };
     orderActivity: { create: jest.Mock; createMany: jest.Mock };
-    offer: { findUniqueOrThrow: jest.Mock };
     product: { update: jest.Mock };
     customer: { findUniqueOrThrow: jest.Mock };
   };
@@ -50,12 +52,15 @@ function makeOrder(status: string, overrides: Record<string, unknown> = {}) {
     order_id: ORDER_ID,
     pharmacy_id: PHARMACY_ID,
     customer_id: CUSTOMER_ID,
-    offer_id: 'offer-uuid-1',
-    quantity: 2,
     status,
     ...overrides,
   };
 }
+
+const LINE_FIXTURE = {
+  quantity: 2,
+  offer: { product: { name: 'Crème' } },
+};
 
 function makeNotifications(): jest.Mocked<INotificationService> {
   return {
@@ -99,10 +104,11 @@ describe('OrderService — historique OrderActivity', () => {
       first_name: 'Jean',
       last_name: 'Dupont',
     });
-    prisma.offer.findUniqueOrThrow.mockResolvedValue({
-      offer_id: 'offer-uuid-1',
-      product: { name: 'Crème' },
+    prisma.order.findUniqueOrThrow.mockResolvedValue({
+      order_id: ORDER_ID,
+      qr_code: 'qr-uuid-1',
       pharmacy: { name: 'Pharmacie Test' },
+      lines: [LINE_FIXTURE],
     });
 
     await service.markReady(PHARMACY_ID, ORDER_ID, PREPARATEUR_ID);
@@ -115,10 +121,9 @@ describe('OrderService — historique OrderActivity', () => {
   it('withdraw enregistre une activité RETIREE avec l’acteur', async () => {
     prisma.order.findUnique.mockResolvedValue(makeOrder('PRETE'));
     prisma.order.update.mockResolvedValue(makeOrder('RETIREE'));
-    prisma.offer.findUniqueOrThrow.mockResolvedValue({
-      offer_id: 'offer-uuid-1',
-      product_id: 'product-uuid-1',
-    });
+    prisma.orderLine.findMany.mockResolvedValue([
+      { quantity: 2, offer: { product_id: 'product-uuid-1' } },
+    ]);
     prisma.product.update.mockResolvedValue({});
 
     await service.withdraw(PHARMACY_ID, ORDER_ID, PREPARATEUR_ID);
@@ -126,16 +131,18 @@ describe('OrderService — historique OrderActivity', () => {
     expect(prisma.orderActivity.create).toHaveBeenCalledWith({
       data: { order_id: ORDER_ID, action: 'RETIREE', actor_id: PREPARATEUR_ID },
     });
+    expect(prisma.product.update).toHaveBeenCalledWith({
+      where: { product_id: 'product-uuid-1' },
+      data: { stock_quantity: { decrement: 2 } },
+    });
   });
 
   it('cancel (pharmacie) enregistre une activité ANNULEE avec l’acteur', async () => {
     prisma.order.findUnique.mockResolvedValue({
       ...makeOrder('RESERVEE'),
       customer: { email: 'a@b.fr', first_name: 'A', last_name: 'B' },
-      offer: {
-        product: { name: 'Crème' },
-        pharmacy: { name: 'Pharmacie Test' },
-      },
+      pharmacy: { name: 'Pharmacie Test' },
+      lines: [LINE_FIXTURE],
     });
     prisma.order.update.mockResolvedValue(makeOrder('ANNULEE'));
 
@@ -156,10 +163,8 @@ describe('OrderService — historique OrderActivity', () => {
     prisma.order.findUnique.mockResolvedValue({
       ...makeOrder('RESERVEE'),
       customer: { email: 'a@b.fr', first_name: 'A', last_name: 'B' },
-      offer: {
-        product: { name: 'Crème' },
-        pharmacy: { name: 'Pharmacie Test' },
-      },
+      pharmacy: { name: 'Pharmacie Test' },
+      lines: [LINE_FIXTURE],
     });
     prisma.order.update.mockResolvedValue(makeOrder('ANNULEE'));
 
@@ -175,10 +180,8 @@ describe('OrderService — historique OrderActivity', () => {
       {
         ...makeOrder('RESERVEE'),
         customer: { email: 'a@b.fr', first_name: 'A', last_name: 'B' },
-        offer: {
-          product: { name: 'Crème' },
-          pharmacy: { name: 'Pharmacie Test' },
-        },
+        pharmacy: { name: 'Pharmacie Test' },
+        lines: [LINE_FIXTURE],
       },
     ]);
     prisma.order.updateMany.mockResolvedValue({ count: 1 });

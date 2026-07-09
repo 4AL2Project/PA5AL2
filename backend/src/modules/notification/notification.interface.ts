@@ -1,10 +1,14 @@
+export interface OrderLineSummary {
+  product_name: string;
+  quantity: number;
+}
+
 export interface OrderNotificationPayload {
   order_id: string;
   customer_email: string;
   customer_name?: string;
-  product_name: string;
   pharmacy_name: string;
-  quantity: number;
+  lines: OrderLineSummary[];
   qr_code?: string;
 }
 

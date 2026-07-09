@@ -1,7 +1,8 @@
 // Cahier de tests : historique OrderActivity (qui a traité une commande et quand)
 // Couvre : startPreparation, markReady, withdraw, cancel, expireOverdueOrders
 
-import { INotificationService } from '../notification/notification.interface';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 import { OrderService } from './order.service';
 
 jest.mock('../../database/client', () => ({
@@ -62,23 +63,18 @@ const LINE_FIXTURE = {
   offer: { product: { name: 'Crème' } },
 };
 
-function makeNotifications(): jest.Mocked<INotificationService> {
-  return {
-    orderConfirmed: jest.fn().mockResolvedValue(undefined),
-    orderReady: jest.fn().mockResolvedValue(undefined),
-    orderCancelled: jest.fn().mockResolvedValue(undefined),
-    newOrderForPrep: jest.fn().mockResolvedValue(undefined),
-  };
+function makeEventEmitter(): jest.Mocked<Pick<EventEmitter2, 'emit'>> {
+  return { emit: jest.fn() };
 }
 
 describe('OrderService — historique OrderActivity', () => {
   let service: OrderService;
-  let notifications: jest.Mocked<INotificationService>;
+  let eventEmitter: jest.Mocked<Pick<EventEmitter2, 'emit'>>;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    notifications = makeNotifications();
-    service = new OrderService(notifications);
+    eventEmitter = makeEventEmitter();
+    service = new OrderService(eventEmitter as unknown as EventEmitter2);
   });
 
   it('startPreparation enregistre une activité EN_PREPARATION avec l’acteur', async () => {

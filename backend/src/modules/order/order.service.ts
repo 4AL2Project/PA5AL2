@@ -2,19 +2,20 @@ import {
   BadRequestException,
   ConflictException,
   ForbiddenException,
-  Inject,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
 
 import { prisma } from '../../database/client';
+import { OrderLineSummary } from '../notification/notification.interface';
 import {
-  INotificationService,
-  NOTIFICATION_SERVICE,
-  OrderLineSummary,
-} from '../notification/notification.interface';
+  ORDER_CANCELLED_EVENT,
+  ORDER_CREATED_EVENT,
+  ORDER_READY_EVENT,
+} from './order.events';
 
 const HOLD_DURATION_HOURS = 24;
 
@@ -41,10 +42,7 @@ export interface CheckoutLineDto {
 export class OrderService {
   private readonly logger = new Logger(OrderService.name);
 
-  constructor(
-    @Inject(NOTIFICATION_SERVICE)
-    private readonly notifications: INotificationService
-  ) {}
+  constructor(private readonly eventEmitter: EventEmitter2) {}
 
   /** Checkout atomique d'un panier multi-offres (une seule pharmacie) — tout ou rien. */
   async createOrder(customerId: string, lines: CheckoutLineDto[]) {
@@ -156,10 +154,7 @@ export class OrderService {
       qr_code: order.qr_code,
     };
 
-    await Promise.all([
-      this.notifications.orderConfirmed(notifPayload),
-      this.notifications.newOrderForPrep(notifPayload),
-    ]);
+    this.eventEmitter.emit(ORDER_CREATED_EVENT, notifPayload);
 
     this.logger.log(
       `[${order.pharmacy_id}] Order created: customer=${customerId}, lines=${order.lines.length} → order_id=${order.order_id}`
@@ -305,7 +300,7 @@ export class OrderService {
     const { customer, lineSummaries, pharmacyName, qrCode } =
       await this.buildNotificationContext(order.order_id, order.customer_id);
 
-    await this.notifications.orderReady({
+    this.eventEmitter.emit(ORDER_READY_EVENT, {
       order_id: order.order_id,
       customer_email: customer.email,
       customer_name: [customer.first_name, customer.last_name]
@@ -396,8 +391,8 @@ export class OrderService {
 
     this.logger.log(`[${orderId}] Order cancelled by ${requesterType}`);
 
-    await this.notifications.orderCancelled(
-      {
+    this.eventEmitter.emit(ORDER_CANCELLED_EVENT, {
+      payload: {
         order_id: order.order_id,
         customer_email: order.customer.email,
         customer_name: [order.customer.first_name, order.customer.last_name]
@@ -409,10 +404,11 @@ export class OrderService {
           quantity: l.quantity,
         })),
       },
-      requesterType === 'customer'
-        ? 'Annulé par le client'
-        : 'Annulé par la pharmacie'
-    );
+      reason:
+        requesterType === 'customer'
+          ? 'Annulé par le client'
+          : 'Annulé par la pharmacie',
+    });
 
     return updated;
   }
@@ -453,25 +449,23 @@ export class OrderService {
       })),
     });
 
-    await Promise.all(
-      expired.map((order) =>
-        this.notifications.orderCancelled(
-          {
-            order_id: order.order_id,
-            customer_email: order.customer.email,
-            customer_name: [order.customer.first_name, order.customer.last_name]
-              .filter(Boolean)
-              .join(' '),
-            pharmacy_name: order.pharmacy.name,
-            lines: order.lines.map((l) => ({
-              product_name: l.offer.product.name,
-              quantity: l.quantity,
-            })),
-          },
-          'Réservation expirée (24h dépassées)'
-        )
-      )
-    );
+    for (const order of expired) {
+      this.eventEmitter.emit(ORDER_CANCELLED_EVENT, {
+        payload: {
+          order_id: order.order_id,
+          customer_email: order.customer.email,
+          customer_name: [order.customer.first_name, order.customer.last_name]
+            .filter(Boolean)
+            .join(' '),
+          pharmacy_name: order.pharmacy.name,
+          lines: order.lines.map((l) => ({
+            product_name: l.offer.product.name,
+            quantity: l.quantity,
+          })),
+        },
+        reason: 'Réservation expirée (24h dépassées)',
+      });
+    }
 
     return expired.length;
   }

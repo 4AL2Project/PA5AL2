@@ -170,6 +170,14 @@ export class OrderService {
         offer: {
           include: { product: { select: { name: true, external_sku: true } } },
         },
+        activities: {
+          orderBy: { created_at: 'asc' },
+          include: {
+            actor: {
+              select: { first_name: true, last_name: true, role: true },
+            },
+          },
+        },
       },
     });
     if (!order) throw new NotFoundException('Order not found');
@@ -198,22 +206,28 @@ export class OrderService {
   }
 
   /** Préparateur: RESERVEE → EN_PREPARATION */
-  async startPreparation(pharmacyId: string, orderId: string) {
+  async startPreparation(pharmacyId: string, orderId: string, actorId: string) {
     this.logger.log(`[${pharmacyId}] Order ${orderId} → EN_PREPARATION`);
-    return this.transition(pharmacyId, orderId, 'RESERVEE', 'EN_PREPARATION', {
-      prepared_at: new Date(),
-    });
+    return this.transition(
+      pharmacyId,
+      orderId,
+      'RESERVEE',
+      'EN_PREPARATION',
+      { prepared_at: new Date() },
+      actorId
+    );
   }
 
   /** Préparateur: EN_PREPARATION → PRETE */
-  async markReady(pharmacyId: string, orderId: string) {
+  async markReady(pharmacyId: string, orderId: string, actorId: string) {
     this.logger.log(`[${pharmacyId}] Order ${orderId} → PRETE`);
     const order = await this.transition(
       pharmacyId,
       orderId,
       'EN_PREPARATION',
       'PRETE',
-      { ready_at: new Date() }
+      { ready_at: new Date() },
+      actorId
     );
 
     const customer = await prisma.customer.findUniqueOrThrow({
@@ -244,16 +258,15 @@ export class OrderService {
   }
 
   /** Préparateur: valide le retrait (scan QR) — décrémente le stock */
-  async withdraw(pharmacyId: string, orderId: string) {
+  async withdraw(pharmacyId: string, orderId: string, actorId: string) {
     this.logger.log(`[${pharmacyId}] Order ${orderId} → RETIREE`);
     const order = await this.transition(
       pharmacyId,
       orderId,
       'PRETE',
       'RETIREE',
-      {
-        withdrawn_at: new Date(),
-      }
+      { withdrawn_at: new Date() },
+      actorId
     );
 
     // Decrement stock only at withdrawal
@@ -273,7 +286,8 @@ export class OrderService {
     orderId: string,
     requesterId: string,
     requesterType: 'customer' | 'pharmacy',
-    pharmacyId?: string
+    pharmacyId?: string,
+    actorId?: string
   ) {
     const order = await prisma.order.findUnique({
       where: { order_id: orderId },
@@ -313,6 +327,8 @@ export class OrderService {
       where: { order_id: orderId },
       data: { status: 'ANNULEE', cancelled_at: new Date() },
     });
+
+    await this.logActivity(orderId, 'ANNULEE', actorId);
 
     this.logger.log(`[${orderId}] Order cancelled by ${requesterType}`);
 
@@ -367,6 +383,14 @@ export class OrderService {
       data: { status: 'EXPIREE', cancelled_at: now },
     });
 
+    await prisma.orderActivity.createMany({
+      data: expired.map((order) => ({
+        order_id: order.order_id,
+        action: 'EXPIREE',
+        actor_id: null,
+      })),
+    });
+
     await Promise.all(
       expired.map((order) =>
         this.notifications.orderCancelled(
@@ -393,7 +417,8 @@ export class OrderService {
     orderId: string,
     from: string,
     to: string,
-    extra: Record<string, unknown> = {}
+    extra: Record<string, unknown> = {},
+    actorId?: string
   ) {
     const order = await prisma.order.findUnique({
       where: { order_id: orderId },
@@ -406,9 +431,17 @@ export class OrderService {
         `Order status must be ${from} to transition to ${to} (current: ${order.status})`
       );
     }
-    return prisma.order.update({
+    const updated = await prisma.order.update({
       where: { order_id: orderId },
       data: { status: to, updated_at: new Date(), ...extra },
+    });
+    await this.logActivity(orderId, to, actorId);
+    return updated;
+  }
+
+  private async logActivity(orderId: string, action: string, actorId?: string) {
+    await prisma.orderActivity.create({
+      data: { order_id: orderId, action, actor_id: actorId ?? null },
     });
   }
 }

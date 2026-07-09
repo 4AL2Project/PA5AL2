@@ -1,5 +1,14 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
   ApiGoneResponse,
   ApiOkResponse,
   ApiOperation,
@@ -7,14 +16,17 @@ import {
 } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
+import { CurrentUser } from './decorators/current-user.decorator';
 import {
   AuthTokensDto,
   LoginDto,
+  MeResponseDto,
   RefreshDto,
   RegisterDto,
   RegisteredUserDto,
 } from './dto/auth.dto';
 import { MagicLinkRequestDto, MagicLinkVerifyDto } from './dto/magic-link.dto';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { MagicLinkService } from './magic-link.service';
 
 @ApiTags('auth')
@@ -56,6 +68,18 @@ export class AuthController {
   @ApiOkResponse({ type: AuthTokensDto })
   refresh(@Body() dto: RefreshDto) {
     return this.authService.refresh(dto.refresh_token);
+  }
+
+  @Get('me')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({
+    summary: "Profil centralisé de l'utilisateur courant (adapté à son rôle)",
+  })
+  @ApiOkResponse({ type: MeResponseDto })
+  me(@CurrentUser('sub') userId: string) {
+    return this.authService.me(userId);
   }
 
   // ─── Magic link flow ──────────────────────────────────────────────────────

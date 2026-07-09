@@ -439,11 +439,7 @@ export class OrderService {
     return updated;
   }
 
-  private async logActivity(
-    orderId: string,
-    action: string,
-    actorId?: string
-  ) {
+  private async logActivity(orderId: string, action: string, actorId?: string) {
     await prisma.orderActivity.create({
       data: { order_id: orderId, action, actor_id: actorId ?? null },
     });

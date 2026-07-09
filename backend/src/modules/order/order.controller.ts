@@ -124,11 +124,7 @@ export class OrderController {
   @Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR)
   @ApiOperation({ summary: 'Marquer un Order PRETE' })
   ready(@Req() req: Request & { user: JwtPayload }, @Param('id') id: string) {
-    return this.orderService.markReady(
-      req.user.pharmacy_id!,
-      id,
-      req.user.sub
-    );
+    return this.orderService.markReady(req.user.pharmacy_id!, id, req.user.sub);
   }
 
   @Patch(':id/withdraw')
@@ -139,11 +135,7 @@ export class OrderController {
     @Req() req: Request & { user: JwtPayload },
     @Param('id') id: string
   ) {
-    return this.orderService.withdraw(
-      req.user.pharmacy_id!,
-      id,
-      req.user.sub
-    );
+    return this.orderService.withdraw(req.user.pharmacy_id!, id, req.user.sub);
   }
 
   @Patch(':id/cancel')

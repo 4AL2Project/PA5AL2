@@ -67,6 +67,7 @@ model User {
 
   pharmacy    Pharmacy?   @relation(fields: [pharmacy_id], references: [pharmacy_id])
   auth_tokens AuthToken[]
+  order_activities OrderActivity[]
 }
 
 model AuthToken {
@@ -324,8 +325,24 @@ model Order {
   customer     Customer  @relation(fields: [customer_id], references: [customer_id])
   offer        Offer     @relation(fields: [offer_id], references: [offer_id])
   pharmacy     Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
+  activities   OrderActivity[]
 
   @@index([pharmacy_id, status])
   @@index([offer_id, status])
   @@index([expires_at, status])
+}
+
+// Historique des transitions d'un Order : qui a fait quoi et quand.
+// actor_id est null pour les actions déclenchées par le système (cron d'expiration).
+model OrderActivity {
+  activity_id String   @id @default(uuid())
+  order_id    String
+  action      String   // EN_PREPARATION|PRETE|RETIREE|ANNULEE|EXPIREE
+  actor_id    String?
+  created_at  DateTime @default(now())
+
+  order       Order    @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  actor       User?    @relation(fields: [actor_id], references: [user_id])
+
+  @@index([order_id, created_at])
 }

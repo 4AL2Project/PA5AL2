@@ -112,7 +112,11 @@ export class OrderController {
   @Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR)
   @ApiOperation({ summary: 'Passer un Order EN_PREPARATION' })
   prepare(@Req() req: Request & { user: JwtPayload }, @Param('id') id: string) {
-    return this.orderService.startPreparation(req.user.pharmacy_id!, id);
+    return this.orderService.startPreparation(
+      req.user.pharmacy_id!,
+      id,
+      req.user.sub
+    );
   }
 
   @Patch(':id/ready')
@@ -120,7 +124,11 @@ export class OrderController {
   @Roles(UserRole.TITULAIRE, UserRole.PREPARATEUR)
   @ApiOperation({ summary: 'Marquer un Order PRETE' })
   ready(@Req() req: Request & { user: JwtPayload }, @Param('id') id: string) {
-    return this.orderService.markReady(req.user.pharmacy_id!, id);
+    return this.orderService.markReady(
+      req.user.pharmacy_id!,
+      id,
+      req.user.sub
+    );
   }
 
   @Patch(':id/withdraw')
@@ -131,7 +139,11 @@ export class OrderController {
     @Req() req: Request & { user: JwtPayload },
     @Param('id') id: string
   ) {
-    return this.orderService.withdraw(req.user.pharmacy_id!, id);
+    return this.orderService.withdraw(
+      req.user.pharmacy_id!,
+      id,
+      req.user.sub
+    );
   }
 
   @Patch(':id/cancel')
@@ -146,7 +158,8 @@ export class OrderController {
       id,
       req.user.pharmacy_id!,
       'pharmacy',
-      req.user.pharmacy_id!
+      req.user.pharmacy_id!,
+      req.user.sub
     );
   }
 }

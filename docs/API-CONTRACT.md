@@ -56,13 +56,13 @@ by `ResponseEnvelopeInterceptor` (success) and `HttpExceptionFilter`
 
 - `code` is a stable, machine-readable string. Mapping:
   | HTTP | code |
-  | ---- | --------------------- |
+  | ---- | ---------------------- |
   | 400 | `BAD_REQUEST` |
   | 401 | `UNAUTHORIZED` |
   | 403 | `FORBIDDEN` |
   | 404 | `NOT_FOUND` |
   | 409 | `CONFLICT` |
-  | 422 | `UNPROCESSABLE_ENTITY`|
+  | 422 | `UNPROCESSABLE_ENTITY` |
   | 500 | `INTERNAL_ERROR` |
 - `message` is human-readable but stable (do not localise here).
 - `details` is optional. It contains the raw `class-validator` array on

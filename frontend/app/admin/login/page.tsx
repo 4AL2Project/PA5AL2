@@ -9,8 +9,7 @@ import { AuthShell } from '@/components/auth/auth-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { adminLogin, decodeJwt, startSession } from '@/lib/auth';
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { isValidEmail } from '@/lib/validation';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -24,7 +23,7 @@ export default function AdminLoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  const emailValid = EMAIL_RE.test(email);
+  const emailValid = isValidEmail(email);
   const passwordValid = password.length > 0;
   const emailError = emailTouched && !emailValid && !emailFocused;
   const passwordError = passwordTouched && !passwordValid && !passwordFocused;

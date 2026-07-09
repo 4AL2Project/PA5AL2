@@ -6,9 +6,12 @@ import { useState } from 'react';
 
 import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { Button } from '@/components/ui/button';
+import { EmailInput } from '@/components/ui/email-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { PharmacyDetail } from '@/lib/auth';
+import { isValidEmail, isValidFrenchPhone } from '@/lib/validation';
 
 interface InfoFormState {
   name: string;
@@ -60,6 +63,10 @@ export function OfficineInfoForm({ pharmacy }: { pharmacy: PharmacyDetail }) {
   const dirty = (Object.keys(form) as (keyof InfoFormState)[]).some(
     (k) => form[k] !== initial[k]
   );
+
+  const contactValid =
+    !hasTitulaire ||
+    (isValidEmail(form.email) && isValidFrenchPhone(form.phone));
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,23 +233,21 @@ export function OfficineInfoForm({ pharmacy }: { pharmacy: PharmacyDetail }) {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>
-                <Input
+                <EmailInput
                   id="email"
-                  type="email"
                   value={form.email}
                   placeholder="email@savely.com"
-                  onChange={(e) => update('email', e.target.value)}
+                  onChange={(value) => update('email', value)}
                   disabled={saving}
                 />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="phone">Téléphone</Label>
-                <Input
+                <PhoneInput
                   id="phone"
-                  type="tel"
                   value={form.phone}
                   placeholder="0712345678"
-                  onChange={(e) => update('phone', e.target.value)}
+                  onChange={(value) => update('phone', value)}
                   disabled={saving}
                 />
               </div>
@@ -268,7 +273,7 @@ export function OfficineInfoForm({ pharmacy }: { pharmacy: PharmacyDetail }) {
             Enregistré
           </span>
         )}
-        <Button type="submit" disabled={saving || !dirty}>
+        <Button type="submit" disabled={saving || !dirty || !contactValid}>
           {saving && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
           Enregistrer
         </Button>

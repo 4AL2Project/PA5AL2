@@ -8,8 +8,7 @@ import { AuthShell } from '@/components/auth/auth-shell';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { requestMagicLink } from '@/lib/auth';
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { isValidEmail } from '@/lib/validation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,7 +21,7 @@ export default function LoginPage() {
   );
   const [resendCooldown, setResendCooldown] = useState(0);
 
-  const emailValid = EMAIL_RE.test(email);
+  const emailValid = isValidEmail(email);
   const emailError = emailTouched && !emailValid && !emailFocused;
 
   // Décompte du délai avant de pouvoir renvoyer un nouveau code.

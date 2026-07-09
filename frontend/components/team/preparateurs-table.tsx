@@ -32,8 +32,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { EmailInput } from '@/components/ui/email-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneInput } from '@/components/ui/phone-input';
 import {
   Table,
   TableBody,
@@ -43,6 +45,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Preparateur } from '@/lib/auth';
+import { isValidEmail, isValidFrenchPhone } from '@/lib/validation';
 
 function preparateurName(p: Preparateur): string {
   const full = [p.first_name, p.last_name].filter(Boolean).join(' ').trim();
@@ -83,7 +86,7 @@ function InvitePreparateurDialog({
     }
   }
 
-  const canSubmit = email.trim().length > 0;
+  const canSubmit = isValidEmail(email);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,12 +128,11 @@ function InvitePreparateurDialog({
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="invite-email">Adresse email</Label>
-            <Input
+            <EmailInput
               id="invite-email"
-              type="email"
               placeholder="prenom.nom@pharmacie.fr"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(value) => setEmail(value)}
               disabled={submitting}
               autoFocus
             />
@@ -299,21 +301,19 @@ function PreparateurDetailsDialog({
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="det-email">Email</Label>
-              <Input
+              <EmailInput
                 id="det-email"
-                type="email"
                 value={form.email}
-                onChange={(e) => update('email', e.target.value)}
+                onChange={(value) => update('email', value)}
                 disabled={submitting}
               />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="det-phone">Téléphone</Label>
-              <Input
+              <PhoneInput
                 id="det-phone"
-                type="tel"
                 value={form.phone}
-                onChange={(e) => update('phone', e.target.value)}
+                onChange={(value) => update('phone', value)}
                 disabled={submitting}
               />
             </div>
@@ -333,7 +333,14 @@ function PreparateurDetailsDialog({
               >
                 Annuler
               </Button>
-              <Button type="submit" disabled={submitting}>
+              <Button
+                type="submit"
+                disabled={
+                  submitting ||
+                  !isValidEmail(form.email) ||
+                  (form.phone.trim() !== '' && !isValidFrenchPhone(form.phone))
+                }
+              >
                 {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
                 Enregistrer
               </Button>

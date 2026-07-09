@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PhoneInput } from '@/components/ui/phone-input';
 import { Separator } from '@/components/ui/separator';
 import {
   acceptInvitation,
@@ -18,6 +19,7 @@ import {
   InvitationInfo,
   startSession,
 } from '@/lib/auth';
+import { isValidFrenchPhone } from '@/lib/validation';
 
 type LoadState =
   | { kind: 'loading' }
@@ -161,7 +163,7 @@ function OnboardingContent() {
     !!form.pharmacy_siret.trim() &&
     !!form.first_name.trim() &&
     !!form.last_name.trim() &&
-    !!form.phone.trim();
+    isValidFrenchPhone(form.phone);
 
   return (
     <AuthShell
@@ -260,12 +262,11 @@ function OnboardingContent() {
             <Label htmlFor="phone" className="text-xs">
               Téléphone
             </Label>
-            <Input
+            <PhoneInput
               id="phone"
-              type="tel"
               required
               value={form.phone}
-              onChange={(e) => update('phone', e.target.value)}
+              onChange={(value) => update('phone', value)}
               disabled={submitting}
             />
           </div>

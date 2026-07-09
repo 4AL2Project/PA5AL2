@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
+import { EmailInput } from '@/components/ui/email-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -16,6 +17,7 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { createAdminUser } from '@/lib/api';
+import { isValidEmail } from '@/lib/validation';
 
 export function AddAdminUserDrawer() {
   const [open, setOpen] = useState(false);
@@ -27,7 +29,7 @@ export function AddAdminUserDrawer() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !firstName || !lastName) return;
+    if (!isValidEmail(email) || !firstName || !lastName) return;
     setLoading(true);
     try {
       await createAdminUser({
@@ -78,13 +80,12 @@ export function AddAdminUserDrawer() {
             <Label htmlFor="admin-email" className="text-xs">
               Email <span className="text-destructive">*</span>
             </Label>
-            <Input
+            <EmailInput
               id="admin-email"
-              type="email"
               className="h-8 text-xs"
               placeholder="alice@savely.fr"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(value) => setEmail(value)}
               required
             />
           </div>
@@ -130,7 +131,9 @@ export function AddAdminUserDrawer() {
             <Button
               type="submit"
               size="sm"
-              disabled={loading || !email || !firstName || !lastName}
+              disabled={
+                loading || !isValidEmail(email) || !firstName || !lastName
+              }
             >
               Envoyer l&apos;invitation
             </Button>

@@ -12,23 +12,25 @@
 Le système attend **deux fichiers distincts** (`upload.service.ts`), pas un seul.
 
 **Fichier PRODUITS**
-| Colonne | Obligatoire | Rôle |
-|---|---|---|
-| `external_sku` | non\* | identifiant produit côté LGO — clé anti-doublon |
-| `name` | oui | nom produit |
-| `category`, `brand` | non | classification |
-| `expiry_date` | oui | date de péremption → moteur risque |
-| `stock_quantity` | oui | stock actuel |
-| `unit_price` | oui | prix de vente |
-| `cost_price` | non | prix d'achat → calcul de la perte |
+
+| Colonne             | Obligatoire | Rôle                                            |
+| ------------------- | ----------- | ----------------------------------------------- |
+| `external_sku`      | non\*       | identifiant produit côté LGO — clé anti-doublon |
+| `name`              | oui         | nom produit                                     |
+| `category`, `brand` | non         | classification                                  |
+| `expiry_date`       | oui         | date de péremption → moteur risque              |
+| `stock_quantity`    | oui         | stock actuel                                    |
+| `unit_price`        | oui         | prix de vente                                   |
+| `cost_price`        | non         | prix d'achat → calcul de la perte               |
 
 **Fichier VENTES**
-| Colonne | Obligatoire | Rôle |
-|---|---|---|
-| `external_sku` | oui | rattache la vente au produit |
-| `sale_date` | oui | calcul vélocité 30j |
-| `quantity_sold` | oui | volume écoulé |
-| `unit_price_sold` | non | prix réel de vente |
+
+| Colonne           | Obligatoire | Rôle                         |
+| ----------------- | ----------- | ---------------------------- |
+| `external_sku`    | oui         | rattache la vente au produit |
+| `sale_date`       | oui         | calcul vélocité 30j          |
+| `quantity_sold`   | oui         | volume écoulé                |
+| `unit_price_sold` | non         | prix réel de vente           |
 
 > ⚠️ `external_sku` est optionnel pour les produits mais obligatoire pour les ventes. Un produit sans SKU ne peut pas être relié à ses ventes → classé "critical" à tort. **À verrouiller : rendre le SKU obligatoire.**
 

@@ -32,6 +32,12 @@ const OFFER_CUSTOMER_INCLUDE = {
   },
   categories: CATEGORY_SELECT,
   pharmacy: { select: { name: true, address: true, lat: true, lng: true } },
+  // Galerie produit. Les `url` sont relatives (`/uploads/offers/…`) : c'est au
+  // client de les résoudre contre l'origine de l'API.
+  images: {
+    select: { url: true, position: true },
+    orderBy: { position: 'asc' as const },
+  },
 };
 
 // Vue détaillée côté Titulaire (page de gestion d'une offre)
@@ -332,6 +338,7 @@ export class OfferService {
         offer_id: offer.offer_id,
         product: offer.product,
         categories: (offer as { categories?: unknown }).categories ?? [],
+        images: offer.images,
         discounted_price: offer.discounted_price,
         original_price: originalPrice,
         discount_percent: discountPercent,

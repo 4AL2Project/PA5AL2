@@ -212,8 +212,8 @@ export async function acceptInvitation(
   );
 }
 
+// Pas de mot de passe : le préparateur se connecte ensuite par code OTP.
 export interface AcceptPreparateurPayload {
-  password: string;
   first_name: string;
   last_name: string;
   phone?: string;
@@ -259,6 +259,33 @@ export async function adminLogin(
   return backendFetch<AuthTokens>('/api/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
+  });
+}
+
+/**
+ * Connexion préparateur, étape 1 : demande d'un code à 6 chiffres par email.
+ * La réponse est volontairement identique que le compte existe ou non.
+ */
+export async function requestPreparateurCode(
+  email: string
+): Promise<{ message: string }> {
+  return backendFetch<{ message: string }>(
+    '/api/auth/preparateur/request-code',
+    {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }
+  );
+}
+
+/** Connexion préparateur, étape 2 : échange du code contre une session. */
+export async function verifyPreparateurCode(
+  email: string,
+  code: string
+): Promise<AuthTokens> {
+  return backendFetch<AuthTokens>('/api/auth/preparateur/verify-code', {
+    method: 'POST',
+    body: JSON.stringify({ email, code }),
   });
 }
 

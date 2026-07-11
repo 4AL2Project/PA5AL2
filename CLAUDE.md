@@ -23,6 +23,8 @@ PA5AL2/                # pnpm workspace (monorepo)
 
 **Auth & multi-tenant**: JWT + RBAC (`TITULAIRE`/`PREPARATEUR`/`ADMIN_SAVELY`) implemented in `src/modules/auth/` (guards: `jwt-auth`, `roles`, `tenant`; `mask-financial` interceptor). `pharmacy_id` is derived from the token (`TenantGuard`). ⚠️ Some legacy read endpoints still accept `?pharmacy_id=` — verify per controller.
 
+**Login per role**: `TITULAIRE` → magic link · `ADMIN_SAVELY` → password (`POST /api/auth/login`) · `PREPARATEUR` → 6-digit OTP emailed on demand (`POST /api/auth/preparateur/request-code` then `/verify-code`). Préparateurs have **no password**: `User.password` is `NULL` for them and `POST /api/auth/login` rejects the role outright.
+
 **Where the real code lives**: `backend/src/modules/` (`auth`, `analysis`, `upload`, `product`, `dashboard`). **Ignore `backend/dist/contexts/`** — stale build of an abandoned DDD experiment.
 
 ## Development Commands
@@ -95,8 +97,9 @@ A daily cron job (2 AM) recalculates risk for all pharmacies.
 ## Data Models (Prisma)
 
 - **Pharmacy**: Multi-tenant anchor (email, subscription_tier)
-- **User**: belongs to a Pharmacy; role (TITULAIRE/PREPARATEUR/ADMIN_SAVELY), bcrypt password, status
+- **User**: belongs to a Pharmacy; role (TITULAIRE/PREPARATEUR/ADMIN_SAVELY), bcrypt password (`NULL` for PREPARATEUR — OTP login), status
 - **AuthToken**: magic-link / refresh tokens (hashed)
+- **UserOtp**: 6-digit login codes for PREPARATEUR (SHA-256 hashed, TTL 10min, max 5 attempts)
 - **Product**: `external_sku` (**required**), `lot_number`, stock, expiry_date, prices
 - **Sale**: Historical sales for velocity calculation
 - **RiskAnalysis**: Computed risk scores per product per day

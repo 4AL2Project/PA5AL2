@@ -68,13 +68,8 @@ export class InvitationInfoDto {
   expires_at!: Date;
 }
 
+// Pas de mot de passe : le preparateur se connecte par code OTP a 6 chiffres.
 export class AcceptPreparateurInvitationDto {
-  @ApiProperty({ example: 'MonMotDePasse123', minLength: 8 })
-  @IsString()
-  @IsNotEmpty()
-  @MinLength(8)
-  password!: string;
-
   @ApiProperty({ required: false, example: 'Jean' })
   @IsOptional()
   @IsString()

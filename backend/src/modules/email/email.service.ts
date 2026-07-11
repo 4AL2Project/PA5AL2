@@ -98,8 +98,12 @@ export class EmailService {
     });
   }
 
-  async sendOtpCodeEmail(to: string, code: string): Promise<void> {
-    const ttlMinutes = Math.round(config.auth.customerOtpTtlMs / 60000);
+  async sendOtpCodeEmail(
+    to: string,
+    code: string,
+    ttlMs: number = config.auth.customerOtpTtlMs
+  ): Promise<void> {
+    const ttlMinutes = Math.round(ttlMs / 60000);
     await this.send({
       from: config.email.from,
       to,

@@ -86,13 +86,13 @@ export class InvitationService {
   }
 
   /**
-   * Finalise le compte d'un preparateur invite : il choisit son mot de passe
-   * depuis l'onboarding web. Le compte passe de PENDING a ACTIVE.
+   * Finalise le compte d'un preparateur invite depuis l'onboarding web.
+   * Le compte passe de PENDING a ACTIVE. Aucun mot de passe n'est defini :
+   * le preparateur se connecte ensuite par code OTP a 6 chiffres.
    */
   async acceptPreparateur(
     rawToken: string,
     body: {
-      password: string;
       accepted_terms: unknown;
       first_name?: string;
       last_name?: string;
@@ -114,15 +114,9 @@ export class InvitationService {
       );
     }
 
-    const passwordHash = await bcrypt.hash(
-      body.password,
-      config.auth.bcryptRounds
-    );
-
     const updatedUser = await prisma.user.update({
       where: { user_id: user.user_id },
       data: {
-        password: passwordHash,
         first_name: body.first_name ?? user.first_name,
         last_name: body.last_name ?? user.last_name,
         phone: body.phone ?? user.phone,

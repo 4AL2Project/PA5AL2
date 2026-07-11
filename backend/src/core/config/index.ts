@@ -27,6 +27,12 @@ export const config = {
     customerOtpMaxAttempts: 5, // essais de vérification avant invalidation
     customerOtpRateLimit: 3, // max de codes demandés par fenêtre
     customerOtpRateLimitWindowMs: 15 * 60 * 1000, // 15min window
+    // OTP de connexion Préparateur (back-office) — remplace le mot de passe
+    preparateurOtpLength: 6, // nombre de chiffres du code
+    preparateurOtpTtlMs: 10 * 60 * 1000, // 10min de validité
+    preparateurOtpMaxAttempts: 5, // essais de vérification avant invalidation
+    preparateurOtpRateLimit: 3, // max de codes demandés par fenêtre
+    preparateurOtpRateLimitWindowMs: 15 * 60 * 1000, // 15min window
   },
   email: {
     // 'resend' (prod) ou 'smtp' (dev/test via MailHog)

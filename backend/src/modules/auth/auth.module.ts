@@ -9,6 +9,7 @@ import { RolesGuard } from './guards/roles.guard';
 import { TenantGuard } from './guards/tenant.guard';
 import { MaskFinancialInterceptor } from './interceptors/mask-financial.interceptor';
 import { MagicLinkService } from './magic-link.service';
+import { PreparateurOtpService } from './preparateur-otp.service';
 
 @Module({
   imports: [JwtModule.register({}), EmailModule],
@@ -16,6 +17,7 @@ import { MagicLinkService } from './magic-link.service';
   providers: [
     AuthService,
     MagicLinkService,
+    PreparateurOtpService,
     JwtAuthGuard,
     RolesGuard,
     TenantGuard,

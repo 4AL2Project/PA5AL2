@@ -19,8 +19,6 @@ import {
 } from '@/lib/auth';
 import { isValidFrenchPhone } from '@/lib/validation';
 
-const MIN_PASSWORD_LENGTH = 8;
-
 type LoadState =
   | { kind: 'loading' }
   | { kind: 'error'; status?: number }
@@ -31,8 +29,6 @@ interface FormState {
   first_name: string;
   last_name: string;
   phone: string;
-  password: string;
-  confirm_password: string;
   accepted_terms: boolean;
 }
 
@@ -41,8 +37,6 @@ function buildInitialForm(info: InvitationInfo): FormState {
     first_name: info.titulaire.first_name ?? '',
     last_name: info.titulaire.last_name ?? '',
     phone: info.titulaire.phone ?? '',
-    password: '',
-    confirm_password: '',
     accepted_terms: false,
   };
 }
@@ -94,21 +88,9 @@ function PreparateurOnboardingContent() {
     if (!token || !form) return;
     setSubmitError(null);
 
-    if (form.password.length < MIN_PASSWORD_LENGTH) {
-      setSubmitError(
-        `Le mot de passe doit contenir au moins ${MIN_PASSWORD_LENGTH} caractères.`
-      );
-      return;
-    }
-    if (form.password !== form.confirm_password) {
-      setSubmitError('Les mots de passe ne correspondent pas.');
-      return;
-    }
-
     setSubmitting(true);
     try {
       await acceptPreparateurInvitation(token, {
-        password: form.password,
         first_name: form.first_name,
         last_name: form.last_name,
         phone: form.phone.trim() || undefined,
@@ -152,12 +134,15 @@ function PreparateurOnboardingContent() {
         <div className="rounded-lg border bg-muted/30 p-4 flex items-start gap-3">
           <CheckCircle2 className="h-4 w-4 text-primary mt-0.5" />
           <p className="text-xs text-muted-foreground">
-            Vous pouvez désormais vous connecter sur l’application mobile Savely
-            avec votre adresse email{' '}
-            <span className="font-medium text-foreground">{successEmail}</span>{' '}
-            et le mot de passe que vous venez de choisir.
+            Vous pouvez désormais vous connecter avec votre adresse email{' '}
+            <span className="font-medium text-foreground">{successEmail}</span>.
+            Un code à 6 chiffres vous sera envoyé par email à chaque connexion —
+            vous n’avez pas de mot de passe à retenir.
           </p>
         </div>
+        <Button asChild className="w-full mt-5">
+          <Link href="/preparateur/login">Se connecter</Link>
+        </Button>
       </AuthShell>
     );
   }
@@ -198,14 +183,12 @@ function PreparateurOnboardingContent() {
     form.accepted_terms &&
     !!form.first_name.trim() &&
     !!form.last_name.trim() &&
-    !!form.password &&
-    !!form.confirm_password &&
     (form.phone.trim() === '' || isValidFrenchPhone(form.phone));
 
   return (
     <AuthShell
       title="Finaliser votre compte préparateur"
-      description={`Rejoignez ${loadState.info.pharmacy.name} en choisissant votre mot de passe.`}
+      description={`Rejoignez ${loadState.info.pharmacy.name} en confirmant vos informations.`}
     >
       <form onSubmit={onSubmit} className="space-y-5">
         <section className="space-y-3">
@@ -266,43 +249,13 @@ function PreparateurOnboardingContent() {
 
         <Separator />
 
-        <section className="space-y-3">
-          <h2 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Mot de passe
-          </h2>
-          <div className="space-y-1.5">
-            <Label htmlFor="password" className="text-xs">
-              Mot de passe
-            </Label>
-            <Input
-              id="password"
-              type="password"
-              required
-              autoComplete="new-password"
-              minLength={MIN_PASSWORD_LENGTH}
-              value={form.password}
-              onChange={(e) => update('password', e.target.value)}
-              disabled={submitting}
-            />
-            <p className="text-xs text-muted-foreground">
-              Au moins {MIN_PASSWORD_LENGTH} caractères.
-            </p>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="confirm-password" className="text-xs">
-              Confirmer le mot de passe
-            </Label>
-            <Input
-              id="confirm-password"
-              type="password"
-              required
-              autoComplete="new-password"
-              value={form.confirm_password}
-              onChange={(e) => update('confirm_password', e.target.value)}
-              disabled={submitting}
-            />
-          </div>
-        </section>
+        <div className="rounded-lg border bg-muted/30 p-4 flex items-start gap-3">
+          <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+          <p className="text-xs text-muted-foreground">
+            Aucun mot de passe à choisir : à chaque connexion, vous recevrez un
+            code à 6 chiffres sur votre adresse email.
+          </p>
+        </div>
 
         <Separator />
 

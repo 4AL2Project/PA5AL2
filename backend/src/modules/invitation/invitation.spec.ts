@@ -285,7 +285,6 @@ describe('InvitationService.acceptPreparateur', () => {
   let service: InvitationService;
 
   const validBody = {
-    password: 'MonMotDePasse123',
     accepted_terms: true as unknown,
   };
 
@@ -313,12 +312,12 @@ describe('InvitationService.acceptPreparateur', () => {
     expect(result).toHaveProperty('refresh_token');
   });
 
-  it('enregistre un mot de passe hashe et passe le compte ACTIVE', async () => {
+  it('passe le compte ACTIVE sans definir de mot de passe', async () => {
     await service.acceptPreparateur('valid-token', validBody);
     const updateCall = prisma.user.update.mock.calls[0][0];
     expect(updateCall.data.status).toBe('ACTIVE');
-    expect(updateCall.data.password).toEqual(expect.any(String));
-    expect(updateCall.data.password).not.toBe(validBody.password);
+    // Le preparateur se connecte par code OTP : aucun mot de passe n'est ecrit.
+    expect(updateCall.data).not.toHaveProperty('password');
   });
 
   it('invalide le token en remplissant consumed_at', async () => {

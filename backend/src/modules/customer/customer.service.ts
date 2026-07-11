@@ -10,10 +10,10 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 
 import { config } from '../../core/config';
+import { generateOtpCode, hashOtpCode } from '../../core/otp.util';
 import { prisma } from '../../database/client';
 import { EmailService } from '../email/email.service';
 import { CustomerJwtPayload } from './customer-jwt-payload';
-import { generateOtpCode, hashOtpCode } from './customer-otp.util';
 import { UpdateCustomerMeDto } from './dto/customer.dto';
 
 type CustomerRefreshPayload = {

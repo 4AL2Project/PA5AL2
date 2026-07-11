@@ -13,6 +13,7 @@ import {
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
@@ -26,15 +27,22 @@ import {
   RegisteredUserDto,
 } from './dto/auth.dto';
 import { MagicLinkRequestDto, MagicLinkVerifyDto } from './dto/magic-link.dto';
+import {
+  PreparateurRequestCodeDto,
+  PreparateurRequestCodeResponseDto,
+  PreparateurVerifyCodeDto,
+} from './dto/preparateur-otp.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { MagicLinkService } from './magic-link.service';
+import { PreparateurOtpService } from './preparateur-otp.service';
 
 @ApiTags('auth')
 @Controller('api/auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly magicLinkService: MagicLinkService
+    private readonly magicLinkService: MagicLinkService,
+    private readonly preparateurOtpService: PreparateurOtpService
   ) {}
 
   @Post('register')
@@ -80,6 +88,30 @@ export class AuthController {
   @ApiOkResponse({ type: MeResponseDto })
   me(@CurrentUser('sub') userId: string) {
     return this.authService.me(userId);
+  }
+
+  // ─── Connexion préparateur par code OTP ───────────────────────────────────
+
+  @Post('preparateur/request-code')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      'Envoyer un code à 6 chiffres au préparateur (réponse toujours 200, rate-limitée)',
+  })
+  @ApiOkResponse({ type: PreparateurRequestCodeResponseDto })
+  requestPreparateurCode(@Body() dto: PreparateurRequestCodeDto) {
+    return this.preparateurOtpService.requestCode(dto.email);
+  }
+
+  @Post('preparateur/verify-code')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Consommer le code du préparateur et retourner une session',
+  })
+  @ApiOkResponse({ type: AuthTokensDto })
+  @ApiUnauthorizedResponse({ description: 'Code invalide ou expire' })
+  verifyPreparateurCode(@Body() dto: PreparateurVerifyCodeDto) {
+    return this.preparateurOtpService.verifyCode(dto.email, dto.code);
   }
 
   // ─── Magic link flow ──────────────────────────────────────────────────────

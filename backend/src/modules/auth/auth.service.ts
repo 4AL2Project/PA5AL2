@@ -51,6 +51,17 @@ export class AuthService {
 
   async login(email: string, password: string): Promise<AuthTokens> {
     const user = await prisma.user.findUnique({ where: { email } });
+
+    // Testé avant l'absence de mot de passe : le password d'un préparateur est
+    // NULL en base, sinon il tomberait dans « Invalid credentials » et son
+    // compte paraîtrait cassé. Il passe par POST /api/auth/preparateur/request-code.
+    if (user?.role === UserRole.PREPARATEUR) {
+      this.logger.warn(`Password login refused (PREPARATEUR): ${email}`);
+      throw new UnauthorizedException(
+        'Les préparateurs se connectent avec un code à 6 chiffres envoyé par email'
+      );
+    }
+
     if (!user || !user.password) {
       this.logger.warn(`Login failed (unknown user): ${email}`);
       throw new UnauthorizedException('Invalid credentials');

@@ -56,6 +56,7 @@ model User {
   // null quand role = ADMIN_SAVELY (pas d'officine rattachée)
   pharmacy_id       String?
   email             String    @unique
+  // null pour les PREPARATEUR : ils se connectent par code OTP, jamais par mot de passe
   password          String?
   role              String    @default("TITULAIRE")
   status            String    @default("ACTIVE")
@@ -67,6 +68,7 @@ model User {
 
   pharmacy    Pharmacy?   @relation(fields: [pharmacy_id], references: [pharmacy_id])
   auth_tokens AuthToken[]
+  otps        UserOtp[]
   order_activities OrderActivity[]
 }
 
@@ -82,6 +84,23 @@ model AuthToken {
   user        User      @relation(fields: [user_id], references: [user_id])
 
   @@index([token_hash])
+}
+
+// Code OTP de connexion d'un utilisateur back-office (préparateur).
+// Rattaché au User : contrairement au Customer B2C, le compte existe toujours
+// en amont (créé par invitation du titulaire).
+model UserOtp {
+  otp_id      String    @id @default(uuid())
+  user_id     String
+  code_hash   String
+  expires_at  DateTime
+  attempts    Int       @default(0)
+  consumed_at DateTime?
+  created_at  DateTime  @default(now())
+
+  user        User      @relation(fields: [user_id], references: [user_id])
+
+  @@index([user_id, created_at])
 }
 
 model Product {

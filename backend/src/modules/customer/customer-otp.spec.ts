@@ -6,9 +6,9 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
+import { hashOtpCode } from '../../core/otp.util';
 import { EmailService } from '../email/email.service';
 import { CustomerService } from './customer.service';
-import { hashOtpCode } from './customer-otp.util';
 
 // --- Mocks -------------------------------------------------------------------
 jest.mock('../../database/client', () => ({

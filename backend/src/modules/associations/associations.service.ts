@@ -1,5 +1,10 @@
+import { randomUUID } from 'node:crypto';
+import { extname } from 'node:path';
+
 import { Injectable, NotFoundException } from '@nestjs/common';
 
+import { config } from '../../core/config';
+import { StorageService } from '../../core/storage/storage.service';
 import { prisma } from '../../database/client';
 import { GeocodingService } from '../geocoding/geocoding.service';
 
@@ -22,7 +27,10 @@ export interface FindAllOptions {
 
 @Injectable()
 export class AssociationsService {
-  constructor(private readonly geocoding: GeocodingService) {}
+  constructor(
+    private readonly geocoding: GeocodingService,
+    private readonly storage: StorageService
+  ) {}
 
   async create(dto: CreateAssociationDto) {
     let { lat, lng } = dto;
@@ -85,12 +93,27 @@ export class AssociationsService {
     });
   }
 
-  async setLogo(id: string, logoUrl: string) {
-    await this.findOne(id);
-    return prisma.association.update({
+  async setLogo(id: string, file: Express.Multer.File) {
+    const asso = await this.findOne(id);
+
+    const logoUrl = await this.storage.upload({
+      key: `${config.storage.prefixes.associations}/${randomUUID()}${extname(
+        file.originalname
+      ).toLowerCase()}`,
+      body: file.buffer,
+      contentType: file.mimetype,
+    });
+
+    const updated = await prisma.association.update({
       where: { association_id: id },
       data: { logo_url: logoUrl },
     });
+
+    // Supprime l'ancien logo (best-effort) une fois le nouveau enregistré.
+    if (asso.logo_url && asso.logo_url !== logoUrl) {
+      await this.storage.delete(asso.logo_url);
+    }
+    return updated;
   }
 }
 

@@ -4,6 +4,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
 
 import { config } from './core/config';
+import { StorageModule } from './core/storage/storage.module';
 import { HealthController } from './health.controller';
 import { AnalysisJob } from './jobs/analysis.job';
 import { ActionsModule } from './modules/actions/actions.module';
@@ -40,6 +41,7 @@ import { ProductModule } from './modules/product/product.module';
         };
       })(),
     }),
+    StorageModule,
     AuthModule,
     AdminModule,
     InvitationModule,

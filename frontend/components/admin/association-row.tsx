@@ -47,7 +47,11 @@ export function AssociationRow({ item }: { item: Association }) {
           <div className="flex items-center gap-2">
             {item.logo_url ? (
               <img
-                src={`/api/be${item.logo_url}`}
+                src={
+                  /^https?:\/\//.test(item.logo_url)
+                    ? item.logo_url
+                    : `/api/be${item.logo_url}`
+                }
                 alt=""
                 className="h-7 w-7 shrink-0 rounded-md object-contain"
               />

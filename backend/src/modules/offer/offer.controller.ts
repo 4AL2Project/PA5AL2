@@ -1,8 +1,5 @@
 // Gilles — v1.1
 // US-80 : recherche géolocalisée + US-81 : détail offre (mobile)
-import { randomUUID } from 'node:crypto';
-import { extname } from 'node:path';
-
 import {
   BadRequestException,
   Body,
@@ -22,13 +19,8 @@ import {
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 
-import {
-  ensureOfferImagesDir,
-  OFFER_IMAGES_DIR,
-  offerImagePublicUrl,
-} from '../../core/uploads';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -42,16 +34,6 @@ import { CreateOfferDto, OfferService, UpdateOfferDto } from './offer.service';
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 Mo
 const MAX_IMAGES_PER_UPLOAD = 10;
 const ALLOWED_IMAGE_MIME = /^image\/(jpe?g|png|webp|gif)$/;
-
-const offerImageStorage = diskStorage({
-  destination: (_req, _file, cb) => {
-    ensureOfferImagesDir();
-    cb(null, OFFER_IMAGES_DIR);
-  },
-  filename: (_req, file, cb) => {
-    cb(null, `${randomUUID()}${extname(file.originalname).toLowerCase()}`);
-  },
-});
 
 @ApiTags('offers')
 @Controller('api/offers')
@@ -124,7 +106,7 @@ export class OfferController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FilesInterceptor('images', MAX_IMAGES_PER_UPLOAD, {
-      storage: offerImageStorage,
+      storage: memoryStorage(),
       limits: { fileSize: MAX_IMAGE_BYTES },
       fileFilter: (_req, file, cb) => {
         cb(null, ALLOWED_IMAGE_MIME.test(file.mimetype));
@@ -141,11 +123,7 @@ export class OfferController {
         'At least one image file (jpeg, png, webp, gif ≤ 5 Mo) is required'
       );
     }
-    return this.offerService.addImages(
-      req.user.pharmacy_id!,
-      id,
-      files.map((f) => offerImagePublicUrl(f.filename))
-    );
+    return this.offerService.addImages(req.user.pharmacy_id!, id, files);
   }
 
   @Delete(':id/images/:imageId')

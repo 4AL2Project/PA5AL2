@@ -32,6 +32,28 @@ const ORDER_LINE_INCLUDE = {
   },
 } as const;
 
+// Ce que le mobile (Customer) a besoin d'afficher sur ses commandes : le nom du
+// produit, sa marque, le prix de référence barré (product.unit_price) et la
+// galerie d'images de l'offre.
+const CUSTOMER_ORDER_LINE_INCLUDE = {
+  offer: {
+    include: {
+      product: {
+        select: {
+          name: true,
+          category: true,
+          brand: true,
+          unit_price: true,
+        },
+      },
+      images: {
+        orderBy: { position: 'asc' },
+        select: { url: true, position: true },
+      },
+    },
+  },
+} as const;
+
 export interface CheckoutLineDto {
   offer_id: string;
   quantity: number;
@@ -194,13 +216,7 @@ export class OrderService {
       where: { customer_id: customerId },
       include: {
         pharmacy: { select: { name: true, address: true } },
-        lines: {
-          include: {
-            offer: {
-              include: { product: { select: { name: true, category: true } } },
-            },
-          },
-        },
+        lines: { include: CUSTOMER_ORDER_LINE_INCLUDE },
       },
       orderBy: { reserved_at: 'desc' },
     });
@@ -212,13 +228,7 @@ export class OrderService {
       where: { order_id: orderId },
       include: {
         pharmacy: { select: { name: true, address: true } },
-        lines: {
-          include: {
-            offer: {
-              include: { product: { select: { name: true, category: true } } },
-            },
-          },
-        },
+        lines: { include: CUSTOMER_ORDER_LINE_INCLUDE },
       },
     });
     if (!order) throw new NotFoundException('Order not found');

@@ -4,6 +4,7 @@
 
 import { NotFoundException } from '@nestjs/common';
 
+import { StorageService } from '../../core/storage/storage.service';
 import { GeocodingService } from '../geocoding/geocoding.service';
 import { AssociationsService } from './associations.service';
 
@@ -65,7 +66,11 @@ function makeService(
     sendAssociationRejectedEmail: jest.fn(),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
-  return new AssociationsService(mockGeocoding, mockEmail);
+  const mockStorage = {
+    upload: jest.fn().mockResolvedValue('https://cdn.example/logo.png'),
+    delete: jest.fn().mockResolvedValue(undefined),
+  } as unknown as StorageService;
+  return new AssociationsService(mockGeocoding, mockEmail, mockStorage);
 }
 
 // ---------------------------------------------------------------------------

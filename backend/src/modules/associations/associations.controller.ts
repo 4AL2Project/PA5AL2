@@ -1,6 +1,3 @@
-import { randomUUID } from 'node:crypto';
-import { extname } from 'node:path';
-
 import {
   BadRequestException,
   Body,
@@ -23,13 +20,8 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 
-import {
-  ASSOCIATION_LOGOS_DIR,
-  associationLogoPublicUrl,
-  ensureAssociationLogosDir,
-} from '../../core/uploads';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -46,16 +38,6 @@ import {
 
 const MAX_LOGO_BYTES = 5 * 1024 * 1024; // 5 Mo
 const ALLOWED_IMAGE_MIME = /^image\/(jpe?g|png|webp|gif|svg\+xml)$/;
-
-const associationLogoStorage = diskStorage({
-  destination: (_req, _file, cb) => {
-    ensureAssociationLogosDir();
-    cb(null, ASSOCIATION_LOGOS_DIR);
-  },
-  filename: (_req, file, cb) => {
-    cb(null, `${randomUUID()}${extname(file.originalname).toLowerCase()}`);
-  },
-});
 
 @ApiTags('associations')
 @ApiBearerAuth('access-token')
@@ -132,7 +114,7 @@ export class AssociationsController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('logo', {
-      storage: associationLogoStorage,
+      storage: memoryStorage(),
       limits: { fileSize: MAX_LOGO_BYTES },
       fileFilter: (_req, file, cb) => {
         cb(null, ALLOWED_IMAGE_MIME.test(file.mimetype));
@@ -148,10 +130,7 @@ export class AssociationsController {
         'A logo image (jpeg, png, webp, gif, svg ≤ 5 Mo) is required'
       );
     }
-    return this.associationsService.setLogo(
-      id,
-      associationLogoPublicUrl(file.filename)
-    );
+    return this.associationsService.setLogo(id, file);
   }
 
   @Delete(':id')

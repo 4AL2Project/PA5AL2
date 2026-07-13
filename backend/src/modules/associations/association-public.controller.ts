@@ -17,14 +17,11 @@ import { HttpException, HttpStatus } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Request } from 'express';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 
+import { config } from '../../core/config';
 import { SlidingWindowRateLimiter } from '../../core/rate-limiter';
-import {
-  ASSOCIATION_LOGOS_DIR,
-  associationLogoPublicUrl,
-  ensureAssociationLogosDir,
-} from '../../core/uploads';
+import { StorageService } from '../../core/storage/storage.service';
 import { AssociationRegistrationService } from './association-registration.service';
 import { RegisterAssociationDto } from './dto/association.dto';
 
@@ -34,16 +31,6 @@ const ALLOWED_IMAGE_MIME = /^image\/(jpe?g|png|webp|gif|svg\+xml)$/;
 const REGISTRATION_MAX_PER_IP = 5;
 const REGISTRATION_WINDOW_MS = 60 * 60 * 1000;
 
-const logoStorage = diskStorage({
-  destination: (_req, _file, cb) => {
-    ensureAssociationLogosDir();
-    cb(null, ASSOCIATION_LOGOS_DIR);
-  },
-  filename: (_req, file, cb) => {
-    cb(null, `${randomUUID()}${extname(file.originalname).toLowerCase()}`);
-  },
-});
-
 @ApiTags('public-associations')
 @Controller('api/public/associations')
 export class AssociationPublicController {
@@ -52,7 +39,10 @@ export class AssociationPublicController {
     REGISTRATION_WINDOW_MS
   );
 
-  constructor(private readonly registration: AssociationRegistrationService) {}
+  constructor(
+    private readonly registration: AssociationRegistrationService,
+    private readonly storage: StorageService
+  ) {}
 
   @Post('register')
   @HttpCode(201)
@@ -62,14 +52,14 @@ export class AssociationPublicController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(
     FileInterceptor('logo', {
-      storage: logoStorage,
+      storage: memoryStorage(),
       limits: { fileSize: MAX_LOGO_BYTES },
       fileFilter: (_req, file, cb) => {
         cb(null, ALLOWED_IMAGE_MIME.test(file.mimetype));
       },
     })
   )
-  register(
+  async register(
     @Req() req: Request,
     @Body() dto: RegisterAssociationDto,
     @UploadedFile() logo?: Express.Multer.File
@@ -80,10 +70,17 @@ export class AssociationPublicController {
         HttpStatus.TOO_MANY_REQUESTS
       );
     }
-    return this.registration.register(
-      dto,
-      logo ? associationLogoPublicUrl(logo.filename) : undefined
-    );
+    // Même stockage S3/CloudFront que les logos uploadés par l'admin
+    const logoUrl = logo
+      ? await this.storage.upload({
+          key: `${config.storage.prefixes.associations}/${randomUUID()}${extname(
+            logo.originalname
+          ).toLowerCase()}`,
+          body: logo.buffer,
+          contentType: logo.mimetype,
+        })
+      : undefined;
+    return this.registration.register(dto, logoUrl);
   }
 
   @Post('verify/:token')

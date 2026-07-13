@@ -1,7 +1,12 @@
+import { randomUUID } from 'node:crypto';
+import { extname } from 'node:path';
+
 import { InjectQueue } from '@nestjs/bullmq';
 import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bullmq';
 
+import { config } from '../../core/config';
+import { StorageService } from '../../core/storage/storage.service';
 import { prisma } from '../../database/client';
 import { INGESTION_QUEUE, IngestionFile } from './ingestion.events';
 
@@ -15,7 +20,10 @@ export interface UploadFiles {
 export class IngestionService {
   private readonly logger = new Logger(IngestionService.name);
 
-  constructor(@InjectQueue(INGESTION_QUEUE) private readonly queue: Queue) {}
+  constructor(
+    @InjectQueue(INGESTION_QUEUE) private readonly queue: Queue,
+    private readonly storage: StorageService
+  ) {}
 
   /**
    * Crée UN seul Import regroupant le(s) fichier(s) produits et ventes, puis
@@ -40,6 +48,21 @@ export class IngestionService {
       },
     });
 
+    // Archivage des fichiers bruts sur S3/CloudFront (best-effort par fichier).
+    const [productsUrl, salesUrl] = await Promise.all([
+      this.archive(imp.import_id, 'products', files.products),
+      this.archive(imp.import_id, 'sales', files.sales),
+    ]);
+    if (productsUrl || salesUrl) {
+      await prisma.import.update({
+        where: { import_id: imp.import_id },
+        data: {
+          products_file_url: productsUrl,
+          sales_file_url: salesUrl,
+        },
+      });
+    }
+
     await this.queue.add('process', {
       import_id: imp.import_id,
       pharmacy_id: pharmacyId,
@@ -51,7 +74,24 @@ export class IngestionService {
       `[${pharmacyId}] Import enqueued: ${fileName} (${types.join('+')}) → import_id=${imp.import_id}`
     );
 
-    return imp;
+    return { ...imp, products_file_url: productsUrl, sales_file_url: salesUrl };
+  }
+
+  /** Archive un fichier d'import sur le stockage et renvoie son URL (ou null). */
+  private async archive(
+    importId: string,
+    kind: 'products' | 'sales',
+    file?: Express.Multer.File
+  ): Promise<string | null> {
+    if (!file) return null;
+    const key = `${config.storage.prefixes.imports}/${importId}/${kind}-${randomUUID()}${extname(
+      file.originalname
+    ).toLowerCase()}`;
+    return this.storage.upload({
+      key,
+      body: file.buffer,
+      contentType: file.mimetype || 'application/octet-stream',
+    });
   }
 
   async findById(importId: string, pharmacyId: string) {

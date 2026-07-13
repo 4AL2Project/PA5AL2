@@ -45,4 +45,30 @@ export const config = {
     },
   },
   frontUrl: process.env.FRONT_URL || 'http://localhost:3000',
+  // Stockage des fichiers uploadés (images d'offres, logos d'associations,
+  // fichiers d'import). `driver` = 's3' pour AWS S3 + CloudFront, 'local' pour
+  // le disque local (dev/test). Bascule automatiquement sur 's3' si un bucket
+  // est configuré, sinon reste en 'local' pour garder le dev sans AWS.
+  storage: {
+    driver: (process.env.STORAGE_DRIVER ||
+      (process.env.AWS_S3_BUCKET ? 's3' : 'local')) as 's3' | 'local',
+    s3: {
+      bucket: process.env.AWS_S3_BUCKET || '',
+      region: process.env.AWS_REGION || 'eu-west-3',
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+      // Optionnel : endpoint custom (MinIO / LocalStack) et path-style.
+      endpoint: process.env.AWS_S3_ENDPOINT || undefined,
+      forcePathStyle: process.env.AWS_S3_FORCE_PATH_STYLE === 'true',
+    },
+    // Domaine CloudFront servant les fichiers du bucket (sans slash final).
+    // Ex: https://d1234abcd.cloudfront.net
+    cloudFrontUrl: (process.env.CLOUDFRONT_URL || '').replace(/\/+$/, ''),
+    // Préfixes de clés (dossiers logiques) par type d'asset.
+    prefixes: {
+      offers: 'offers',
+      associations: 'associations',
+      imports: 'imports',
+    },
+  },
 };

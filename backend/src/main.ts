@@ -22,7 +22,11 @@ async function bootstrap() {
   app.enableCors();
   app.useWebSocketAdapter(new IoAdapter(app));
 
-  app.useStaticAssets(UPLOADS_ROOT, { prefix: '/uploads/' });
+  // En mode stockage `local`, on sert les fichiers uploadés sous /uploads/.
+  // En mode `s3`, ils sont diffusés par CloudFront (pas de service statique).
+  if (config.storage.driver === 'local') {
+    app.useStaticAssets(UPLOADS_ROOT, { prefix: '/uploads/' });
+  }
 
   app.useGlobalPipes(
     new ValidationPipe({

@@ -245,6 +245,11 @@ model Import {
   rows_failed Int?
   errors      Json?
 
+  // URLs d'archivage S3/CloudFront des fichiers importés (null si absent ou
+  // en mode stockage local sans upload). Un import peut porter les deux.
+  products_file_url String?
+  sales_file_url    String?
+
   pharmacy    Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
 
   @@index([pharmacy_id, uploaded_at])

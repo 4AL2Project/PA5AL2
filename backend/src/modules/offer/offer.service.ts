@@ -1,5 +1,8 @@
 // Gilles — v1.1
 // US-80 : recherche géolocalisée + US-81 : détail offre (mobile)
+import { randomUUID } from 'node:crypto';
+import { extname } from 'node:path';
+
 import {
   BadRequestException,
   ForbiddenException,
@@ -8,8 +11,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 
+import { config } from '../../core/config';
 import { haversineKm } from '../../core/geo.util';
-import { deleteUploadByUrl } from '../../core/uploads';
+import { StorageService } from '../../core/storage/storage.service';
 import { prisma } from '../../database/client';
 import { CategoryService } from '../category/category.service';
 
@@ -88,7 +92,10 @@ export interface GeoOfferQuery {
 export class OfferService {
   private readonly logger = new Logger(OfferService.name);
 
-  constructor(private readonly categoryService: CategoryService) {}
+  constructor(
+    private readonly categoryService: CategoryService,
+    private readonly storage: StorageService
+  ) {}
 
   async create(pharmacyId: string, dto: CreateOfferDto) {
     const product = await prisma.product.findFirst({
@@ -233,7 +240,11 @@ export class OfferService {
   }
 
   /** Ajoute une ou plusieurs images produit à une offre (append, ordonnées) */
-  async addImages(pharmacyId: string, offerId: string, urls: string[]) {
+  async addImages(
+    pharmacyId: string,
+    offerId: string,
+    files: Express.Multer.File[]
+  ) {
     await this.findOwned(pharmacyId, offerId);
 
     const last = await prisma.offerImage.findFirst({
@@ -242,6 +253,18 @@ export class OfferService {
       select: { position: true },
     });
     const start = (last?.position ?? -1) + 1;
+
+    const urls = await Promise.all(
+      files.map((file) =>
+        this.storage.upload({
+          key: `${config.storage.prefixes.offers}/${randomUUID()}${extname(
+            file.originalname
+          ).toLowerCase()}`,
+          body: file.buffer,
+          contentType: file.mimetype,
+        })
+      )
+    );
 
     await prisma.offerImage.createMany({
       data: urls.map((url, i) => ({
@@ -268,7 +291,7 @@ export class OfferService {
     }
 
     await prisma.offerImage.delete({ where: { image_id: imageId } });
-    deleteUploadByUrl(image.url);
+    await this.storage.delete(image.url);
     this.logger.log(
       `[${pharmacyId}] Offer ${offerId}: image ${imageId} removed`
     );

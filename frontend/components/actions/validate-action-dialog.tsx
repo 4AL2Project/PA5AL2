@@ -22,7 +22,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { fetchCategories } from '@/lib/api';
+import {
+  donationEligiblePreview,
+  EligiblePreview,
+  fetchCategories,
+} from '@/lib/api';
 import { Category, DormantAction } from '@/lib/types';
 
 export interface ValidateActionPayload {
@@ -31,6 +35,8 @@ export interface ValidateActionPayload {
   quantityOffered?: number;
   description?: string;
   categoryIds?: string[];
+  donQuantity?: number;
+  preferredAssociationId?: string;
 }
 
 const ACTION_OPTIONS: {
@@ -78,6 +84,11 @@ export function ValidateActionDialog({
   const [errors, setErrors] = useState<{ price?: string; quantity?: string }>(
     {}
   );
+  // Flux DON : le titulaire ne choisit plus l'asso — l'orchestrateur décide.
+  const [eligible, setEligible] = useState<EligiblePreview | null>(null);
+  const [donQuantity, setDonQuantity] = useState('');
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [preferredAssociationId, setPreferredAssociationId] = useState('');
 
   useEffect(() => {
     fetchCategories()
@@ -93,11 +104,31 @@ export function ValidateActionDialog({
       setDescription('');
       setCategoryIds([]);
       setErrors({});
+      setDonQuantity(String(action.stock));
+      setAdvancedOpen(false);
+      setPreferredAssociationId('');
+      setEligible(null);
+      donationEligiblePreview([
+        { product_id: action.productId, quantity: action.stock },
+      ])
+        .then(setEligible)
+        .catch(() => setEligible(null));
     }
   }, [open, action]);
 
   const validate = (): ValidateActionPayload | null => {
-    if (selectedType !== 'B2C') return { type: 'DON' };
+    if (selectedType !== 'B2C') {
+      const q = parseInt(donQuantity, 10);
+      if (isNaN(q) || q <= 0 || (action && q > action.stock)) {
+        setErrors({ quantity: `Quantité invalide (1 à ${action?.stock})` });
+        return null;
+      }
+      return {
+        type: 'DON',
+        donQuantity: q,
+        preferredAssociationId: preferredAssociationId || undefined,
+      };
+    }
 
     const errs: typeof errors = {};
     const p = parseFloat(price);
@@ -194,6 +225,100 @@ export function ValidateActionDialog({
                   </p>
                 )}
               </div>
+
+              {/* DON : l'orchestrateur propose en cascade aux assos éligibles */}
+              {selectedType === 'DON' && (
+                <div className="space-y-3">
+                  <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm">
+                    {eligible === null ? (
+                      <p className="text-muted-foreground">
+                        Recherche des associations éligibles…
+                      </p>
+                    ) : eligible.count === 0 ? (
+                      <p className="text-destructive">
+                        Aucune association éligible dans la zone — le don
+                        échouera immédiatement. Vérifiez les catégories ou
+                        privilégiez la vente B2C.
+                      </p>
+                    ) : (
+                      <p>
+                        <span className="font-medium">
+                          {eligible.count} association
+                          {eligible.count > 1 ? 's' : ''} éligible
+                          {eligible.count > 1 ? 's' : ''}
+                        </span>{' '}
+                        dans la zone. Savely propose le lot automatiquement,
+                        gère les relances et vous prévient au retrait.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="don-qty">
+                      Quantité à donner{' '}
+                      <span className="text-xs text-muted-foreground font-normal">
+                        (max {action.stock})
+                      </span>
+                    </Label>
+                    <Input
+                      id="don-qty"
+                      type="number"
+                      step="1"
+                      min="1"
+                      max={action.stock}
+                      value={donQuantity}
+                      onChange={(e) => {
+                        setDonQuantity(e.target.value);
+                        setErrors((prev) => ({ ...prev, quantity: undefined }));
+                      }}
+                    />
+                    {errors.quantity && (
+                      <p className="text-xs text-destructive">
+                        {errors.quantity}
+                      </p>
+                    )}
+                  </div>
+
+                  {eligible !== null && eligible.count > 0 && (
+                    <div className="space-y-1.5">
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground underline"
+                        onClick={() => setAdvancedOpen((v) => !v)}
+                      >
+                        {advancedOpen
+                          ? 'Masquer le mode avancé'
+                          : 'Mode avancé : proposer d’abord à…'}
+                      </button>
+                      {advancedOpen && (
+                        <Select
+                          value={preferredAssociationId || 'AUTO'}
+                          onValueChange={(v) =>
+                            setPreferredAssociationId(v === 'AUTO' ? '' : v)
+                          }
+                        >
+                          <SelectTrigger className="w-full">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="AUTO">
+                              Laisser Savely choisir (recommandé)
+                            </SelectItem>
+                            {eligible.associations.map((a) => (
+                              <SelectItem
+                                key={a.association_id}
+                                value={a.association_id}
+                              >
+                                {a.name} ({a.distance_km} km)
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* B2C fields */}
               {selectedType === 'B2C' && (

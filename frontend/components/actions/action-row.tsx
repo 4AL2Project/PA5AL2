@@ -8,7 +8,6 @@ import {
   Heart,
   ShoppingBag,
 } from 'lucide-react';
-import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -47,14 +46,14 @@ function ValidateButtons({
   if (suggested === 'DON') {
     return (
       <div className="flex flex-col items-end gap-1">
-        <Button size="sm" variant="default" disabled={loading} asChild>
-          <Link
-            href={`/donations/new?action=${action.id}&product=${action.productId}`}
-            onClick={() => onValidate(action.id, 'DON')}
-          >
-            <SuggestedIcon className="h-3.5 w-3.5 mr-1" />
-            Don associatif
-          </Link>
+        <Button
+          size="sm"
+          variant="default"
+          disabled={loading}
+          onClick={() => onValidate(action.id, 'DON')}
+        >
+          <SuggestedIcon className="h-3.5 w-3.5 mr-1" />
+          Don associatif
         </Button>
         <button
           disabled={loading}

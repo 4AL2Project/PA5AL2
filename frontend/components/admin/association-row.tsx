@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin, Pencil, PowerOff } from 'lucide-react';
+import { BarChart3, MapPin, Pencil, PowerOff } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -16,10 +16,12 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Association } from '@/lib/admin';
 
 import { AssociationForm } from './association-form';
+import { AssociationStatsSheet } from './association-stats-sheet';
 
 export function AssociationRow({ item }: { item: Association }) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
 
   const handleDeactivate = async () => {
@@ -83,6 +85,15 @@ export function AssociationRow({ item }: { item: Association }) {
               size="icon"
               variant="ghost"
               className="h-7 w-7"
+              onClick={() => setStatsOpen(true)}
+              title="Fiche et fiabilité"
+            >
+              <BarChart3 className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              className="h-7 w-7"
               onClick={() => setEditOpen(true)}
             >
               <Pencil className="h-3.5 w-3.5" />
@@ -122,6 +133,12 @@ export function AssociationRow({ item }: { item: Association }) {
           </div>
         </SheetContent>
       </Sheet>
+
+      <AssociationStatsSheet
+        association={item}
+        open={statsOpen}
+        onOpenChange={setStatsOpen}
+      />
     </>
   );
 }

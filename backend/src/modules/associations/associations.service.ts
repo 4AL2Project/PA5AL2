@@ -1,6 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
+import { haversineKm } from '../../core/geo.util';
 import { prisma } from '../../database/client';
+import { EmailService } from '../email/email.service';
 import { GeocodingService } from '../geocoding/geocoding.service';
 
 export interface CreateAssociationDto {
@@ -10,7 +16,11 @@ export interface CreateAssociationDto {
   postal_code: string;
   lat?: number;
   lng?: number;
+  action_radius_km?: number;
   categories?: string[];
+  pickup_sla_days?: number;
+  response_sla_hours?: number;
+  rna_or_siren?: string;
   contact_email?: string;
   contact_phone?: string;
   logo_url?: string;
@@ -18,11 +28,15 @@ export interface CreateAssociationDto {
 
 export interface FindAllOptions {
   category?: string;
+  status?: string;
 }
 
 @Injectable()
 export class AssociationsService {
-  constructor(private readonly geocoding: GeocodingService) {}
+  constructor(
+    private readonly geocoding: GeocodingService,
+    private readonly email: EmailService
+  ) {}
 
   async create(dto: CreateAssociationDto) {
     let { lat, lng } = dto;
@@ -37,11 +51,22 @@ export class AssociationsService {
         lng = coords.lng;
       }
     }
-    return prisma.association.create({ data: { ...dto, lat, lng } });
+    // Création manuelle par l'admin : l'asso est vérifiée d'office
+    return prisma.association.create({
+      data: {
+        ...dto,
+        lat,
+        lng,
+        status: 'ACTIVE',
+        email_verified_at: new Date(),
+      },
+    });
   }
 
   async findAll(opts: FindAllOptions = {}) {
-    const where: Record<string, unknown> = { active: true };
+    const where: Record<string, unknown> = {
+      status: opts.status ?? 'ACTIVE',
+    };
     if (opts.category) where.categories = { hasSome: [opts.category] };
     return prisma.association.findMany({ where });
   }
@@ -52,7 +77,7 @@ export class AssociationsService {
     radiusKm = 50,
     opts: FindAllOptions = {}
   ) {
-    const where: Record<string, unknown> = { active: true };
+    const where: Record<string, unknown> = { status: 'ACTIVE' };
     if (opts.category) where.categories = { hasSome: [opts.category] };
     const all = await prisma.association.findMany({ where });
     return all.filter((a) => {
@@ -81,7 +106,7 @@ export class AssociationsService {
     await this.findOne(id);
     return prisma.association.update({
       where: { association_id: id },
-      data: { active: false },
+      data: { status: 'SUSPENDUE' },
     });
   }
 
@@ -92,24 +117,77 @@ export class AssociationsService {
       data: { logo_url: logoUrl },
     });
   }
-}
 
-// Formule de Haversine — distance en km entre deux points GPS
-function haversineKm(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
-): number {
-  const R = 6371;
-  const dLat = toRad(lat2 - lat1);
-  const dLng = toRad(lng2 - lng1);
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
+  // ── File de validation admin ────────────────────────────────────────────────
 
-function toRad(deg: number): number {
-  return (deg * Math.PI) / 180;
+  async listPending() {
+    return prisma.association.findMany({
+      where: { status: 'EN_ATTENTE_VALIDATION' },
+      orderBy: { created_at: 'asc' },
+    });
+  }
+
+  async validate(id: string, fiscalReceiptVerified: boolean) {
+    const asso = await this.findOne(id);
+    if (asso.status !== 'EN_ATTENTE_VALIDATION') {
+      throw new BadRequestException(
+        `Seule une association en attente peut être validée (statut : ${asso.status})`
+      );
+    }
+    if (!asso.email_verified_at) {
+      throw new BadRequestException(
+        "L'association n'a pas encore confirmé son adresse email"
+      );
+    }
+    const updated = await prisma.association.update({
+      where: { association_id: id },
+      data: {
+        status: 'ACTIVE',
+        fiscal_receipt_verified: fiscalReceiptVerified,
+      },
+    });
+    if (asso.contact_email) {
+      await this.email.sendAssociationValidatedEmail(
+        asso.contact_email,
+        asso.name
+      );
+    }
+    return updated;
+  }
+
+  async reject(id: string, reason: string) {
+    const asso = await this.findOne(id);
+    if (asso.status !== 'EN_ATTENTE_VALIDATION') {
+      throw new BadRequestException(
+        `Seule une association en attente peut être rejetée (statut : ${asso.status})`
+      );
+    }
+    const updated = await prisma.association.update({
+      where: { association_id: id },
+      data: { status: 'REJETEE', rejection_reason: reason },
+    });
+    if (asso.contact_email) {
+      await this.email.sendAssociationRejectedEmail(
+        asso.contact_email,
+        asso.name,
+        reason
+      );
+    }
+    return updated;
+  }
+
+  /** Historique des allocations pour la fiche admin. */
+  async allocationHistory(id: string) {
+    await this.findOne(id);
+    return prisma.donationAllocation.findMany({
+      where: { association_id: id },
+      include: {
+        donation: {
+          include: { pharmacy: { select: { name: true, address: true } } },
+        },
+      },
+      orderBy: { pickup_slot_start: 'desc' },
+      take: 50,
+    });
+  }
 }

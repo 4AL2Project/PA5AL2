@@ -1,14 +1,34 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
+  IsArray,
   IsEmail,
   IsIn,
   IsNotEmpty,
   IsNumber,
   IsOptional,
   IsString,
+  Matches,
   Max,
   Min,
+  ValidateNested,
 } from 'class-validator';
+
+const HHMM = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export class PickupWindowDto {
+  @ApiProperty({ enum: ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'] })
+  @IsIn(['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'])
+  day!: string;
+
+  @ApiProperty({ example: '14:00' })
+  @Matches(HHMM)
+  start!: string;
+
+  @ApiProperty({ example: '17:00' })
+  @Matches(HHMM)
+  end!: string;
+}
 
 export class UpdatePharmacyMeDto {
   @ApiProperty({ required: false })
@@ -34,6 +54,17 @@ export class UpdatePharmacyMeDto {
   @Min(-180)
   @Max(180)
   lng?: number;
+
+  @ApiProperty({
+    required: false,
+    description: 'Créneaux hebdo de récupération des dons',
+    type: [PickupWindowDto],
+  })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PickupWindowDto)
+  donation_pickup_windows?: PickupWindowDto[];
 }
 
 // ─── Preparateurs (gestion par le titulaire) ─────────────────────────────────

@@ -73,6 +73,13 @@ interface RawDashboard {
   };
   summary?: RawSummary;
   top10_dormants?: RawTop10Dormant[];
+  upcoming_donation_pickups?: {
+    allocation_id: string;
+    association_name: string;
+    pickup_slot_start: string;
+    pickup_slot_end: string;
+    lines: { name: string; quantity: number }[];
+  }[];
 }
 
 export interface DashboardData {
@@ -86,6 +93,13 @@ export interface DashboardData {
   totalCapitalLocked: number;
   pendingActions: number;
   missingCostPriceCount: number;
+  upcomingDonationPickups: {
+    allocationId: string;
+    associationName: string;
+    pickupSlotStart: string;
+    pickupSlotEnd: string;
+    lines: { name: string; quantity: number }[];
+  }[];
   top10Dormants: {
     productId: string;
     name: string;
@@ -329,6 +343,15 @@ export async function fetchDashboard(): Promise<DashboardData> {
     totalCapitalLocked: s.total_capital_locked ?? 0,
     pendingActions: s.pending_actions ?? 0,
     missingCostPriceCount: s.missing_cost_price_count ?? 0,
+    upcomingDonationPickups: (data.upcoming_donation_pickups ?? []).map(
+      (a) => ({
+        allocationId: a.allocation_id,
+        associationName: a.association_name,
+        pickupSlotStart: a.pickup_slot_start,
+        pickupSlotEnd: a.pickup_slot_end,
+        lines: a.lines,
+      })
+    ),
     top10Dormants: (data.top10_dormants ?? []).map((d) => ({
       productId: d.product_id,
       name: d.name,
@@ -546,4 +569,133 @@ export async function resendAdminUserInvitation(id: string): Promise<void> {
 
 export async function deactivateAdminUser(id: string): Promise<AdminUser> {
   return apiFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+}
+
+// ─── Dons (cycle de vie piloté par l'orchestrateur) ─────────────────────────
+
+export interface DonationLinePayload {
+  product_id: string;
+  quantity: number;
+}
+
+export interface EligiblePreview {
+  count: number;
+  associations: {
+    association_id: string;
+    name: string;
+    distance_km: number;
+  }[];
+}
+
+export interface DonationLineItem {
+  line_id: string;
+  product_id: string;
+  quantity_total: number;
+  quantity_allocated: number;
+  unit_value: number;
+  product: { name: string; external_sku: string | null };
+}
+
+export interface DonationAllocationItem {
+  allocation_id: string;
+  association_id: string;
+  status: 'PLANIFIEE' | 'RETIREE' | 'NON_RECUPEREE';
+  lines: {
+    product_id: string;
+    name: string;
+    quantity: number;
+    unit_value: number;
+  }[];
+  pickup_slot_start: string;
+  pickup_slot_end: string;
+  picked_up_by: string | null;
+  picked_up_at: string | null;
+  cerfa_number: string | null;
+  association: { name: string; contact_phone?: string | null };
+}
+
+export interface DonationEventItem {
+  event_id: string;
+  type: string;
+  actor: string;
+  payload: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface DonationSummary {
+  donation_id: string;
+  status: 'EN_COURS' | 'COMPLETEE' | 'ECHOUEE' | 'ANNULEE';
+  attempt_count: number;
+  created_at: string;
+  lines: DonationLineItem[];
+  proposals: { association: { name: string }; expires_at: string }[];
+  allocations: DonationAllocationItem[];
+}
+
+export interface DonationDetail extends DonationSummary {
+  events: DonationEventItem[];
+  remaining: {
+    product_id: string;
+    name: string;
+    quantity_total: number;
+    quantity_allocated: number;
+    quantity_remaining: number;
+    unit_value: number;
+  }[];
+  cancellable: boolean;
+}
+
+export async function donationEligiblePreview(
+  lines: DonationLinePayload[]
+): Promise<EligiblePreview> {
+  return apiFetch('/api/donations/eligible-preview', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lines }),
+  });
+}
+
+export async function createDonation(payload: {
+  action_id?: string;
+  lines: DonationLinePayload[];
+  preferred_association_id?: string;
+}): Promise<DonationSummary> {
+  return apiFetch('/api/donations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchDonations(): Promise<DonationSummary[]> {
+  return apiFetch('/api/donations');
+}
+
+export async function fetchDonationDetail(id: string): Promise<DonationDetail> {
+  return apiFetch(`/api/donations/${id}`);
+}
+
+export async function cancelDonation(id: string): Promise<void> {
+  await apiFetch(`/api/donations/${id}/cancel`, { method: 'POST' });
+}
+
+export async function fetchUpcomingPickups(): Promise<
+  DonationAllocationItem[]
+> {
+  return apiFetch('/api/donations/upcoming-pickups');
+}
+
+export async function confirmPickup(
+  allocationId: string,
+  pickedUpBy: string
+): Promise<void> {
+  await apiFetch(`/api/donations/allocations/${allocationId}/confirm-pickup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ picked_up_by: pickedUpBy }),
+  });
+}
+
+export function donationCerfaUrl(allocationId: string): string {
+  return `/api/be/api/donations/allocations/${allocationId}/cerfa`;
 }

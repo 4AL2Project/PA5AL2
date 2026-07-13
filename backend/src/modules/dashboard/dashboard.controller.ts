@@ -22,32 +22,49 @@ export class DashboardController {
     summary: 'Aggregated pharmacy KPIs (counts + recoverable values)',
   })
   async getDashboard(@TenantPharmacyId() pharmacyId: string) {
-    const [pharmacy, analyses, pendingActionsCount, missingCostPriceCount] =
-      await Promise.all([
-        prisma.pharmacy.findUnique({
-          where: { pharmacy_id: pharmacyId },
-          select: { name: true, last_upload_at: true, subscription_tier: true },
-        }),
-        prisma.riskAnalysis.findMany({
-          where: { pharmacy_id: pharmacyId },
-          orderBy: { analysis_date: 'desc' },
-          distinct: ['product_id'],
-          include: {
-            product: {
-              select: { name: true, external_sku: true, category: true },
-            },
+    const [
+      pharmacy,
+      analyses,
+      pendingActionsCount,
+      missingCostPriceCount,
+      upcomingPickups,
+    ] = await Promise.all([
+      prisma.pharmacy.findUnique({
+        where: { pharmacy_id: pharmacyId },
+        select: { name: true, last_upload_at: true, subscription_tier: true },
+      }),
+      prisma.riskAnalysis.findMany({
+        where: { pharmacy_id: pharmacyId },
+        orderBy: { analysis_date: 'desc' },
+        distinct: ['product_id'],
+        include: {
+          product: {
+            select: { name: true, external_sku: true, category: true },
           },
-        }),
-        prisma.action.count({
-          where: { pharmacy_id: pharmacyId, status: 'EN_ATTENTE' },
-        }),
-        prisma.product.count({
-          where: {
-            pharmacy_id: pharmacyId,
-            OR: [{ cost_price: null }, { cost_price: 0 }],
+        },
+      }),
+      prisma.action.count({
+        where: { pharmacy_id: pharmacyId, status: 'EN_ATTENTE' },
+      }),
+      prisma.product.count({
+        where: {
+          pharmacy_id: pharmacyId,
+          OR: [{ cost_price: null }, { cost_price: 0 }],
+        },
+      }),
+      // Retraits de dons planifiés sur 7 jours (web titulaire + app préparateur)
+      prisma.donationAllocation.findMany({
+        where: {
+          donation: { pharmacy_id: pharmacyId },
+          status: 'PLANIFIEE',
+          pickup_slot_start: {
+            lte: new Date(Date.now() + 7 * 24 * 3600 * 1000),
           },
-        }),
-      ]);
+        },
+        include: { association: { select: { name: true } } },
+        orderBy: { pickup_slot_start: 'asc' },
+      }),
+    ]);
 
     const byLevel = analyses.reduce(
       (acc: Record<string, number>, a) => {
@@ -95,6 +112,13 @@ export class DashboardController {
         missing_cost_price_count: missingCostPriceCount,
       },
       top10_dormants: top10Dormants,
+      upcoming_donation_pickups: upcomingPickups.map((a) => ({
+        allocation_id: a.allocation_id,
+        association_name: a.association.name,
+        pickup_slot_start: a.pickup_slot_start,
+        pickup_slot_end: a.pickup_slot_end,
+        lines: a.lines,
+      })),
     };
   }
 }

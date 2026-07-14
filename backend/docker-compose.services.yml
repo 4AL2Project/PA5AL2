@@ -16,6 +16,11 @@ x-backend: &backend
     NODE_ENV: production
     DATABASE_URL: postgresql://pharma:pharma@db:5432/pharma_risk
     REDIS_URL: redis://redis:6379
+    # Emails capturés par MailHog en dev. `mailhog` = nom du service (réseau
+    # Docker) : depuis un conteneur, `localhost` ne pointerait PAS vers MailHog.
+    EMAIL_TRANSPORT: smtp
+    SMTP_HOST: mailhog
+    SMTP_PORT: '1025'
   depends_on:
     db:
       condition: service_healthy
@@ -77,6 +82,15 @@ services:
       - '6379:6379'
     volumes:
       - redisdata:/data
+
+  # Catcher SMTP de dev — capture tous les emails. UI sur http://localhost:8025.
+  # Dev uniquement (en prod : Resend via EMAIL_TRANSPORT=resend).
+  mailhog:
+    image: jcalonso/mailhog:latest
+    restart: unless-stopped
+    ports:
+      - '1025:1025' # SMTP
+      - '8025:8025' # UI web
 
 # Stockage : par défaut STORAGE_DRIVER=local (disque). Pour un stockage S3
 # entièrement local/neutre, lancer un MinIO et régler dans .env :

@@ -64,7 +64,7 @@ jobs:
           curl --silent --show-error --fail \
             -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
 
-  # ── main → GCP Cloud Run (3 services depuis une seule image) ─────────────────
+  # ── main → GCP Cloud Run : api + worker (scheduler = Cloud Scheduler → endpoint)
   deploy-gcp:
     name: Deploy to Cloud Run (production)
     needs: ci
@@ -98,7 +98,7 @@ jobs:
           docker push "$IMAGE:latest"
           echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
 
-      - name: Deploy Cloud Run services (api / worker / scheduler)
+      - name: Deploy Cloud Run services (api / worker)
         run: |
           set -euo pipefail
 
@@ -123,7 +123,6 @@ jobs:
             --no-allow-unauthenticated --min-instances=1 --no-cpu-throttling \
             --set-env-vars="ROLE=worker,$COMMON_ENV"
 
-          # scheduler : singleton (min=max=1) → crons non dupliqués, privé.
-          gcloud run deploy savely-scheduler $COMMON \
-            --no-allow-unauthenticated --min-instances=1 --max-instances=1 --no-cpu-throttling \
-            --set-env-vars="ROLE=scheduler,$COMMON_ENV"
+          # Pas de service scheduler : les tâches planifiées sont déclenchées par
+          # Cloud Scheduler qui tape POST /internal/scheduler/* sur savely-api
+          # (en-tête X-Scheduler-Key = SCHEDULER_SECRET). Voir prérequis infra.

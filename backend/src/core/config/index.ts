@@ -1,6 +1,15 @@
+// Rôle du process. Une même image se déploie en plusieurs services de conteneurs
+// qui se distinguent par `ROLE` (aucune dépendance à un cron/scheduler managé) :
+//   'api'       → HTTP + WebSocket, enfile les jobs mais ne les traite pas
+//   'worker'    → consomme les files BullMQ (ingestion + tâches planifiées)
+//   'scheduler' → fait tourner les @Cron (singleton) qui enfilent les tâches
+//   'all'       → tout dans un seul process (défaut : dev local, mono-service)
+export type AppRole = 'api' | 'worker' | 'scheduler' | 'all';
+
 export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
+  role: (process.env.ROLE || 'all') as AppRole,
   database: {
     url: process.env.DATABASE_URL || '',
   },
@@ -45,6 +54,10 @@ export const config = {
     },
   },
   frontUrl: process.env.FRONT_URL || 'http://localhost:3000',
+  // Secret partageant l'accès à l'endpoint de déclenchement des tâches planifiées
+  // (`POST /internal/scheduler/*`). En prod, un scheduler tiers (Cloud Scheduler…)
+  // envoie ce secret dans l'en-tête `X-Scheduler-Key` pour enfiler une tâche.
+  schedulerSecret: process.env.SCHEDULER_SECRET || '',
   // Stockage des fichiers uploadés (images d'offres, logos d'associations,
   // fichiers d'import). `driver` = 's3' pour AWS S3 + CloudFront, 'local' pour
   // le disque local (dev/test). Bascule automatiquement sur 's3' si un bucket
@@ -72,3 +85,9 @@ export const config = {
     },
   },
 };
+
+// Helpers de rôle : un provider « actif » (worker processor, cron producer) n'est
+// instancié que pour son rôle, ou en mode 'all' (dev local / mono-service).
+export const isApi = config.role === 'api' || config.role === 'all';
+export const isWorker = config.role === 'worker' || config.role === 'all';
+export const isScheduler = config.role === 'scheduler' || config.role === 'all';

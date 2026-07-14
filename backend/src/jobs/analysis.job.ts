@@ -1,16 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
 
 import { prisma } from '../database/client';
 import { AnalysisService } from '../modules/analysis/analysis.service';
 
+// Recalcul quotidien du risque pour toutes les pharmacies. Le déclenchement n'est
+// plus porté par un @Cron in-process : c'est le service `scheduler` qui enfile le
+// job `daily-analysis`, exécuté ici par le `MaintenanceWorker`.
 @Injectable()
 export class AnalysisJob {
   private readonly logger = new Logger(AnalysisJob.name);
 
   constructor(private readonly analysisService: AnalysisService) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async runDailyAnalysis() {
     this.logger.log('Starting daily risk analysis job');
 

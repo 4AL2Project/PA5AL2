@@ -80,7 +80,7 @@ Two interchangeable triggers (use **one**, never both, to avoid double-fire):
 - **Local (neutral)**: `docker compose -f backend/docker-compose.services.yml up --build` runs the 3 roles + db + redis.
 - **CI/CD** (`.github/workflows/deploy.yml`): `dev` → Render (unchanged); `main` → **Cloud Run** (`deploy-gcp`)
   deploys `savely-api` + `savely-worker` from one image (DB = Cloud SQL, Redis = Redis Cloud), auth via
-  Workload Identity Federation. The scheduler is **not** a service in prod: Cloud Scheduler calls
+  a GCP service-account key (`secrets.GCP_SA_KEY`). The scheduler is **not** a service in prod: Cloud Scheduler calls
   `POST /internal/scheduler/*` on the API. `ROLE=scheduler` remains the self-hosted default (docker-compose).
 
 ## Core Domain: Risk Calculation

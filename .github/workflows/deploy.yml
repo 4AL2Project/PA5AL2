@@ -71,18 +71,14 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
-    permissions:
-      contents: read
-      id-token: write # requis pour l'auth OIDC (Workload Identity Federation)
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Authenticate to GCP (Workload Identity Federation)
+      - name: Authenticate to GCP (clé de service account)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ vars.GCP_DEPLOYER_SA }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2

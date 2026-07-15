@@ -31,72 +31,88 @@ export async function fetchAssociations(
   accessToken: string,
   opts: { category?: string } = {}
 ): Promise<Association[]> {
-  const params = new URLSearchParams();
-  if (opts.category) params.set('category', opts.category);
-  const qs = params.size ? `?${params}` : '';
+  try {
+    const params = new URLSearchParams();
+    if (opts.category) params.set('category', opts.category);
+    const qs = params.size ? `?${params}` : '';
 
-  const res = await fetch(`${API_BASE}/api/associations${qs}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    cache: 'no-store',
-  });
-  if (!res.ok) return [];
-  const payload = (await res.json()) as Association[] | { data: Association[] };
-  return Array.isArray(payload) ? payload : (payload.data ?? []);
+    const res = await fetch(`${API_BASE}/api/associations${qs}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const payload = (await res.json()) as Association[] | { data: Association[] };
+    return Array.isArray(payload) ? payload : (payload.data ?? []);
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchPendingAssociations(
   accessToken: string
 ): Promise<Association[]> {
-  const res = await fetch(`${API_BASE}/api/associations/pending`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    cache: 'no-store',
-  });
-  if (!res.ok) return [];
-  const payload = (await res.json()) as Association[] | { data: Association[] };
-  return Array.isArray(payload) ? payload : (payload.data ?? []);
+  try {
+    const res = await fetch(`${API_BASE}/api/associations/pending`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const payload = (await res.json()) as Association[] | { data: Association[] };
+    return Array.isArray(payload) ? payload : (payload.data ?? []);
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchPharmacies(
   accessToken: string
 ): Promise<PharmacyListItem[]> {
-  const res = await fetch(`${API_BASE}/api/admin/pharmacies`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    cache: 'no-store',
-  });
-  if (!res.ok) return [];
-  const payload = (await res.json()) as
-    | { success: true; data: { pharmacies?: PharmacyListItem[] } }
-    | { success: false; error: unknown }
-    | { pharmacies?: PharmacyListItem[] };
-  const data =
-    'success' in payload && payload.success
-      ? payload.data
-      : 'pharmacies' in payload
-        ? payload
-        : { pharmacies: [] };
-  return data.pharmacies ?? [];
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/pharmacies`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: 'no-store',
+    });
+    if (!res.ok) return [];
+    const payload = (await res.json()) as
+      | { success: true; data: { pharmacies?: PharmacyListItem[] } }
+      | { success: false; error: unknown }
+      | { pharmacies?: PharmacyListItem[] };
+    const data =
+      'success' in payload && payload.success
+        ? payload.data
+        : 'pharmacies' in payload
+          ? payload
+          : { pharmacies: [] };
+    return data.pharmacies ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function fetchPharmacy(
   accessToken: string,
   pharmacyId: string
 ): Promise<PharmacyDetail | null> {
-  const res = await fetch(
-    `${API_BASE}/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}`,
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      cache: 'no-store',
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}`,
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        cache: 'no-store',
+      }
+    );
+    if (!res.ok) return null;
+    const payload = (await res.json()) as
+      | { success: true; data: PharmacyDetail }
+      | { success: false; error: unknown }
+      | PharmacyDetail;
+    if ('success' in payload) {
+      return payload.success ? payload.data : null;
     }
-  );
-  if (!res.ok) return null;
-  const payload = (await res.json()) as
-    | { success: true; data: PharmacyDetail }
-    | { success: false; error: unknown }
-    | PharmacyDetail;
-  if ('success' in payload) {
-    return payload.success ? payload.data : null;
+    return payload;
+  } catch {
+    return null;
   }
-  return payload;
 }
 
 // ─── Admin donations ──────────────────────────────────────────────────────────
@@ -179,7 +195,11 @@ export interface AdminMonitoring {
     blocked_count: number;
     expired_proposals: number;
     missed_pickups: number;
-    low_reliability_assos: { association_id: string; name: string; reliability: number | null }[];
+    low_reliability_assos: {
+      association_id: string;
+      name: string;
+      reliability: number | null;
+    }[];
   };
 }
 
@@ -188,20 +208,29 @@ async function adminFetch<T>(
   path: string,
   init?: RequestInit
 ): Promise<T | null> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { Authorization: `Bearer ${accessToken}`, ...init?.headers },
-    cache: 'no-store',
-    ...init,
-  });
-  if (!res.ok) return null;
-  const payload = await res.json();
-  if ('success' in payload) return payload.success ? payload.data : null;
-  return payload as T;
+  try {
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: { Authorization: `Bearer ${accessToken}`, ...init?.headers },
+      cache: 'no-store',
+      ...init,
+    });
+    if (!res.ok) return null;
+    const payload = await res.json();
+    if ('success' in payload) return payload.success ? payload.data : null;
+    return payload as T;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchAdminDonations(
   accessToken: string,
-  opts: { status?: string; pharmacy_id?: string; page?: number; limit?: number } = {}
+  opts: {
+    status?: string;
+    pharmacy_id?: string;
+    page?: number;
+    limit?: number;
+  } = {}
 ): Promise<AdminDonationList> {
   const params = new URLSearchParams();
   if (opts.status) params.set('status', opts.status);
@@ -229,7 +258,10 @@ export async function fetchAdminDonationDetail(
 export async function fetchAdminMonitoring(
   accessToken: string
 ): Promise<AdminMonitoring | null> {
-  return adminFetch<AdminMonitoring>(accessToken, '/api/admin/donations/monitoring');
+  return adminFetch<AdminMonitoring>(
+    accessToken,
+    '/api/admin/donations/monitoring'
+  );
 }
 
 export interface AdminDonParametres {

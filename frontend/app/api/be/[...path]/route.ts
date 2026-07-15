@@ -26,15 +26,22 @@ async function forward(req: NextRequest, pathSegments: string[]) {
     init.body = await req.arrayBuffer();
   }
 
-  const upstream = await fetch(url, init);
-  const body = await upstream.arrayBuffer();
-  return new NextResponse(body, {
-    status: upstream.status,
-    headers: {
-      'content-type':
-        upstream.headers.get('content-type') ?? 'application/octet-stream',
-    },
-  });
+  try {
+    const upstream = await fetch(url, init);
+    const body = await upstream.arrayBuffer();
+    return new NextResponse(body, {
+      status: upstream.status,
+      headers: {
+        'content-type':
+          upstream.headers.get('content-type') ?? 'application/octet-stream',
+      },
+    });
+  } catch {
+    return NextResponse.json(
+      { success: false, error: { code: 'BACKEND_UNAVAILABLE', message: 'API indisponible' } },
+      { status: 503 }
+    );
+  }
 }
 
 type RouteContext = { params: Promise<{ path: string[] }> };

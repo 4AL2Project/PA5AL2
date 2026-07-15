@@ -2,6 +2,7 @@ import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma } from '@prisma/client';
+import * as Sentry from '@sentry/node';
 import { Job } from 'bullmq';
 
 import { prisma } from '../../database/client';
@@ -113,6 +114,15 @@ export class IngestionWorker extends WorkerHost {
       );
     } catch (err) {
       this.logger.error(`Ingestion job ${import_id} failed: ${err}`);
+      Sentry.captureException(err, {
+        tags: { module: 'stock', action: 'import-csv' },
+        extra: {
+          pharmacyId: pharmacy_id,
+          importId: import_id,
+          hasProducts: Boolean(products),
+          hasSales: Boolean(sales),
+        },
+      });
       await this.markFailed(import_id, pharmacy_id, 0, [String(err)]);
       throw err;
     }

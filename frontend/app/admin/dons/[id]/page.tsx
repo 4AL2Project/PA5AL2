@@ -188,7 +188,7 @@ export default async function AdminDonDetailPage({
             <h2 className="text-sm font-semibold">Actions admin</h2>
           </div>
           <div className="flex flex-wrap gap-3 px-4 py-4">
-            <ForceStatusForm donationId={don.donation_id} currentStatus={don.status} />
+            <ForceStatusForm _donationId={don.donation_id} currentStatus={don.status} />
             {don.proposals.some((p) => ['ENVOYEE', 'EXPIREE'].includes(p.status)) && (
               <RegenTokenButton donationId={don.donation_id} />
             )}
@@ -266,7 +266,7 @@ function AllocationBadge({ status }: { status: string }) {
 
 // Client actions are handled via server actions or separate client components.
 // For now we render static buttons that link to API routes via forms.
-function ForceStatusForm({ donationId, currentStatus }: { donationId: string; currentStatus: string }) {
+function ForceStatusForm({ _donationId, currentStatus }: { _donationId: string; currentStatus: string }) {
   const targets = ['EN_COURS', 'ECHOUEE', 'ANNULEE'].filter((s) => s !== currentStatus);
   return (
     <div className="flex items-center gap-2">

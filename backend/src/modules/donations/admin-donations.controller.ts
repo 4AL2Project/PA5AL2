@@ -101,7 +101,8 @@ export class AdminDonationsController {
 
   @Get(':id')
   @ApiOperation({
-    summary: "Détail complet d'un don (events, proposals, allocations) — sans restriction de tenant",
+    summary:
+      "Détail complet d'un don (events, proposals, allocations) — sans restriction de tenant",
   })
   detail(@Param('id') id: string) {
     return this.donationsService.adminDetail(id);

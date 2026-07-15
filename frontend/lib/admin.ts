@@ -41,7 +41,9 @@ export async function fetchAssociations(
       cache: 'no-store',
     });
     if (!res.ok) return [];
-    const payload = (await res.json()) as Association[] | { data: Association[] };
+    const payload = (await res.json()) as
+      | Association[]
+      | { data: Association[] };
     return Array.isArray(payload) ? payload : (payload.data ?? []);
   } catch {
     return [];
@@ -57,7 +59,9 @@ export async function fetchPendingAssociations(
       cache: 'no-store',
     });
     if (!res.ok) return [];
-    const payload = (await res.json()) as Association[] | { data: Association[] };
+    const payload = (await res.json()) as
+      | Association[]
+      | { data: Association[] };
     return Array.isArray(payload) ? payload : (payload.data ?? []);
   } catch {
     return [];

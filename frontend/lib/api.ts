@@ -184,7 +184,12 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     const access = (await cookies()).get('savely_access')?.value;
     if (access) headers.set('Authorization', `Bearer ${access}`);
   }
-  const res = await fetch(url, { cache: 'no-store', ...init, headers });
+  let res: Response;
+  try {
+    res = await fetch(url, { cache: 'no-store', ...init, headers });
+  } catch {
+    throw new Error('API indisponible');
+  }
   const payload = await res.json().catch(() => null);
   if (payload && typeof payload === 'object' && 'success' in payload) {
     const env = payload as
@@ -524,7 +529,11 @@ export async function fetchAdminUsers(): Promise<{
   users: AdminUser[];
   total: number;
 }> {
-  return apiFetch('/api/admin/users');
+  try {
+    return await apiFetch('/api/admin/users');
+  } catch {
+    return { users: [], total: 0 };
+  }
 }
 
 export async function createAdminUser(payload: {

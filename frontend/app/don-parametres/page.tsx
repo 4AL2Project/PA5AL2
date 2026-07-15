@@ -117,7 +117,9 @@ export default function DonParametresPage() {
 
           {/* Rayon de matching */}
           <section className="rounded-xl border bg-card p-6">
-            <h2 className="font-semibold">Rayon de recherche des associations</h2>
+            <h2 className="font-semibold">
+              Rayon de recherche des associations
+            </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Les associations situées dans ce rayon autour de votre officine
               seront sollicitées lors d&apos;un don.

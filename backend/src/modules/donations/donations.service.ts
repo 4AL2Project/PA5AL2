@@ -231,7 +231,9 @@ export class DonationsService {
           include: { product: { select: { name: true, external_sku: true } } },
         },
         proposals: {
-          include: { association: { select: { name: true, contact_email: true } } },
+          include: {
+            association: { select: { name: true, contact_email: true } },
+          },
           orderBy: { sent_at: 'asc' },
         },
         allocations: {
@@ -265,7 +267,8 @@ export class DonationsService {
       },
       orderBy: { sent_at: 'desc' },
     });
-    if (!proposal) throw new NotFoundException('Aucune proposition active ou expirée');
+    if (!proposal)
+      throw new NotFoundException('Aucune proposition active ou expirée');
     const newExpiry = new Date(Date.now() + 48 * 60 * 60 * 1000);
     return prisma.donationProposal.update({
       where: { proposal_id: proposal.proposal_id },
@@ -320,7 +323,9 @@ export class DonationsService {
           select: { status: true },
         },
         proposals: {
-          where: { status: { in: ['ACCEPTEE', 'ACCEPTEE_PARTIELLEMENT', 'REFUSEE'] } },
+          where: {
+            status: { in: ['ACCEPTEE', 'ACCEPTEE_PARTIELLEMENT', 'REFUSEE'] },
+          },
           select: { status: true },
         },
       },
@@ -368,7 +373,9 @@ export class DonationsService {
 
   /** Paramètres de don d'une pharmacie, accès admin (retourne null si non configurés). */
   async getParametresAdmin(pharmacyId: string) {
-    return prisma.donParametres.findUnique({ where: { pharmacy_id: pharmacyId } });
+    return prisma.donParametres.findUnique({
+      where: { pharmacy_id: pharmacyId },
+    });
   }
 
   /** Bilan RSE : basé sur les allocations RETIREE (valeur réellement donnée). */

@@ -1,6 +1,5 @@
 // Doit rester le premier import — instrumente les modules Node.js avant NestJS
 import './instrument';
-
 import 'dotenv/config';
 import 'reflect-metadata';
 

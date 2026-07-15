@@ -13,7 +13,7 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   integrations: [
     Sentry.replayIntegration({
-      maskAllText: true,   // RGPD — masque toutes les données texte des replays
+      maskAllText: true, // RGPD — masque toutes les données texte des replays
       blockAllMedia: true, // RGPD — bloque les médias (ordonnances, logos)
     }),
   ],

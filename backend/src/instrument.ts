@@ -2,8 +2,9 @@
  * @author Dev1 — Savely
  * @description Initialisation Sentry — doit être importé en premier dans main.ts,
  *   avant tout autre import NestJS, afin d'instrumenter les modules Node.js natifs.
+ *   Utilise @sentry/nestjs qui enveloppe @sentry/node avec l'intégration NestJS native.
  */
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/nestjs';
 import { nodeProfilingIntegration } from '@sentry/profiling-node';
 
 Sentry.init({

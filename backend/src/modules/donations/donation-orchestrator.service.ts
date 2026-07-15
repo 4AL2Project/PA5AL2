@@ -8,7 +8,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/nestjs';
 
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';

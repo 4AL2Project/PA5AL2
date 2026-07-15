@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SentryModule } from '@sentry/nestjs/setup';
 
 import { config } from './core/config';
 import { StorageModule } from './core/storage/storage.module';
@@ -26,6 +27,7 @@ import { ProductModule } from './modules/product/product.module';
 
 @Module({
   imports: [
+    SentryModule.forRoot(),
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
     BullModule.forRoot({

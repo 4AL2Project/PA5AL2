@@ -3,10 +3,12 @@ import { randomUUID } from 'node:crypto';
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/node';
 
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
@@ -119,10 +121,22 @@ export class DonationOrchestratorService {
     });
 
     this.logger.log(`[${pharmacyId}] Donation ${donation.donation_id} créée`);
-    await this.proposeNext(
-      donation.donation_id,
-      input.preferred_association_id
-    );
+    try {
+      await this.proposeNext(
+        donation.donation_id,
+        input.preferred_association_id
+      );
+    } catch (err) {
+      // proposeNext est asynchrone et critique — une erreur ici laisse un don
+      // EN_COURS sans proposition, ce que le filtre HTTP ne peut pas capturer
+      if (!(err instanceof HttpException)) {
+        Sentry.captureException(err, {
+          tags: { module: 'don', action: 'initier-don' },
+          extra: { pharmacyId, donationId: donation.donation_id },
+        });
+      }
+      throw err;
+    }
     return prisma.donation.findUnique({
       where: { donation_id: donation.donation_id },
       include: { lines: true, proposals: true },
@@ -654,7 +668,19 @@ export class DonationOrchestratorService {
       );
     }
 
-    await this.completeIfDone(allocation.donation_id);
+    try {
+      await this.completeIfDone(allocation.donation_id);
+    } catch (err) {
+      // completeIfDone peut échouer silencieusement (ex : contrainte Prisma) —
+      // le don resterait EN_COURS alors que tous les retraits sont RETIREE
+      if (!(err instanceof HttpException)) {
+        Sentry.captureException(err, {
+          tags: { module: 'don', action: 'confirmer-pickup' },
+          extra: { allocationId, donId: allocation.donation_id, pharmacyId },
+        });
+      }
+      throw err;
+    }
     return prisma.donationAllocation.findUnique({
       where: { allocation_id: allocationId },
     });

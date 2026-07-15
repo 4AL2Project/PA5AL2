@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/node';
 
 import { ErrorResponse } from './response.types';
 
@@ -38,6 +39,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const { status, message, code, details } = this.normalize(exception);
 
     if (status >= 500) {
+      // 4xx = erreurs métier normales (validation, auth, not found) — pas de bruit Sentry
+      Sentry.captureException(exception, {
+        extra: {
+          url: (request as { url?: string }).url,
+          method: (request as { method?: string }).method,
+          pharmacyId: (request as { user?: { pharmacyId?: string } }).user?.pharmacyId,
+          userId: (request as { user?: { id?: string } }).user?.id,
+          role: (request as { user?: { role?: string } }).user?.role,
+        },
+      });
       this.logger.error(
         `${request?.method ?? 'UNKNOWN'} ${request?.url ?? ''} → ${status}`,
         exception instanceof Error ? exception.stack : String(exception)

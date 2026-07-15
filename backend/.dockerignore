@@ -3,3 +3,5 @@ dist
 .env
 *.log
 .DS_Store
+# Lockfile npm périmé (repo géré par pnpm) — ne doit pas entrer dans l'image
+package-lock.json

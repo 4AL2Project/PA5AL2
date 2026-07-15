@@ -5,7 +5,10 @@ RUN apk add --no-cache openssl
 
 WORKDIR /app
 
-COPY package*.json ./
+# On copie uniquement package.json (pas le package-lock.json, périmé car le repo
+# est géré par pnpm) : npm résout alors proprement depuis package.json, ce qui
+# installe le CLI prisma + @prisma/client. Copier le lockfile npm casse l'install.
+COPY package.json ./
 RUN npm install
 
 COPY . .

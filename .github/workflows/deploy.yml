@@ -50,15 +50,75 @@ jobs:
       - name: Test
         run: pnpm --filter backend run test
 
-  deploy:
-    name: Deploy to Render (${{ github.ref == 'refs/heads/main' && 'production' || 'dev' }})
+  # ── dev → Render (inchangé) ──────────────────────────────────────────────────
+  deploy-render:
+    name: Deploy to Render (dev)
     needs: ci
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'dev' }}
+    environment: dev
 
     steps:
       - name: Trigger Render deploy hook
         run: |
           curl --silent --show-error --fail \
             -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+
+  # ── main → GCP Cloud Run : api + worker (scheduler = Cloud Scheduler → endpoint)
+  deploy-gcp:
+    name: Deploy to Cloud Run (production)
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to GCP (clé de service account)
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker "${{ vars.GCP_REGION }}-docker.pkg.dev" --quiet
+
+      - name: Build & push image
+        run: |
+          IMAGE="${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/savely-backend/backend"
+          docker build -t "$IMAGE:${{ github.sha }}" -t "$IMAGE:latest" backend
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Deploy Cloud Run services (api / worker)
+        run: |
+          set -euo pipefail
+
+          COMMON_ENV="NODE_ENV=production,EMAIL_TRANSPORT=resend,STORAGE_DRIVER=s3,AWS_REGION=${{ vars.AWS_REGION }},AWS_S3_BUCKET=${{ vars.AWS_S3_BUCKET }},CLOUDFRONT_URL=${{ vars.CLOUDFRONT_URL }}"
+
+          # Secrets applicatifs : stockés dans Secret Manager, injectés au runtime.
+          SECRETS="DATABASE_URL=DATABASE_URL:latest,JWT_ACCESS_SECRET=JWT_ACCESS_SECRET:latest,JWT_REFRESH_SECRET=JWT_REFRESH_SECRET:latest,JWT_CUSTOMER_SECRET=JWT_CUSTOMER_SECRET:latest,REDIS_URL=REDIS_URL:latest,RESEND_API_KEY=RESEND_API_KEY:latest,AWS_ACCESS_KEY_ID=AWS_ACCESS_KEY_ID:latest,AWS_SECRET_ACCESS_KEY=AWS_SECRET_ACCESS_KEY:latest,FRONT_URL=FRONT_URL:latest,SCHEDULER_SECRET=SCHEDULER_SECRET:latest"
+
+          COMMON="--project=${{ vars.GCP_PROJECT_ID }} --region=${{ vars.GCP_REGION }} \
+            --image=$IMAGE:${{ github.sha }} \
+            --service-account=${{ vars.GCP_RUNTIME_SA }} \
+            --add-cloudsql-instances=${{ vars.GCP_CLOUD_SQL_CONNECTION }} \
+            --set-secrets=$SECRETS --quiet"
+
+          # api : porte les migrations, joignable publiquement.
+          gcloud run deploy savely-api $COMMON \
+            --allow-unauthenticated --min-instances=1 \
+            --set-env-vars="ROLE=api,$COMMON_ENV"
+
+          # worker : consomme les files, CPU always-on, privé.
+          gcloud run deploy savely-worker $COMMON \
+            --no-allow-unauthenticated --min-instances=1 --no-cpu-throttling \
+            --set-env-vars="ROLE=worker,$COMMON_ENV"
+
+          # Pas de service scheduler : les tâches planifiées sont déclenchées par
+          # Cloud Scheduler qui tape POST /internal/scheduler/* sur savely-api
+          # (en-tête X-Scheduler-Key = SCHEDULER_SECRET). Voir prérequis infra.

@@ -1,0 +1,102 @@
+# Déploiement neutre (aucune dépendance à un provider) : la même image tourne en
+# 3 services distingués par ROLE, autour de Postgres + Redis standard.
+#   docker compose -f docker-compose.services.yml up --build
+#
+# Portable tel quel sur n'importe quel hôte Docker (VM, Fly, Render, K8s…).
+# Le service `api` porte les migrations (voir docker-entrypoint.sh).
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: Dockerfile
+  # Reprend les secrets applicatifs (JWT, Resend, AWS/S3…) depuis .env, puis
+  # surcharge DB/Redis pour pointer vers les services du réseau compose.
+  env_file: .env
+  environment: &backend-env
+    NODE_ENV: production
+    DATABASE_URL: postgresql://pharma:pharma@db:5432/pharma_risk
+    REDIS_URL: redis://redis:6379
+    # Emails capturés par MailHog en dev. `mailhog` = nom du service (réseau
+    # Docker) : depuis un conteneur, `localhost` ne pointerait PAS vers MailHog.
+    EMAIL_TRANSPORT: smtp
+    SMTP_HOST: mailhog
+    SMTP_PORT: '1025'
+  depends_on:
+    db:
+      condition: service_healthy
+    redis:
+      condition: service_started
+  restart: unless-stopped
+
+services:
+  # HTTP + WebSocket. Enfile les jobs, ne les traite pas. Porte les migrations.
+  api:
+    <<: *backend
+    environment:
+      <<: *backend-env
+      ROLE: api
+      PORT: 3005
+    ports:
+      - '3005:3005'
+
+  # Consomme les files BullMQ (ingestion + tâches planifiées).
+  worker:
+    <<: *backend
+    environment:
+      <<: *backend-env
+      ROLE: worker
+
+  # Singleton : fait tourner les @Cron qui enfilent les tâches. NE PAS répliquer.
+  scheduler:
+    <<: *backend
+    deploy:
+      replicas: 1
+    environment:
+      <<: *backend-env
+      ROLE: scheduler
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pharma
+      POSTGRES_PASSWORD: pharma
+      POSTGRES_DB: pharma_risk
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U pharma -d pharma_risk']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Exposé sur l'hôte pour le dev (Prisma Studio, client SQL, pnpm dev local).
+    # À retirer pour un déploiement réel (la DB ne doit rester joignable qu'en interne).
+    ports:
+      - '5432:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Exposé sur l'hôte pour le dev (redis-cli, inspection). À retirer en prod.
+    ports:
+      - '6379:6379'
+    volumes:
+      - redisdata:/data
+
+  # Catcher SMTP de dev — capture tous les emails. UI sur http://localhost:8025.
+  # Dev uniquement (en prod : Resend via EMAIL_TRANSPORT=resend).
+  mailhog:
+    image: jcalonso/mailhog:latest
+    restart: unless-stopped
+    ports:
+      - '1025:1025' # SMTP
+      - '8025:8025' # UI web
+
+# Stockage : par défaut STORAGE_DRIVER=local (disque). Pour un stockage S3
+# entièrement local/neutre, lancer un MinIO et régler dans .env :
+#   STORAGE_DRIVER=s3 · AWS_S3_ENDPOINT=http://minio:9000 · AWS_S3_FORCE_PATH_STYLE=true
+#   AWS_S3_BUCKET / AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY
+
+volumes:
+  pgdata:
+  redisdata:

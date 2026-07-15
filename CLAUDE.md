@@ -54,6 +54,35 @@ pnpm -F backend exec prisma migrate dev --schema src/database/prisma/schema.pris
 pnpm -F backend exec prisma studio --schema src/database/prisma/schema.prisma    # Database GUI
 ```
 
+## Deployment & runtime topology
+
+**Provider-agnostic**: one Docker image, deployed as **3 container services** distinguished by `ROLE`
+(`api` | `worker` | `scheduler` | `all`). No managed cron — everything runs on open standards
+(Postgres, Redis, S3-compatible storage). Role helpers live in `src/core/config` (`isApi`/`isWorker`/`isScheduler`).
+
+| `ROLE`      | Runs                                                                                  | Notes                                                      |
+| ----------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `api`       | HTTP + WebSocket; **enqueues** ingestion jobs                                         | applies Prisma migrations at boot (`docker-entrypoint.sh`) |
+| `worker`    | BullMQ processors: `IngestionWorker` + `MaintenanceWorker` (`modules/scheduling/`)    | CPU always-on                                              |
+| `scheduler` | `@Cron` producers (`MaintenanceProducer`) that **enqueue** to the `maintenance` queue | **singleton** (min=max=1) → no double-fire                 |
+| `all`       | everything in one process                                                             | **default** for local dev / mono-service                   |
+
+**Scheduled tasks** are decoupled producer→queue→processor: something enqueues (`daily-analysis`,
+`expire-orders` in `scheduling.events.ts`); `worker` consumes and runs the real work
+(`AnalysisJob.runDailyAnalysis()`, `OrderService.expireOverdueOrders()`). No in-process `@Cron` on the API.
+Two interchangeable triggers (use **one**, never both, to avoid double-fire):
+
+- **Self-hosted** — `ROLE=scheduler` runs `MaintenanceProducer` (`@Cron`). Portable default (docker-compose).
+- **External** — a third-party scheduler (Cloud Scheduler…) calls `POST /internal/scheduler/{daily-analysis,expire-orders}`
+  on the API, guarded by header `X-Scheduler-Key` = `SCHEDULER_SECRET` (`SchedulerController`). Drop `savely-scheduler` when using this.
+  Both go through `MaintenanceQueue.enqueue()`.
+
+- **Local (neutral)**: `docker compose -f backend/docker-compose.services.yml up --build` runs the 3 roles + db + redis.
+- **CI/CD** (`.github/workflows/deploy.yml`): `dev` → Render (unchanged); `main` → **Cloud Run** (`deploy-gcp`)
+  deploys `savely-api` + `savely-worker` from one image (DB = Cloud SQL, Redis = Redis Cloud), auth via
+  a GCP service-account key (`secrets.GCP_SA_KEY`). The scheduler is **not** a service in prod: Cloud Scheduler calls
+  `POST /internal/scheduler/*` on the API. `ROLE=scheduler` remains the self-hosted default (docker-compose).
+
 ## Core Domain: Risk Calculation
 
 The risk engine (`backend/src/modules/analysis/risk-calculator.ts`) is the business-logic heart. Classification stays 3-level (`safe`/`high`/`critical`) → actions (no action / B2C resale / donation).

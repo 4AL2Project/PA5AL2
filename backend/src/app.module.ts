@@ -6,7 +6,6 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { config } from './core/config';
 import { StorageModule } from './core/storage/storage.module';
 import { HealthController } from './health.controller';
-import { AnalysisJob } from './jobs/analysis.job';
 import { ActionsModule } from './modules/actions/actions.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AnalysisModule } from './modules/analysis/analysis.module';
@@ -23,6 +22,7 @@ import { OfferModule } from './modules/offer/offer.module';
 import { OrderModule } from './modules/order/order.module';
 import { PharmacyModule } from './modules/pharmacy/pharmacy.module';
 import { ProductModule } from './modules/product/product.module';
+import { SchedulingModule } from './modules/scheduling/scheduling.module';
 
 @Module({
   imports: [
@@ -30,7 +30,7 @@ import { ProductModule } from './modules/product/product.module';
     EventEmitterModule.forRoot(),
     BullModule.forRoot({
       connection: (() => {
-        const { hostname, port, username, password } = new URL(
+        const { protocol, hostname, port, username, password } = new URL(
           config.redis.url
         );
         return {
@@ -38,6 +38,10 @@ import { ProductModule } from './modules/product/product.module';
           port: parseInt(port || '6379', 10),
           ...(username && { username }),
           ...(password && { password }),
+          // TLS pour les Redis managés (Redis Cloud, Upstash…) via rediss://
+          ...(protocol === 'rediss:' && { tls: {} }),
+          // Requis par BullMQ pour les connexions bloquantes des workers.
+          maxRetriesPerRequest: null,
         };
       })(),
     }),
@@ -58,8 +62,9 @@ import { ProductModule } from './modules/product/product.module';
     OfferModule,
     OrderModule,
     CategoryModule,
+    SchedulingModule,
   ],
   controllers: [HealthController],
-  providers: [AnalysisJob],
+  providers: [],
 })
 export class AppModule {}

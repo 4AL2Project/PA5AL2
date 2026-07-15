@@ -6,7 +6,7 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
-import { SentryExceptionCaptured } from '@sentry/nestjs';
+import * as Sentry from '@sentry/nestjs';
 
 import { ErrorResponse } from './response.types';
 
@@ -31,10 +31,6 @@ type RequestLike = { url?: string; method?: string };
 export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
 
-  // @SentryExceptionCaptured() délègue la capture à SentryModule (toutes exceptions)
-  // On filtre ensuite pour ne logger/capturer que les 5xx — les 4xx sont des erreurs
-  // métier normales (validation, auth, not found) qui pollueraient Sentry inutilement
-  @SentryExceptionCaptured()
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<ResponseLike>();
@@ -43,6 +39,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const { status, message, code, details } = this.normalize(exception);
 
     if (status >= 500) {
+      Sentry.captureException(exception);
       this.logger.error(
         `${request?.method ?? 'UNKNOWN'} ${request?.url ?? ''} → ${status}`,
         exception instanceof Error ? exception.stack : String(exception)

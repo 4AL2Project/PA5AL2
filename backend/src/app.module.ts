@@ -2,7 +2,10 @@ import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
+import { APP_FILTER } from '@nestjs/core';
 import { SentryModule } from '@sentry/nestjs/setup';
+
+import { HttpExceptionFilter } from './core/http/http-exception.filter';
 
 import { config } from './core/config';
 import { StorageModule } from './core/storage/storage.module';
@@ -67,6 +70,6 @@ import { SchedulingModule } from './modules/scheduling/scheduling.module';
     SchedulingModule,
   ],
   controllers: [HealthController],
-  providers: [],
+  providers: [{ provide: APP_FILTER, useClass: HttpExceptionFilter }],
 })
 export class AppModule {}

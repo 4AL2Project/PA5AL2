@@ -6,6 +6,7 @@ import {
   Header,
   Param,
   Post,
+  Put,
   Query,
   Res,
   UseGuards,
@@ -35,6 +36,7 @@ import {
   CreateDonationDto,
   EligiblePreviewDto,
   ScanPickupDto,
+  UpdateDonParametresDto,
 } from './dto/donation.dto';
 
 @ApiTags('donations')
@@ -74,6 +76,23 @@ export class DonationsController {
   })
   upcomingPickups(@TenantPharmacyId() pharmacyId: string) {
     return this.donationsService.upcomingPickups(pharmacyId);
+  }
+
+  @Get('parametres')
+  @Roles(UserRole.TITULAIRE)
+  @ApiOperation({ summary: 'Paramètres de don (seuil dormance, rayon matching)' })
+  getParametres(@TenantPharmacyId() pharmacyId: string) {
+    return this.donationsService.getParametres(pharmacyId);
+  }
+
+  @Put('parametres')
+  @Roles(UserRole.TITULAIRE)
+  @ApiOperation({ summary: 'Modifier les paramètres de don' })
+  updateParametres(
+    @TenantPharmacyId() pharmacyId: string,
+    @Body() dto: UpdateDonParametresDto
+  ) {
+    return this.donationsService.updateParametres(pharmacyId, dto);
   }
 
   @Post('eligible-preview')

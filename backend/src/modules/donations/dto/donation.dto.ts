@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   MaxLength,
   Min,
   ValidateNested,
@@ -85,4 +86,16 @@ export class ScanPickupDto {
   @IsString()
   @MaxLength(120)
   picked_up_by!: string;
+}
+
+export class UpdateDonParametresDto {
+  @IsInt()
+  @Min(63)
+  @Max(117)
+  seuil_dormance_jours!: number;
+
+  @IsInt()
+  @Min(10)
+  @Max(100)
+  rayon_matching_km!: number;
 }

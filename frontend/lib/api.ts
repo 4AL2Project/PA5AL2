@@ -810,3 +810,26 @@ export async function updateAssociation(
     body: JSON.stringify(payload),
   });
 }
+
+// ─── Paramètres de don ────────────────────────────────────────────────────────
+
+export interface DonParametres {
+  id: string;
+  pharmacy_id: string;
+  seuil_dormance_jours: number;
+  rayon_matching_km: number;
+}
+
+export async function fetchDonParametres(): Promise<DonParametres> {
+  return apiFetch<DonParametres>('/api/donations/parametres');
+}
+
+export async function saveDonParametres(
+  data: Pick<DonParametres, 'seuil_dormance_jours' | 'rayon_matching_km'>
+): Promise<DonParametres> {
+  return apiFetch<DonParametres>('/api/donations/parametres', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+}

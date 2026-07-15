@@ -32,6 +32,22 @@ model Pharmacy {
   offers            Offer[]
   orders            Order[]
   categories        Category[]
+  don_parametres    DonParametres?
+}
+
+// Paramètres de configuration du module don par officine.
+// Un enregistrement par pharmacie (relation 1-1 unique).
+// seuil_dormance_jours : durée minimale d'immobilisation déclenchant une
+// recommandation de don (plage réglementaire 63–117 jours selon art. L5112-1 CSP).
+// rayon_matching_km : rayon maximal de recherche d'associations éligibles.
+model DonParametres {
+  id                   String   @id @default(uuid())
+  pharmacy_id          String   @unique
+  seuil_dormance_jours Int      @default(90)
+  rayon_matching_km    Int      @default(50)
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+  pharmacy             Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
 }
 
 // Catégorie de classement d'une Offer B2C (référentiel exposé au catalogue mobile).

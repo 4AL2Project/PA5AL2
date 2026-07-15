@@ -10,7 +10,6 @@ import { IoAdapter } from '@nestjs/platform-socket.io';
 
 import { AppModule } from './app.module';
 import { config } from './core/config';
-import { HttpExceptionFilter } from './core/http/http-exception.filter';
 import { LoggingInterceptor } from './core/http/logging.interceptor';
 import { ResponseEnvelopeInterceptor } from './core/http/response.interceptor';
 import { setupSwagger, SWAGGER_PATH } from './core/http/swagger';
@@ -42,8 +41,6 @@ async function bootstrap() {
     new LoggingInterceptor(),
     new ResponseEnvelopeInterceptor()
   );
-  app.useGlobalFilters(new HttpExceptionFilter());
-
   setupSwagger(app);
 
   await app.listen(config.port);

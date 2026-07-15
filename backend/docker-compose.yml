@@ -7,9 +7,24 @@ services:
       POSTGRES_PASSWORD: pharma
       POSTGRES_DB: pharma_risk
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  mailhog:
+    image: jcalonso/mailhog:latest
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
 volumes:
   postgres_data:
+  redis_data:

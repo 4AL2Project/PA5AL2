@@ -1,14 +1,15 @@
-'use client'
+'use client';
 
 export default function GlobalError({
   error,
 }: {
-  error: Error & { digest?: string }
+  error: Error & { digest?: string };
 }) {
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+  const pathname =
+    typeof window !== 'undefined' ? window.location.pathname : '';
 
   // Log the error to the console so it will be forwarded to server logs and captured by auto-fix
-  console.error(error)
+  console.error(error);
 
   return (
     <html>
@@ -143,5 +144,5 @@ export default function GlobalError({
         </div>
       </body>
     </html>
-  )
+  );
 }

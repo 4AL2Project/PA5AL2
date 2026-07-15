@@ -45,6 +45,7 @@ interface FormState {
   contact_email: string;
   contact_phone: string;
   categories: string[];
+  action_radius_km: number;
 }
 
 function emptyForm(): FormState {
@@ -56,6 +57,7 @@ function emptyForm(): FormState {
     contact_email: '',
     contact_phone: '',
     categories: [],
+    action_radius_km: 30,
   };
 }
 
@@ -68,6 +70,7 @@ function fromAssociation(a: Association): FormState {
     contact_email: a.contact_email ?? '',
     contact_phone: a.contact_phone ?? '',
     categories: a.categories,
+    action_radius_km: a.action_radius_km ?? 30,
   };
 }
 
@@ -140,6 +143,7 @@ export function AssociationForm({
         contact_email: form.contact_email || undefined,
         contact_phone: form.contact_phone || undefined,
         categories: form.categories,
+        action_radius_km: form.action_radius_km,
       };
 
       const isEdit = !!initial;
@@ -327,6 +331,28 @@ export function AssociationForm({
             placeholder="Paris"
           />
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="asso-radius" className="text-xs">
+          Rayon d'action (km) *
+        </Label>
+        <Input
+          id="asso-radius"
+          type="number"
+          required
+          min={5}
+          max={100}
+          value={form.action_radius_km}
+          onChange={(e) =>
+            update('action_radius_km', parseInt(e.target.value, 10) || 30)
+          }
+          disabled={submitting}
+        />
+        <p className="text-[11px] text-muted-foreground">
+          Zone d'action réelle autour du siège — pilote l'éligibilité au
+          matching (5 à 100 km).
+        </p>
       </div>
 
       <div className="space-y-2">

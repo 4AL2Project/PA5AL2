@@ -9,6 +9,7 @@ jest.mock('../../database/client', () => ({
     riskAnalysis: { findMany: jest.fn() },
     action: { count: jest.fn() },
     product: { count: jest.fn() },
+    donationAllocation: { findMany: jest.fn() },
   },
 }));
 
@@ -18,6 +19,7 @@ const { prisma } = require('../../database/client') as {
     pharmacy: { findUnique: jest.Mock };
     riskAnalysis: { findMany: jest.Mock };
     action: { count: jest.Mock };
+    donationAllocation: { findMany: jest.Mock };
     product: { count: jest.Mock };
   };
 };
@@ -66,6 +68,7 @@ describe('DashboardController — US-40', () => {
   beforeEach(() => {
     controller = new DashboardController();
     jest.clearAllMocks();
+    prisma.donationAllocation.findMany.mockResolvedValue([]);
   });
 
   describe('TC-01 — Capital immobilisé = somme des capital_locked', () => {

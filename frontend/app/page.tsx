@@ -7,6 +7,7 @@ import { DormancyDonutChart } from '@/components/dashboard/dormancy-donut-chart'
 import { SalesVelocityChart } from '@/components/dashboard/sales-velocity-chart';
 import { StaleDataAlert } from '@/components/dashboard/stale-data-alert';
 import { Top10DormantsTable } from '@/components/dashboard/top10-dormants-table';
+import { UpcomingPickupsCard } from '@/components/dashboard/upcoming-pickups-card';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Button } from '@/components/ui/button';
 import { fetchDashboard, fetchLatestAnalysis } from '@/lib/api';
@@ -53,6 +54,9 @@ export default async function DashboardPage() {
       <div className="space-y-6">
         {/* Bandeau alerte données stales */}
         <StaleDataAlert lastUploadAt={dashboard.lastUploadAt} />
+
+        {/* Retraits de dons planifiés cette semaine */}
+        <UpcomingPickupsCard pickups={dashboard.upcomingDonationPickups} />
 
         {/* CTA import si aucun produit */}
         {!hasProducts && (

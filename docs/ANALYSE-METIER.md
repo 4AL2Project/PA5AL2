@@ -131,7 +131,7 @@ Paiement en ligne (comptoir) · API directe LGO (export manuel) · Gestion DLP/p
 6. Multi-rôle d'un même utilisateur.
 
 **🔌 Dépendances externes**
-Export LGO · annuaire assos géocodé · service de géocodage · emailing · gabarit Cerfa n°11580 · stockage PDF (5 ans) · FCM (V2) · référentiel CIP (V2) · OVH France (RGPD).
+Export LGO · annuaire assos géocodé · service de géocodage · emailing · gabarit Cerfa n°16216 (entreprises) · stockage PDF (5 ans) · FCM (V2) · référentiel CIP (V2) · OVH France (RGPD).
 
 ---
 

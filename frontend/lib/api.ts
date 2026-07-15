@@ -73,6 +73,13 @@ interface RawDashboard {
   };
   summary?: RawSummary;
   top10_dormants?: RawTop10Dormant[];
+  upcoming_donation_pickups?: {
+    allocation_id: string;
+    association_name: string;
+    pickup_slot_start: string;
+    pickup_slot_end: string;
+    lines: { name: string; quantity: number }[];
+  }[];
 }
 
 export interface DashboardData {
@@ -86,6 +93,13 @@ export interface DashboardData {
   totalCapitalLocked: number;
   pendingActions: number;
   missingCostPriceCount: number;
+  upcomingDonationPickups: {
+    allocationId: string;
+    associationName: string;
+    pickupSlotStart: string;
+    pickupSlotEnd: string;
+    lines: { name: string; quantity: number }[];
+  }[];
   top10Dormants: {
     productId: string;
     name: string;
@@ -329,6 +343,15 @@ export async function fetchDashboard(): Promise<DashboardData> {
     totalCapitalLocked: s.total_capital_locked ?? 0,
     pendingActions: s.pending_actions ?? 0,
     missingCostPriceCount: s.missing_cost_price_count ?? 0,
+    upcomingDonationPickups: (data.upcoming_donation_pickups ?? []).map(
+      (a) => ({
+        allocationId: a.allocation_id,
+        associationName: a.association_name,
+        pickupSlotStart: a.pickup_slot_start,
+        pickupSlotEnd: a.pickup_slot_end,
+        lines: a.lines,
+      })
+    ),
     top10Dormants: (data.top10_dormants ?? []).map((d) => ({
       productId: d.product_id,
       name: d.name,
@@ -546,4 +569,244 @@ export async function resendAdminUserInvitation(id: string): Promise<void> {
 
 export async function deactivateAdminUser(id: string): Promise<AdminUser> {
   return apiFetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+}
+
+// ─── Dons (cycle de vie piloté par l'orchestrateur) ─────────────────────────
+
+export interface DonationLinePayload {
+  product_id: string;
+  quantity: number;
+}
+
+export interface EligiblePreview {
+  count: number;
+  associations: {
+    association_id: string;
+    name: string;
+    distance_km: number;
+  }[];
+  // Coût de revient HT du lot (null si un prix d'achat manque)
+  cost_value: number | null;
+  // 60 % du coût de revient (art. 238 bis CGI)
+  tax_savings: number | null;
+}
+
+export interface DonationLineItem {
+  line_id: string;
+  product_id: string;
+  quantity_total: number;
+  quantity_allocated: number;
+  unit_value: number;
+  product: { name: string; external_sku: string | null };
+}
+
+export interface DonationAllocationItem {
+  allocation_id: string;
+  association_id: string;
+  status: 'PLANIFIEE' | 'RETIREE' | 'NON_RECUPEREE';
+  lines: {
+    product_id: string;
+    name: string;
+    quantity: number;
+    unit_value: number;
+  }[];
+  pickup_slot_start: string;
+  pickup_slot_end: string;
+  picked_up_by: string | null;
+  picked_up_at: string | null;
+  cerfa_number: string | null;
+  association: { name: string; contact_phone?: string | null };
+}
+
+export interface DonationEventItem {
+  event_id: string;
+  type: string;
+  actor: string;
+  payload: Record<string, unknown> | null;
+  created_at: string;
+}
+
+export interface DonationSummary {
+  donation_id: string;
+  status: 'EN_COURS' | 'COMPLETEE' | 'ECHOUEE' | 'ANNULEE';
+  attempt_count: number;
+  created_at: string;
+  lines: DonationLineItem[];
+  proposals: { association: { name: string }; expires_at: string }[];
+  allocations: DonationAllocationItem[];
+}
+
+export interface DonationDetail extends DonationSummary {
+  events: DonationEventItem[];
+  remaining: {
+    product_id: string;
+    name: string;
+    quantity_total: number;
+    quantity_allocated: number;
+    quantity_remaining: number;
+    unit_value: number;
+  }[];
+  cancellable: boolean;
+}
+
+export async function donationEligiblePreview(
+  lines: DonationLinePayload[]
+): Promise<EligiblePreview> {
+  return apiFetch('/api/donations/eligible-preview', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lines }),
+  });
+}
+
+export async function createDonation(payload: {
+  action_id?: string;
+  lines: DonationLinePayload[];
+  preferred_association_id?: string;
+}): Promise<DonationSummary> {
+  return apiFetch('/api/donations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function fetchDonations(): Promise<DonationSummary[]> {
+  return apiFetch('/api/donations');
+}
+
+export async function fetchDonationDetail(id: string): Promise<DonationDetail> {
+  return apiFetch(`/api/donations/${id}`);
+}
+
+export async function cancelDonation(id: string): Promise<void> {
+  await apiFetch(`/api/donations/${id}/cancel`, { method: 'POST' });
+}
+
+export async function fetchUpcomingPickups(): Promise<
+  DonationAllocationItem[]
+> {
+  return apiFetch('/api/donations/upcoming-pickups');
+}
+
+export async function confirmPickup(
+  allocationId: string,
+  pickedUpBy: string
+): Promise<void> {
+  await apiFetch(`/api/donations/allocations/${allocationId}/confirm-pickup`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ picked_up_by: pickedUpBy }),
+  });
+}
+
+export function donationCerfaUrl(allocationId: string): string {
+  return `/api/be/api/donations/allocations/${allocationId}/cerfa`;
+}
+
+export interface DonationBilan {
+  total_donations: number;
+  total_withdrawn: number;
+  // Valeur au coût de revient HT (art. 238 bis CGI)
+  total_value_donated: number;
+  // 60 % de la valeur donnée (plafond 20 000 € ou 0,5 % du CA HT)
+  tax_savings: number;
+  total_associations: number;
+  total_products_donated: number;
+  donations_by_status: Record<string, number>;
+}
+
+export async function fetchDonationBilan(): Promise<DonationBilan> {
+  return apiFetch('/api/donations/bilan');
+}
+
+// ─── Annuaire des associations (titulaire) ──────────────────────────────────
+
+export interface AssociationWindow {
+  day: string;
+  start: string;
+  end: string;
+}
+
+export interface AnnuaireEntry {
+  association_id: string;
+  name: string;
+  city: string;
+  postal_code: string;
+  logo_url: string | null;
+  categories: string[];
+  pickup_windows: AssociationWindow[] | null;
+  action_radius_km: number;
+  distance_km: number | null;
+  reliability: number | null;
+}
+
+export interface AssociationFiche {
+  association_id: string;
+  name: string;
+  address: string;
+  city: string;
+  postal_code: string;
+  contact_email: string | null;
+  contact_phone: string | null;
+  logo_url: string | null;
+  categories: string[];
+  pickup_windows: AssociationWindow[] | null;
+  action_radius_km: number;
+  distance_km: number | null;
+  stats: {
+    proposals_received: number;
+    response_rate: number | null;
+    pickup_rate: number | null;
+    smoothed_reliability: number;
+    avg_response_hours: number | null;
+    last_donation_at: string | null;
+  };
+  history: {
+    allocation_id: string;
+    status: string;
+    pickup_slot_start: string;
+    picked_up_at: string | null;
+    lines: { name: string; quantity: number; unit_value: number }[];
+    value: number | null;
+    cerfa_available: boolean;
+  }[];
+  totals: { total_value: number; tax_savings: number };
+}
+
+export async function fetchAnnuaire(opts?: {
+  category?: string;
+  search?: string;
+}): Promise<AnnuaireEntry[]> {
+  const params = new URLSearchParams();
+  if (opts?.category) params.set('category', opts.category);
+  if (opts?.search) params.set('search', opts.search);
+  const qs = params.size ? `?${params}` : '';
+  return apiFetch(`/api/associations/annuaire${qs}`);
+}
+
+export async function fetchAssociationFiche(
+  id: string
+): Promise<AssociationFiche> {
+  return apiFetch(`/api/associations/${id}/fiche`);
+}
+
+export async function updateAssociation(
+  id: string,
+  payload: Partial<{
+    name: string;
+    address: string;
+    city: string;
+    postal_code: string;
+    contact_email: string;
+    contact_phone: string;
+    categories: string[];
+    pickup_windows: AssociationWindow[];
+  }>
+): Promise<void> {
+  await apiFetch(`/api/associations/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }

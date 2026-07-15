@@ -49,7 +49,7 @@ function makeAsso(overrides: Record<string, unknown> = {}) {
     categories: ['medicaments'],
     contact_email: 'contact@croix-bleue.fr',
     contact_phone: null,
-    active: true,
+    status: 'ACTIVE',
     created_at: new Date(),
     ...overrides,
   };
@@ -61,11 +61,26 @@ function makeService(
   const mockGeocoding = {
     geocode: jest.fn().mockResolvedValue(geocodeResult),
   } as unknown as GeocodingService;
+  const mockEmail = {
+    sendAssociationValidatedEmail: jest.fn(),
+    sendAssociationRejectedEmail: jest.fn(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
   const mockStorage = {
     upload: jest.fn().mockResolvedValue('https://cdn.example/logo.png'),
     delete: jest.fn().mockResolvedValue(undefined),
   } as unknown as StorageService;
-  return new AssociationsService(mockGeocoding, mockStorage);
+  const mockStats = {
+    getReliability: jest.fn().mockResolvedValue(new Map()),
+    getStats: jest.fn(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+  return new AssociationsService(
+    mockGeocoding,
+    mockEmail,
+    mockStorage,
+    mockStats
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -178,7 +193,7 @@ describe('AssociationsService — CRUD (US-30)', () => {
     const result = await service.findAll();
     expect(result).toHaveLength(2);
     expect(prisma.association.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { active: true } })
+      expect.objectContaining({ where: { status: 'ACTIVE' } })
     );
   });
 
@@ -199,13 +214,15 @@ describe('AssociationsService — CRUD (US-30)', () => {
 
   it('désactive une association (soft delete)', async () => {
     prisma.association.findUnique.mockResolvedValue(makeAsso());
-    prisma.association.update.mockResolvedValue(makeAsso({ active: false }));
+    prisma.association.update.mockResolvedValue(
+      makeAsso({ status: 'SUSPENDUE' })
+    );
 
     const result = await service.deactivate(ASSO_ID);
-    expect(result.active).toBe(false);
+    expect(result.status).toBe('SUSPENDUE');
     expect(prisma.association.update).toHaveBeenCalledWith(
       expect.objectContaining({
-        data: { active: false },
+        data: { status: 'SUSPENDUE' },
       })
     );
   });
@@ -356,7 +373,7 @@ describe('AssociationsService — filtre catégorie (US-63)', () => {
     expect(prisma.association.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
-          active: true,
+          status: 'ACTIVE',
           categories: { hasSome: ['medicaments'] },
         }),
       })
@@ -374,7 +391,7 @@ describe('AssociationsService — filtre catégorie (US-63)', () => {
     const results = await service.findAll();
 
     expect(prisma.association.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({ where: { active: true } })
+      expect.objectContaining({ where: { status: 'ACTIVE' } })
     );
     expect(results).toHaveLength(2);
   });
@@ -452,13 +469,13 @@ describe('AssociationsService — associations inactives (US-63)', () => {
 
   it('findAll ne retourne pas les associations inactives', async () => {
     // findMany est mocké pour ne retourner que des actives (active: true en where)
-    prisma.association.findMany.mockResolvedValue([makeAsso({ active: true })]);
+    prisma.association.findMany.mockResolvedValue([makeAsso()]);
 
     await service.findAll();
 
     expect(prisma.association.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ active: true }),
+        where: expect.objectContaining({ status: 'ACTIVE' }),
       })
     );
   });
@@ -472,7 +489,7 @@ describe('AssociationsService — associations inactives (US-63)', () => {
     expect(results).toHaveLength(0);
     expect(prisma.association.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ active: true }),
+        where: expect.objectContaining({ status: 'ACTIVE' }),
       })
     );
   });
@@ -480,7 +497,9 @@ describe('AssociationsService — associations inactives (US-63)', () => {
   it("une association désactivée n'est plus proposée au matching", async () => {
     // Après deactivate, findAll ne la retourne plus (filtre active: true)
     prisma.association.findUnique.mockResolvedValue(makeAsso());
-    prisma.association.update.mockResolvedValue(makeAsso({ active: false }));
+    prisma.association.update.mockResolvedValue(
+      makeAsso({ status: 'SUSPENDUE' })
+    );
     prisma.association.findMany.mockResolvedValue([]); // liste vide post-désactivation
 
     await service.deactivate(ASSO_ID);

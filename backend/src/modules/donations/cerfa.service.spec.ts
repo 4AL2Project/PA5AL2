@@ -1,264 +1,135 @@
-// Roger — v1.0
-// Cahier de tests US-32 : Génération du reçu Cerfa PDF
-// Couvre : génération PDF sur don RETIREE, blocage non-RETIREE,
-//          isolation tenant, re-téléchargement (idempotence), données transmises
+// Cahier de tests : reçu Cerfa par ALLOCATION retirée
+// Couvre : invariant RETIREE, isolation tenant, valeurs des lignes de
+// l'allocation uniquement, PDF généré.
 
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 import { CerfaService } from './cerfa.service';
+import { createFakeDb, FakeDb } from './testing/fake-db';
 
-// ---------------------------------------------------------------------------
-// Mocks
-// ---------------------------------------------------------------------------
-jest.mock('../../database/client', () => ({
-  prisma: {
-    donation: { findFirst: jest.fn() },
-  },
-}));
-
+jest.mock('../../database/client', () => ({ prisma: {} }));
 jest.mock('./cerfa.generator', () => ({
-  generateCerfaPdf: jest.fn(),
+  generateCerfaPdf: jest.fn().mockResolvedValue(Buffer.from('%PDF-fake')),
 }));
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const { prisma } = require('../../database/client') as {
-  prisma: { donation: { findFirst: jest.Mock } };
-};
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { generateCerfaPdf } = require('./cerfa.generator') as {
   generateCerfaPdf: jest.Mock;
 };
 
-// ---------------------------------------------------------------------------
-// Fixtures
-// ---------------------------------------------------------------------------
-const PHARMACY_ID = 'pharma-uuid-1';
-const OTHER_PHARMACY_ID = 'pharma-uuid-2';
-const DONATION_ID = 'don-uuid-1';
-const FAKE_PDF = Buffer.from('%PDF-1.4 fake');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const clientModule = require('../../database/client') as { prisma: FakeDb };
 
-function makeDonation(status: string, overrides: Record<string, unknown> = {}) {
-  return {
-    donation_id: DONATION_ID,
+const PHARMACY_ID = 'pharma-1';
+
+let db: FakeDb;
+let service: CerfaService;
+
+function seedAllocation(overrides: Record<string, unknown> = {}) {
+  db.seed('pharmacy', {
     pharmacy_id: PHARMACY_ID,
-    quantity: 5,
-    estimated_value: 27.5,
-    status,
-    cerfa_number: status === 'RETIREE' ? 'CERFA-DON-1717000000000' : null,
-    withdrawn_at:
-      status === 'RETIREE' ? new Date('2026-06-01T10:00:00Z') : null,
-    product: { name: 'Doliprane 500mg', lot_number: 'LOT-2024-A' },
-    association: {
-      name: 'Croix Bleue Paris',
-      address: '10 rue Voltaire',
-      city: 'Paris',
-      postal_code: '75011',
-    },
-    pharmacy: {
-      name: 'Pharmacie de la Paix',
-      address: '1 rue de la Paix, 75001 Paris',
-      siret: '12345678901234',
-    },
+    name: 'Pharmacie du Test',
+    email: 'p@x.fr',
+    address: '1 rue du Test',
+    siret: '12345678900011',
+  });
+  const product = db.seed('product', {
+    pharmacy_id: PHARMACY_ID,
+    external_sku: 'SKU-1',
+    name: 'Crème',
+    lot_number: 'LOT-42',
+    stock_quantity: 10,
+    unit_price: 8,
+  });
+  const asso = db.seed('association', {
+    name: 'Les Restos',
+    address: '2 rue des Assos',
+    city: 'Paris',
+    postal_code: '75011',
+  });
+  const donation = db.seed('donation', { pharmacy_id: PHARMACY_ID });
+  const proposal = db.seed('donationProposal', {
+    donation_id: donation.donation_id,
+    association_id: asso.association_id,
+    status: 'ACCEPTEE',
+    proposed_lines: [],
+    expires_at: new Date(),
+  });
+  return db.seed('donationAllocation', {
+    donation_id: donation.donation_id,
+    association_id: asso.association_id,
+    proposal_id: proposal.proposal_id,
+    status: 'RETIREE',
+    cerfa_number: 'CERFA-DON-1',
+    picked_up_at: new Date('2026-07-10'),
+    picked_up_by: 'Marie',
+    lines: [
+      {
+        product_id: product.product_id,
+        name: 'Crème',
+        quantity: 3,
+        unit_value: 8,
+      },
+    ],
+    pickup_slot_start: new Date(),
+    pickup_slot_end: new Date(),
     ...overrides,
-  };
+  });
 }
 
-// ---------------------------------------------------------------------------
-// BLOC 1 — Génération PDF sur un don RETIREE
-// ---------------------------------------------------------------------------
-describe('CerfaService — generateCerfa (US-32)', () => {
-  let service: CerfaService;
+beforeEach(() => {
+  db = createFakeDb();
+  Object.assign(clientModule.prisma, db);
+  service = new CerfaService();
+});
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    service = new CerfaService();
-    generateCerfaPdf.mockResolvedValue(FAKE_PDF);
-  });
-
-  it('retourne un Buffer non vide pour un don RETIREE appartenant à la pharmacie', async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('RETIREE'));
-
-    const result = await service.generateCerfa(DONATION_ID, PHARMACY_ID);
-
-    expect(result).toBeInstanceOf(Buffer);
-    expect(result.length).toBeGreaterThan(0);
-  });
-
-  it('appelle generateCerfaPdf avec les données complètes du don', async () => {
-    const donation = makeDonation('RETIREE');
-    prisma.donation.findFirst.mockResolvedValue(donation);
-
-    await service.generateCerfa(DONATION_ID, PHARMACY_ID);
-
+describe('CerfaService', () => {
+  it('génère le PDF avec les valeurs des lignes de CETTE allocation uniquement', async () => {
+    const allocation = seedAllocation();
+    const pdf = await service.generateCerfa(
+      allocation.allocation_id,
+      PHARMACY_ID
+    );
+    expect(Buffer.isBuffer(pdf)).toBe(true);
     expect(generateCerfaPdf).toHaveBeenCalledWith(
       expect.objectContaining({
-        cerfa_number: 'CERFA-DON-1717000000000',
-        pharmacy_name: 'Pharmacie de la Paix',
-        association_name: 'Croix Bleue Paris',
-        product_name: 'Doliprane 500mg',
-        quantity: 5,
-        estimated_value: 27.5,
-        withdrawn_at: new Date('2026-06-01T10:00:00Z'),
+        cerfa_number: 'CERFA-DON-1',
+        association_name: 'Les Restos',
+        pharmacy_name: 'Pharmacie du Test',
+        lines: [
+          {
+            product_name: 'Crème',
+            lot_number: 'LOT-42',
+            quantity: 3,
+            unit_value: 8,
+          },
+        ],
       })
     );
   });
 
-  it('transmet le SIRET de la pharmacie au générateur', async () => {
-    prisma.donation.findFirst.mockResolvedValue(
-      makeDonation('RETIREE', {
-        pharmacy: {
-          name: 'Pharma Test',
-          address: '1 rue Test',
-          siret: '98765432100019',
-        },
-      })
-    );
-
-    await service.generateCerfa(DONATION_ID, PHARMACY_ID);
-
-    expect(generateCerfaPdf).toHaveBeenCalledWith(
-      expect.objectContaining({ pharmacy_siret: '98765432100019' })
-    );
-  });
-
-  it("transmet l'adresse complète de l'association (adresse, ville, code postal)", async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('RETIREE'));
-
-    await service.generateCerfa(DONATION_ID, PHARMACY_ID);
-
-    expect(generateCerfaPdf).toHaveBeenCalledWith(
-      expect.objectContaining({
-        association_address: '10 rue Voltaire',
-        association_city: 'Paris',
-        association_postal_code: '75011',
-      })
-    );
-  });
-
-  it('transmet le numéro de lot du produit quand il est présent', async () => {
-    prisma.donation.findFirst.mockResolvedValue(
-      makeDonation('RETIREE', {
-        product: { name: 'Doliprane 500mg', lot_number: 'LOT-2024-A' },
-      })
-    );
-
-    await service.generateCerfa(DONATION_ID, PHARMACY_ID);
-
-    expect(generateCerfaPdf).toHaveBeenCalledWith(
-      expect.objectContaining({ lot_number: 'LOT-2024-A' })
-    );
-  });
-
-  it("transmet lot_number null si le produit n'a pas de numéro de lot", async () => {
-    prisma.donation.findFirst.mockResolvedValue(
-      makeDonation('RETIREE', {
-        product: { name: 'Crème sans lot', lot_number: null },
-      })
-    );
-
-    await service.generateCerfa(DONATION_ID, PHARMACY_ID);
-
-    expect(generateCerfaPdf).toHaveBeenCalledWith(
-      expect.objectContaining({ lot_number: null })
-    );
-  });
-});
-
-// ---------------------------------------------------------------------------
-// BLOC 2 — Blocage : seul un don RETIREE peut générer un Cerfa
-// ---------------------------------------------------------------------------
-describe('CerfaService — blocage statut non RETIREE (US-32)', () => {
-  let service: CerfaService;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    service = new CerfaService();
-  });
-
-  it('lève BadRequestException pour un don PROPOSEE (non encore accepté)', async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('PROPOSEE'));
-
+  it('refuse une allocation encore PLANIFIEE', async () => {
+    const allocation = seedAllocation({
+      status: 'PLANIFIEE',
+      cerfa_number: null,
+      picked_up_at: null,
+    });
     await expect(
-      service.generateCerfa(DONATION_ID, PHARMACY_ID)
-    ).rejects.toThrow(BadRequestException);
+      service.generateCerfa(allocation.allocation_id, PHARMACY_ID)
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('lève BadRequestException pour un don ACCEPTEE (accepté mais pas encore retiré)', async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('ACCEPTEE'));
-
+  it('refuse l’accès cross-tenant', async () => {
+    const allocation = seedAllocation();
     await expect(
-      service.generateCerfa(DONATION_ID, PHARMACY_ID)
-    ).rejects.toThrow(BadRequestException);
+      service.generateCerfa(allocation.allocation_id, 'autre-pharmacie')
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
-  it('lève BadRequestException pour un don REFUSEE', async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('REFUSEE'));
-
+  it('allocation inconnue → 404', async () => {
+    seedAllocation();
     await expect(
-      service.generateCerfa(DONATION_ID, PHARMACY_ID)
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it("le message d'erreur indique que le don doit être retiré", async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('PROPOSEE'));
-
-    const error = await service
-      .generateCerfa(DONATION_ID, PHARMACY_ID)
-      .catch((e: Error) => e);
-
-    expect(error).toBeInstanceOf(BadRequestException);
-    expect((error as BadRequestException).message).toMatch(/retiré|RETIREE/i);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// BLOC 3 — Isolation tenant
-// ---------------------------------------------------------------------------
-describe('CerfaService — isolation tenant (US-32)', () => {
-  let service: CerfaService;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    service = new CerfaService();
-  });
-
-  it("lève NotFoundException si le don n'appartient pas à la pharmacie demandeuse", async () => {
-    prisma.donation.findFirst.mockResolvedValue(null);
-
-    await expect(
-      service.generateCerfa(DONATION_ID, OTHER_PHARMACY_ID)
-    ).rejects.toThrow(NotFoundException);
-  });
-
-  it('lève NotFoundException si le donation_id est inconnu', async () => {
-    prisma.donation.findFirst.mockResolvedValue(null);
-
-    await expect(
-      service.generateCerfa('don-inexistant', PHARMACY_ID)
-    ).rejects.toThrow(NotFoundException);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// BLOC 4 — Re-téléchargement idempotent
-// ---------------------------------------------------------------------------
-describe('CerfaService — re-téléchargement idempotent (US-32)', () => {
-  let service: CerfaService;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    service = new CerfaService();
-    generateCerfaPdf.mockResolvedValue(FAKE_PDF);
-  });
-
-  it('génère un PDF valide lors de deux appels successifs sur le même don', async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('RETIREE'));
-
-    const first = await service.generateCerfa(DONATION_ID, PHARMACY_ID);
-    const second = await service.generateCerfa(DONATION_ID, PHARMACY_ID);
-
-    expect(first).toEqual(second);
-    expect(generateCerfaPdf).toHaveBeenCalledTimes(2);
+      service.generateCerfa('inconnue', PHARMACY_ID)
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

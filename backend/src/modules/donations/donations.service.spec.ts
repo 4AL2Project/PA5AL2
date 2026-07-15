@@ -1,484 +1,203 @@
-// Roger — v1.0
-// Cahier de tests US-30 : Don associatif
-// Couvre : création, machine à états, isolation tenant, matching géoloc, Cerfa, bilan RSE
+// Cahier de tests : lectures titulaire du cycle don
+// Couvre : liste isolée par tenant, détail (reliquat + annulabilité),
+// bilan RSE basé sur les allocations RETIREE, aperçu des assos éligibles.
 
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 
+import { AssociationStatsService } from '../associations/association-stats.service';
+import { DonationMatchingService } from './donation-matching.service';
 import { DonationsService } from './donations.service';
+import { createFakeDb, FakeDb } from './testing/fake-db';
 
-jest.mock('../../database/client', () => ({
-  prisma: {
-    product: { findFirst: jest.fn() },
-    association: { findUnique: jest.fn() },
-    donation: {
-      create: jest.fn(),
-      findMany: jest.fn(),
-      update: jest.fn(),
-      findFirst: jest.fn(),
-    },
-  },
-}));
+jest.mock('../../database/client', () => ({ prisma: {} }));
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { prisma } = require('../../database/client') as {
-  prisma: {
-    product: { findFirst: jest.Mock };
-    association: { findUnique: jest.Mock };
-    donation: {
-      create: jest.Mock;
-      findMany: jest.Mock;
-      update: jest.Mock;
-      findFirst: jest.Mock;
-    };
-  };
-};
+const clientModule = require('../../database/client') as { prisma: FakeDb };
 
-const PHARMACY_ID = 'pharma-uuid-1';
-const OTHER_PHARMACY_ID = 'pharma-uuid-2';
-const PRODUCT_ID = 'prod-uuid-1';
-const ASSOCIATION_ID = 'asso-uuid-1';
-const DONATION_ID = 'don-uuid-1';
+const PHARMACY_ID = 'pharma-1';
+const OTHER_PHARMACY_ID = 'pharma-2';
 
-function makeProduct(
-  overrides: Partial<{ stock_quantity: number; unit_price: number }> = {}
+let db: FakeDb;
+let service: DonationsService;
+
+function seedDonation(
+  pharmacyId: string,
+  overrides: Record<string, unknown> = {}
 ) {
-  return {
-    product_id: PRODUCT_ID,
-    pharmacy_id: PHARMACY_ID,
-    stock_quantity: overrides.stock_quantity ?? 10,
-    unit_price: overrides.unit_price ?? 5.5,
-    name: 'Crème dormante',
-    external_sku: 'SKU-001',
-  };
-}
-
-function makeAssociation(active = true) {
-  return {
-    association_id: ASSOCIATION_ID,
-    name: 'Croix Bleue',
-    active,
-    city: 'Paris',
-  };
-}
-
-function makeDonation(status: string, overrides: Record<string, unknown> = {}) {
-  return {
-    donation_id: DONATION_ID,
-    product_id: PRODUCT_ID,
-    pharmacy_id: PHARMACY_ID,
-    association_id: ASSOCIATION_ID,
-    quantity: 3,
-    estimated_value: 16.5,
-    status,
+  const product = db.seed('product', {
+    pharmacy_id: pharmacyId,
+    external_sku: `SKU-${Math.random()}`,
+    name: 'Crème',
+    category: 'Cosmétique',
+    stock_quantity: 10,
+    unit_price: 8,
+    cost_price: 5,
+  });
+  const donation = db.seed('donation', {
+    pharmacy_id: pharmacyId,
     ...overrides,
-  };
+  });
+  const line = db.seed('donationLine', {
+    donation_id: donation.donation_id,
+    product_id: product.product_id,
+    quantity_total: 5,
+    unit_value: 8,
+  });
+  return { donation, product, line };
 }
 
-// ---------------------------------------------------------------------------
-// BLOC 1 — Création d'un don (PROPOSEE)
-// ---------------------------------------------------------------------------
-describe('DonationsService — create (US-30)', () => {
-  let service: DonationsService;
+beforeEach(() => {
+  db = createFakeDb();
+  Object.assign(clientModule.prisma, db);
+  db.seed('pharmacy', {
+    pharmacy_id: PHARMACY_ID,
+    name: 'Pharmacie',
+    email: 'p@x.fr',
+    lat: 48.8566,
+    lng: 2.3522,
+  });
+  service = new DonationsService(
+    new DonationMatchingService(new AssociationStatsService())
+  );
+});
 
-  beforeEach(() => {
-    jest.clearAllMocks();
-    service = new DonationsService();
+describe('DonationsService — listes et détail', () => {
+  it('ne liste que les dons de la pharmacie du token (isolation tenant)', async () => {
+    seedDonation(PHARMACY_ID);
+    seedDonation(OTHER_PHARMACY_ID);
+
+    const list = await service.listForPharmacy(PHARMACY_ID);
+    expect(list).toHaveLength(1);
+    expect(list[0].pharmacy_id).toBe(PHARMACY_ID);
   });
 
-  it('crée un don PROPOSEE avec la valeur estimée correcte (quantité × prix unitaire)', async () => {
-    prisma.product.findFirst.mockResolvedValue(
-      makeProduct({ unit_price: 5.5 })
-    );
-    prisma.association.findUnique.mockResolvedValue(makeAssociation());
-    prisma.donation.create.mockResolvedValue({
-      ...makeDonation('PROPOSEE'),
-      product: { name: 'Crème dormante', external_sku: 'SKU-001' },
-      association: { name: 'Croix Bleue', city: 'Paris' },
+  it('filtre par statut', async () => {
+    seedDonation(PHARMACY_ID, { status: 'EN_COURS' });
+    seedDonation(PHARMACY_ID, { status: 'COMPLETEE' });
+
+    const done = await service.listForPharmacy(PHARMACY_ID, 'COMPLETEE');
+    expect(done).toHaveLength(1);
+    expect(done[0].status).toBe('COMPLETEE');
+  });
+
+  it('getDetail expose le reliquat et l’annulabilité', async () => {
+    const { donation, line } = seedDonation(PHARMACY_ID);
+    await db.donationLine.updateMany({
+      where: { line_id: line.line_id },
+      data: { quantity_allocated: 2 },
     });
 
-    const result = await service.create(PHARMACY_ID, {
-      product_id: PRODUCT_ID,
-      association_id: ASSOCIATION_ID,
-      quantity: 3,
+    const detail = await service.getDetail(donation.donation_id, PHARMACY_ID);
+    expect(detail.remaining[0].quantity_remaining).toBe(3);
+    expect(detail.cancellable).toBe(true);
+  });
+
+  it('getDetail : non annulable dès qu’un retrait est planifié', async () => {
+    const { donation, line } = seedDonation(PHARMACY_ID);
+    const asso = db.seed('association', { name: 'A' });
+    const proposal = db.seed('donationProposal', {
+      donation_id: donation.donation_id,
+      association_id: asso.association_id,
+      status: 'ACCEPTEE',
+      proposed_lines: [],
+      expires_at: new Date(),
+    });
+    db.seed('donationAllocation', {
+      donation_id: donation.donation_id,
+      association_id: asso.association_id,
+      proposal_id: proposal.proposal_id,
+      lines: [
+        {
+          product_id: line.product_id,
+          name: 'Crème',
+          quantity: 5,
+          unit_value: 8,
+        },
+      ],
+      pickup_slot_start: new Date(),
+      pickup_slot_end: new Date(),
     });
 
-    expect(prisma.donation.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({
-          status: 'PROPOSEE',
-          estimated_value: 16.5,
-          quantity: 3,
-        }),
-      })
-    );
-    expect(result.status).toBe('PROPOSEE');
+    const detail = await service.getDetail(donation.donation_id, PHARMACY_ID);
+    expect(detail.cancellable).toBe(false);
   });
 
-  it("lève NotFoundException si le produit n'appartient pas à la pharmacie (isolation tenant)", async () => {
-    prisma.product.findFirst.mockResolvedValue(null);
-
+  it('getDetail refuse l’accès cross-tenant', async () => {
+    const { donation } = seedDonation(OTHER_PHARMACY_ID);
     await expect(
-      service.create(OTHER_PHARMACY_ID, {
-        product_id: PRODUCT_ID,
-        association_id: ASSOCIATION_ID,
-        quantity: 1,
-      })
-    ).rejects.toThrow(NotFoundException);
-  });
-
-  it("lève NotFoundException si l'association est inconnue ou inactive", async () => {
-    prisma.product.findFirst.mockResolvedValue(makeProduct());
-    prisma.association.findUnique.mockResolvedValue(null);
-
-    await expect(
-      service.create(PHARMACY_ID, {
-        product_id: PRODUCT_ID,
-        association_id: 'asso-inconnue',
-        quantity: 1,
-      })
-    ).rejects.toThrow(NotFoundException);
-  });
-
-  it('lève BadRequestException si la quantité est 0', async () => {
-    prisma.product.findFirst.mockResolvedValue(
-      makeProduct({ stock_quantity: 10 })
-    );
-    prisma.association.findUnique.mockResolvedValue(makeAssociation());
-
-    await expect(
-      service.create(PHARMACY_ID, {
-        product_id: PRODUCT_ID,
-        association_id: ASSOCIATION_ID,
-        quantity: 0,
-      })
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it('lève BadRequestException si la quantité dépasse le stock disponible', async () => {
-    prisma.product.findFirst.mockResolvedValue(
-      makeProduct({ stock_quantity: 5 })
-    );
-    prisma.association.findUnique.mockResolvedValue(makeAssociation());
-
-    await expect(
-      service.create(PHARMACY_ID, {
-        product_id: PRODUCT_ID,
-        association_id: ASSOCIATION_ID,
-        quantity: 6,
-      })
-    ).rejects.toThrow(BadRequestException);
-  });
-
-  it('accepte une quantité égale au stock total (cas limite)', async () => {
-    prisma.product.findFirst.mockResolvedValue(
-      makeProduct({ stock_quantity: 5 })
-    );
-    prisma.association.findUnique.mockResolvedValue(makeAssociation());
-    prisma.donation.create.mockResolvedValue(
-      makeDonation('PROPOSEE', { quantity: 5 })
-    );
-
-    await expect(
-      service.create(PHARMACY_ID, {
-        product_id: PRODUCT_ID,
-        association_id: ASSOCIATION_ID,
-        quantity: 5,
-      })
-    ).resolves.toBeDefined();
+      service.getDetail(donation.donation_id, PHARMACY_ID)
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });
 
-// ---------------------------------------------------------------------------
-// BLOC 2 — Machine à états du don
-// ---------------------------------------------------------------------------
-describe('DonationsService — machine à états (US-30)', () => {
-  let service: DonationsService;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    service = new DonationsService();
-  });
-
-  it('accepte un don PROPOSEE → statut passe à ACCEPTEE', async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('PROPOSEE'));
-    prisma.donation.update.mockResolvedValue(makeDonation('ACCEPTEE'));
-
-    const result = await service.accept(DONATION_ID, PHARMACY_ID);
-    expect(result.status).toBe('ACCEPTEE');
-    expect(prisma.donation.update).toHaveBeenCalledWith(
-      expect.objectContaining({
-        data: expect.objectContaining({ status: 'ACCEPTEE' }),
-      })
-    );
-  });
-
-  it("lève BadRequestException si on tente d'accepter un don déjà ACCEPTEE", async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('ACCEPTEE'));
-
-    await expect(service.accept(DONATION_ID, PHARMACY_ID)).rejects.toThrow(
-      BadRequestException
-    );
-  });
-
-  it("lève BadRequestException si on tente d'accepter un don REFUSEE", async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('REFUSEE'));
-
-    await expect(service.accept(DONATION_ID, PHARMACY_ID)).rejects.toThrow(
-      BadRequestException
-    );
-  });
-
-  it('refuse un don PROPOSEE → statut passe à REFUSEE', async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('PROPOSEE'));
-    prisma.donation.update.mockResolvedValue(makeDonation('REFUSEE'));
-
-    const result = await service.refuse(DONATION_ID, PHARMACY_ID);
-    expect(result.status).toBe('REFUSEE');
-  });
-
-  it('lève BadRequestException si on tente de refuser un don ACCEPTEE', async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('ACCEPTEE'));
-
-    await expect(service.refuse(DONATION_ID, PHARMACY_ID)).rejects.toThrow(
-      BadRequestException
-    );
-  });
-
-  it('marque un don ACCEPTEE → RETIREE et génère un numéro Cerfa non vide', async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('ACCEPTEE'));
-    prisma.donation.update.mockImplementation(
-      ({ data }: { data: Record<string, unknown> }) =>
-        Promise.resolve(
-          makeDonation('RETIREE', { cerfa_number: data['cerfa_number'] })
-        )
-    );
-
-    const result = await service.withdraw(DONATION_ID, PHARMACY_ID);
-    expect(result.status).toBe('RETIREE');
-    expect(result.cerfa_number).toBeTruthy();
-  });
-
-  it('lève BadRequestException si on tente de retirer un don PROPOSEE (pas encore accepté)', async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('PROPOSEE'));
-
-    await expect(service.withdraw(DONATION_ID, PHARMACY_ID)).rejects.toThrow(
-      BadRequestException
-    );
-  });
-
-  it('lève BadRequestException si on tente de retirer un don déjà RETIREE', async () => {
-    prisma.donation.findFirst.mockResolvedValue(makeDonation('RETIREE'));
-
-    await expect(service.withdraw(DONATION_ID, PHARMACY_ID)).rejects.toThrow(
-      BadRequestException
-    );
-  });
-
-  it('lève NotFoundException si la pharmacie ne possède pas le don (isolation tenant)', async () => {
-    prisma.donation.findFirst.mockResolvedValue(null);
-
-    await expect(
-      service.accept(DONATION_ID, OTHER_PHARMACY_ID)
-    ).rejects.toThrow(NotFoundException);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// BLOC 3 — Listing des dons
-// ---------------------------------------------------------------------------
-describe('DonationsService — listForPharmacy (US-30)', () => {
-  let service: DonationsService;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    service = new DonationsService();
-  });
-
-  it('retourne tous les dons de la pharmacie sans filtre de statut', async () => {
-    const dons = [makeDonation('PROPOSEE'), makeDonation('ACCEPTEE')];
-    prisma.donation.findMany.mockResolvedValue(dons);
-
-    const result = await service.listForPharmacy(PHARMACY_ID);
-    expect(result).toHaveLength(2);
-    expect(prisma.donation.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ pharmacy_id: PHARMACY_ID }),
-      })
-    );
-  });
-
-  it('filtre par statut PROPOSEE si demandé', async () => {
-    prisma.donation.findMany.mockResolvedValue([makeDonation('PROPOSEE')]);
-
-    await service.listForPharmacy(PHARMACY_ID, 'PROPOSEE');
-    expect(prisma.donation.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ status: 'PROPOSEE' }),
-      })
-    );
-  });
-
-  it('retourne une liste vide si aucun don pour la pharmacie', async () => {
-    prisma.donation.findMany.mockResolvedValue([]);
-
-    const result = await service.listForPharmacy(PHARMACY_ID);
-    expect(result).toHaveLength(0);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// BLOC 4 — Bilan RSE
-// ---------------------------------------------------------------------------
-describe('DonationsService — getBilan (US-30)', () => {
-  let service: DonationsService;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    service = new DonationsService();
-  });
-
-  it('retourne des zéros quand aucun don', async () => {
-    prisma.donation.findMany.mockResolvedValue([]);
-
-    const bilan = await service.getBilan(PHARMACY_ID);
-
-    expect(bilan.total_donations).toBe(0);
-    expect(bilan.total_withdrawn).toBe(0);
-    expect(bilan.total_value_donated).toBe(0);
-    expect(bilan.total_associations).toBe(0);
-    expect(bilan.total_products_donated).toBe(0);
-    expect(bilan.donations_by_status).toEqual({
-      PROPOSEE: 0,
-      ACCEPTEE: 0,
-      RETIREE: 0,
-      REFUSEE: 0,
+describe('DonationsService — bilan RSE', () => {
+  it('ne compte que les allocations RETIREE, valeurs des lignes retirées', async () => {
+    const { donation, product } = seedDonation(PHARMACY_ID, {
+      status: 'COMPLETEE',
     });
-  });
-
-  it('calcule total_value_donated uniquement sur les dons RETIREE', async () => {
-    prisma.donation.findMany.mockResolvedValue([
-      {
-        status: 'RETIREE',
-        estimated_value: 100,
-        association_id: 'asso-1',
-        product_id: 'prod-1',
-      },
-      {
-        status: 'RETIREE',
-        estimated_value: 250,
-        association_id: 'asso-2',
-        product_id: 'prod-2',
-      },
-      {
-        status: 'PROPOSEE',
-        estimated_value: 999,
-        association_id: 'asso-3',
-        product_id: 'prod-3',
-      },
-    ]);
-
-    const bilan = await service.getBilan(PHARMACY_ID);
-
-    expect(bilan.total_withdrawn).toBe(2);
-    expect(bilan.total_value_donated).toBeCloseTo(350, 2);
-    expect(bilan.total_products_donated).toBe(2);
-    expect(bilan.total_associations).toBe(2);
-  });
-
-  it('déduplique les associations et produits dans les totaux RSE', async () => {
-    prisma.donation.findMany.mockResolvedValue([
-      {
-        status: 'RETIREE',
-        estimated_value: 50,
-        association_id: 'asso-1',
-        product_id: 'prod-1',
-      },
-      {
-        status: 'RETIREE',
-        estimated_value: 75,
-        association_id: 'asso-1',
-        product_id: 'prod-1',
-      },
-      {
-        status: 'RETIREE',
-        estimated_value: 30,
-        association_id: 'asso-2',
-        product_id: 'prod-2',
-      },
-    ]);
-
-    const bilan = await service.getBilan(PHARMACY_ID);
-
-    expect(bilan.total_associations).toBe(2);
-    expect(bilan.total_products_donated).toBe(2);
-  });
-
-  it('compte tous les statuts dans donations_by_status', async () => {
-    prisma.donation.findMany.mockResolvedValue([
-      {
-        status: 'PROPOSEE',
-        estimated_value: 10,
-        association_id: 'a1',
-        product_id: 'p1',
-      },
-      {
+    const asso = db.seed('association', { name: 'A' });
+    const mk = (status: string, qty: number) => {
+      const proposal = db.seed('donationProposal', {
+        donation_id: donation.donation_id,
+        association_id: asso.association_id,
         status: 'ACCEPTEE',
-        estimated_value: 20,
-        association_id: 'a2',
-        product_id: 'p2',
-      },
-      {
-        status: 'RETIREE',
-        estimated_value: 30,
-        association_id: 'a3',
-        product_id: 'p3',
-      },
-      {
-        status: 'REFUSEE',
-        estimated_value: 40,
-        association_id: 'a4',
-        product_id: 'p4',
-      },
-    ]);
+        proposed_lines: [],
+        expires_at: new Date(),
+      });
+      db.seed('donationAllocation', {
+        donation_id: donation.donation_id,
+        association_id: asso.association_id,
+        proposal_id: proposal.proposal_id,
+        status,
+        lines: [
+          {
+            product_id: product.product_id,
+            name: 'Crème',
+            quantity: qty,
+            unit_value: 8,
+          },
+        ],
+        pickup_slot_start: new Date(),
+        pickup_slot_end: new Date(),
+      });
+    };
+    mk('RETIREE', 3);
+    mk('NON_RECUPEREE', 2);
 
     const bilan = await service.getBilan(PHARMACY_ID);
-
-    expect(bilan.total_donations).toBe(4);
-    expect(bilan.donations_by_status).toEqual({
-      PROPOSEE: 1,
-      ACCEPTEE: 1,
-      RETIREE: 1,
-      REFUSEE: 1,
-    });
+    expect(bilan.total_withdrawn).toBe(1);
+    // 3 × 8 € ; la non-récupérée ne compte pas
+    expect(bilan.total_value_donated).toBe(24);
+    // Réduction d'impôt entreprise : 60 % (art. 238 bis CGI), pas 75 %
+    expect(bilan.tax_savings).toBeCloseTo(14.4);
+    expect(bilan.total_associations).toBe(1);
+    expect(bilan.donations_by_status.COMPLETEE).toBe(1);
   });
+});
 
-  it('ne compte que les dons RETIREE dans les totaux RSE', async () => {
-    prisma.donation.findMany.mockResolvedValue([
-      {
-        status: 'PROPOSEE',
-        estimated_value: 500,
-        association_id: 'asso-1',
-        product_id: 'prod-1',
-      },
-      {
-        status: 'ACCEPTEE',
-        estimated_value: 300,
-        association_id: 'asso-2',
-        product_id: 'prod-2',
-      },
-      {
-        status: 'REFUSEE',
-        estimated_value: 200,
-        association_id: 'asso-3',
-        product_id: 'prod-3',
-      },
+describe('DonationsService — aperçu éligibilité', () => {
+  it('retourne le nombre d’assos éligibles pour le dialog de validation', async () => {
+    const { product } = seedDonation(PHARMACY_ID);
+    db.seed('association', {
+      name: 'Éligible',
+      status: 'ACTIVE',
+      email_verified_at: new Date(),
+      lat: 48.8566 + 10 / 111.19,
+      lng: 2.3522,
+      action_radius_km: 30,
+      categories: ['Cosmétique'],
+      pickup_sla_days: 7,
+      response_sla_hours: 72,
+      last_proposal_at: null,
+    });
+
+    const preview = await service.eligiblePreview(PHARMACY_ID, [
+      { product_id: product.product_id, quantity: 2 },
     ]);
-
-    const bilan = await service.getBilan(PHARMACY_ID);
-
-    expect(bilan.total_withdrawn).toBe(0);
-    expect(bilan.total_value_donated).toBe(0);
-    expect(bilan.total_associations).toBe(0);
-    expect(bilan.total_products_donated).toBe(0);
+    expect(preview.count).toBe(1);
+    expect(preview.associations[0].name).toBe('Éligible');
+    // Valorisation au coût de revient HT (2 × 5 €) + éco fiscale 60 %
+    expect(preview.cost_value).toBe(10);
+    expect(preview.tax_savings).toBeCloseTo(6);
   });
 });

@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
+  createDonation,
   createOffer,
   fetchPendingActions,
   ignoreAction,
@@ -173,8 +174,17 @@ export default function ActionsPage() {
         await validateAction(id, payload.type);
         removeAction(id);
         setPendingAction(null);
-        if (payload.type === 'DON') {
-          window.location.href = `/donations/new?action=${id}`;
+        if (payload.type === 'DON' && action && payload.donQuantity) {
+          await createDonation({
+            action_id: id,
+            lines: [
+              { product_id: action.productId, quantity: payload.donQuantity },
+            ],
+            preferred_association_id: payload.preferredAssociationId,
+          });
+          toast.success(
+            'Don validé — Savely propose le lot aux associations de la zone'
+          );
         } else if (
           action &&
           payload.discountedPrice &&

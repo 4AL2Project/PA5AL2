@@ -11,6 +11,7 @@ export interface MyPharmacy {
   lat: number | null;
   lng: number | null;
   status: string;
+  donation_pickup_windows: { day: string; start: string; end: string }[] | null;
   subscription_tier: string | null;
   last_upload_at: string | null;
   created_at: string;

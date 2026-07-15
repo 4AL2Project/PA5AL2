@@ -1,12 +1,10 @@
-// Roger — v1.0
-// Controller dons médicamenteux — US-30 Don associatif + US-32 Cerfa PDF
+// Controller dons — cycle de vie complet piloté par l'orchestrateur
 import {
   Body,
   Controller,
   Get,
   Header,
   Param,
-  Patch,
   Post,
   Query,
   Res,
@@ -21,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { Response } from 'express';
 
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { TenantPharmacyId } from '../auth/decorators/tenant-pharmacy.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -28,11 +27,15 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { UserRole } from '../auth/roles.enum';
 import { CerfaService } from './cerfa.service';
+import { DonationStatus } from './donation.types';
+import { DonationOrchestratorService } from './donation-orchestrator.service';
+import { DonationsService } from './donations.service';
 import {
+  ConfirmPickupDto,
   CreateDonationDto,
-  DonationsService,
-  DonationStatus,
-} from './donations.service';
+  EligiblePreviewDto,
+  ScanPickupDto,
+} from './dto/donation.dto';
 
 @ApiTags('donations')
 @ApiBearerAuth('access-token')
@@ -42,6 +45,7 @@ import {
 export class DonationsController {
   constructor(
     private readonly donationsService: DonationsService,
+    private readonly orchestrator: DonationOrchestratorService,
     private readonly cerfaService: CerfaService
   ) {}
 
@@ -64,38 +68,99 @@ export class DonationsController {
     return this.donationsService.getBilan(pharmacyId);
   }
 
+  @Get('upcoming-pickups')
+  @ApiOperation({
+    summary: 'Retraits planifiés des prochains jours (dashboard, préparateur)',
+  })
+  upcomingPickups(@TenantPharmacyId() pharmacyId: string) {
+    return this.donationsService.upcomingPickups(pharmacyId);
+  }
+
+  @Post('eligible-preview')
+  @Roles(UserRole.TITULAIRE)
+  @ApiOperation({
+    summary: "Nombre d'associations éligibles pour un lot (avant validation)",
+  })
+  eligiblePreview(
+    @TenantPharmacyId() pharmacyId: string,
+    @Body() dto: EligiblePreviewDto
+  ) {
+    return this.donationsService.eligiblePreview(pharmacyId, dto.lines);
+  }
+
   @Post()
-  @ApiOperation({ summary: 'Proposer un don à une association' })
+  @Roles(UserRole.TITULAIRE)
+  @ApiOperation({
+    summary:
+      'Valider un don — le système propose ensuite en cascade aux associations',
+  })
   create(
     @TenantPharmacyId() pharmacyId: string,
+    @CurrentUser('sub') userId: string,
     @Body() dto: CreateDonationDto
   ) {
-    return this.donationsService.create(pharmacyId, dto);
+    return this.orchestrator.createDonation(pharmacyId, userId, dto);
   }
 
-  @Patch(':id/accept')
-  @ApiOperation({ summary: 'Association accepte le don' })
-  accept(@Param('id') id: string, @TenantPharmacyId() pharmacyId: string) {
-    return this.donationsService.accept(id, pharmacyId);
+  @Get(':id')
+  @ApiOperation({ summary: "Détail d'un don : lignes, reliquat, timeline" })
+  detail(@Param('id') id: string, @TenantPharmacyId() pharmacyId: string) {
+    return this.donationsService.getDetail(id, pharmacyId);
   }
 
-  @Patch(':id/refuse')
-  @ApiOperation({ summary: 'Association refuse le don' })
-  refuse(@Param('id') id: string, @TenantPharmacyId() pharmacyId: string) {
-    return this.donationsService.refuse(id, pharmacyId);
-  }
-
-  @Patch(':id/withdraw')
+  @Post(':id/cancel')
+  @Roles(UserRole.TITULAIRE)
   @ApiOperation({
-    summary: 'Marquer le don comme retiré — génère le numéro Cerfa',
+    summary: 'Annuler un don EN_COURS (impossible si un retrait est planifié)',
   })
-  withdraw(@Param('id') id: string, @TenantPharmacyId() pharmacyId: string) {
-    return this.donationsService.withdraw(id, pharmacyId);
+  cancel(
+    @Param('id') id: string,
+    @TenantPharmacyId() pharmacyId: string,
+    @CurrentUser('sub') userId: string
+  ) {
+    return this.orchestrator.cancelDonation(id, pharmacyId, userId);
   }
 
-  @Get(':id/cerfa')
+  @Post('pickup/scan')
   @ApiOperation({
-    summary: 'Télécharger le reçu Cerfa PDF du don (statut RETIREE requis)',
+    summary:
+      "Confirmer un retrait par scan du QR de l'allocation (app préparateur)",
+  })
+  scanPickup(
+    @TenantPharmacyId() pharmacyId: string,
+    @CurrentUser() user: { sub: string; role: string },
+    @Body() dto: ScanPickupDto
+  ) {
+    return this.orchestrator.confirmPickupByQr(
+      dto.qr_code,
+      pharmacyId,
+      dto.picked_up_by,
+      `${user.role}:${user.sub}`
+    );
+  }
+
+  @Post('allocations/:id/confirm-pickup')
+  @ApiOperation({
+    summary:
+      'Confirmer le retrait (nom du récupérateur) — génère le Cerfa de cette allocation',
+  })
+  confirmPickup(
+    @Param('id') id: string,
+    @TenantPharmacyId() pharmacyId: string,
+    @CurrentUser() user: { sub: string; role: string },
+    @Body() dto: ConfirmPickupDto
+  ) {
+    return this.orchestrator.confirmPickup(
+      id,
+      pharmacyId,
+      dto.picked_up_by,
+      `${user.role}:${user.sub}`
+    );
+  }
+
+  @Get('allocations/:id/cerfa')
+  @ApiOperation({
+    summary: 'Télécharger le reçu Cerfa PDF (allocation RETIREE requise)',
   })
   @ApiProduces('application/pdf')
   @Header('Content-Type', 'application/pdf')
@@ -107,7 +172,7 @@ export class DonationsController {
     const pdf = await this.cerfaService.generateCerfa(id, pharmacyId);
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="cerfa-${id}.pdf"`
+      `attachment; filename="cerfa-16216-${id}.pdf"`
     );
     res.setHeader('Content-Length', pdf.length);
     res.end(pdf);

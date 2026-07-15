@@ -16,6 +16,7 @@ export interface UpdatePharmacyMeInput {
   address?: string;
   lat?: number;
   lng?: number;
+  donation_pickup_windows?: { day: string; start: string; end: string }[];
 }
 
 export interface PreparateurItem {
@@ -47,6 +48,7 @@ const PHARMACY_SELECT = {
   lat: true,
   lng: true,
   status: true,
+  donation_pickup_windows: true,
   subscription_tier: true,
   last_upload_at: true,
   created_at: true,

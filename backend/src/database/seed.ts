@@ -555,6 +555,135 @@ async function seedAdmin() {
   console.log(`✅ Admin créé : ${ADMIN_EMAIL} / ${ADMIN_PASSWORD}`);
 }
 
+// ─── Associations de démonstration (cycle don) ───────────────────────────────
+// 3 assos aux rayons d'action différents, dont une non fiable (historique de
+// retraits manqués) pour illustrer le score de fiabilité du matching.
+// Position : autour de la pharmacie démo (Place de la République, Paris 11e).
+
+const DEMO_ASSOCIATIONS = [
+  {
+    name: 'Solidarité Quartier République',
+    address: '8 rue du Faubourg du Temple',
+    city: 'Paris',
+    postal_code: '75011',
+    lat: 48.868,
+    lng: 2.366,
+    action_radius_km: 5, // asso de quartier
+    categories: ['Cosmétique', 'Dermatologie', 'Capillaire'],
+    pickup_sla_days: 5,
+    pickup_windows: [
+      { day: 'MON', start: '09:00', end: '17:00' },
+      { day: 'TUE', start: '09:00', end: '17:00' },
+      { day: 'WED', start: '09:00', end: '17:00' },
+      { day: 'THU', start: '09:00', end: '17:00' },
+      { day: 'FRI', start: '09:00', end: '17:00' },
+    ],
+    contact_email: 'contact@solidarite-republique.org',
+    contact_phone: '0140000001',
+    rna_or_siren: 'W751000001',
+  },
+  {
+    name: 'Entraide Île-de-France',
+    address: '3 avenue de la Résistance, Créteil',
+    city: 'Créteil',
+    postal_code: '94000',
+    lat: 48.7904,
+    lng: 2.4556,
+    action_radius_km: 60, // domiciliée à Créteil, intervient sur toute l'IDF
+    categories: ['Cosmétique', 'Solaire', 'Pédiatrie', 'Compléments'],
+    pickup_sla_days: 7,
+    pickup_windows: [
+      { day: 'TUE', start: '10:00', end: '16:00' },
+      { day: 'THU', start: '10:00', end: '16:00' },
+    ],
+    contact_email: 'dons@entraide-idf.org',
+    contact_phone: '0140000002',
+    rna_or_siren: 'W941000002',
+  },
+  {
+    name: 'Les Oubliés du Retrait', // non fiable : rate ses créneaux
+    address: '21 boulevard Voltaire',
+    city: 'Paris',
+    postal_code: '75011',
+    lat: 48.863,
+    lng: 2.37,
+    action_radius_km: 30,
+    categories: ['Cosmétique', 'Maquillage', 'Parfumerie'],
+    pickup_sla_days: 10,
+    contact_email: 'contact@oublies-retrait.org',
+    contact_phone: '0140000003',
+    rna_or_siren: 'W751000003',
+  },
+];
+
+async function seedAssociations() {
+  let created = 0;
+  const byName = new Map<string, string>();
+  for (const a of DEMO_ASSOCIATIONS) {
+    const existing = await prisma.association.findFirst({
+      where: { name: a.name },
+    });
+    if (existing) {
+      byName.set(a.name, existing.association_id);
+      continue;
+    }
+    const asso = await prisma.association.create({
+      data: { ...a, status: 'ACTIVE', email_verified_at: new Date() },
+    });
+    byName.set(a.name, asso.association_id);
+    created++;
+  }
+  console.log(
+    `✅ Associations : ${created} créée(s), ${DEMO_ASSOCIATIONS.length - created} déjà présente(s)`
+  );
+
+  // Historique de non-fiabilité : 3 retraits manqués pour la 3e asso.
+  // Rattaché à la pharmacie admin (toujours présente) — seule la fiabilité
+  // (ratio RETIREE / NON_RECUPEREE toutes officines) compte pour le matching.
+  const unreliableId = byName.get('Les Oubliés du Retrait');
+  if (unreliableId) {
+    const alreadySeeded = await prisma.donationAllocation.findFirst({
+      where: { association_id: unreliableId, status: 'NON_RECUPEREE' },
+    });
+    if (!alreadySeeded) {
+      for (let i = 0; i < 3; i++) {
+        const donation = await prisma.donation.create({
+          data: {
+            pharmacy_id: ADMIN_PHARMACY_ID,
+            status: 'ECHOUEE',
+            attempt_count: 1,
+          },
+        });
+        const proposal = await prisma.donationProposal.create({
+          data: {
+            donation_id: donation.donation_id,
+            association_id: unreliableId,
+            status: 'ACCEPTEE',
+            proposed_lines: [],
+            sent_at: daysAgo(30 + i * 10),
+            responded_at: daysAgo(29 + i * 10),
+            expires_at: daysAgo(27 + i * 10),
+          },
+        });
+        await prisma.donationAllocation.create({
+          data: {
+            donation_id: donation.donation_id,
+            association_id: unreliableId,
+            proposal_id: proposal.proposal_id,
+            status: 'NON_RECUPEREE',
+            lines: [],
+            pickup_slot_start: daysAgo(25 + i * 10),
+            pickup_slot_end: daysAgo(25 + i * 10),
+          },
+        });
+      }
+      console.log(
+        '✅ Historique de non-fiabilité créé (Les Oubliés du Retrait)'
+      );
+    }
+  }
+}
+
 async function main() {
   console.log('🌱 Démarrage du seed...\n');
 
@@ -562,11 +691,28 @@ async function main() {
 
   await seedCategories();
 
+  await seedAssociations();
+
   // Idempotence : ne pas recréer si déjà présent
   const existing = await prisma.pharmacy.findFirst({
     where: { email: 'demo@cosmorisk.fr' },
   });
   if (existing) {
+    // Idempotence corrective : géoloc + créneaux requis par le cycle don
+    if (existing.lat == null || existing.donation_pickup_windows == null) {
+      await prisma.pharmacy.update({
+        where: { pharmacy_id: existing.pharmacy_id },
+        data: {
+          lat: existing.lat ?? 48.8676,
+          lng: existing.lng ?? 2.3631,
+          donation_pickup_windows: existing.donation_pickup_windows ?? [
+            { day: 'TUE', start: '14:00', end: '17:00' },
+            { day: 'THU', start: '09:00', end: '12:00' },
+          ],
+        },
+      });
+      console.log('✅ Pharmacie démo réalignée (géoloc + créneaux dons)');
+    }
     console.log(
       `✅ Données déjà présentes (pharmacy_id: ${existing.pharmacy_id})`
     );
@@ -580,6 +726,13 @@ async function main() {
       name: 'Institut Beaute Demo',
       email: 'demo@cosmorisk.fr',
       address: '12 Place de la République, 75011 Paris',
+      lat: 48.8676,
+      lng: 2.3631,
+      // Créneaux de récupération des dons (modifiables dans Paramètres)
+      donation_pickup_windows: [
+        { day: 'TUE', start: '14:00', end: '17:00' },
+        { day: 'THU', start: '09:00', end: '12:00' },
+      ],
       subscription_tier: 'pro',
       last_upload_at: new Date(),
     },

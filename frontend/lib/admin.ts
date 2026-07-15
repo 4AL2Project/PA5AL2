@@ -16,7 +16,14 @@ export interface Association {
   contact_email: string | null;
   contact_phone: string | null;
   logo_url: string | null;
-  active: boolean;
+  status: string;
+  action_radius_km: number;
+  pickup_sla_days: number;
+  response_sla_hours: number;
+  rna_or_siren: string | null;
+  email_verified_at: string | null;
+  fiscal_receipt_verified: boolean;
+  rejection_reason: string | null;
   created_at: string;
 }
 
@@ -29,6 +36,18 @@ export async function fetchAssociations(
   const qs = params.size ? `?${params}` : '';
 
   const res = await fetch(`${API_BASE}/api/associations${qs}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+  if (!res.ok) return [];
+  const payload = (await res.json()) as Association[] | { data: Association[] };
+  return Array.isArray(payload) ? payload : (payload.data ?? []);
+}
+
+export async function fetchPendingAssociations(
+  accessToken: string
+): Promise<Association[]> {
+  const res = await fetch(`${API_BASE}/api/associations/pending`, {
     headers: { Authorization: `Bearer ${accessToken}` },
     cache: 'no-store',
   });

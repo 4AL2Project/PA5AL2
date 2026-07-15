@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { AddAssociationDrawer } from '@/components/admin/add-association-drawer';
 import { AdminShell } from '@/components/admin/admin-shell';
 import { AssociationRow } from '@/components/admin/association-row';
+import { AssociationValidationQueue } from '@/components/admin/association-validation-queue';
 import {
   Table,
   TableBody,
@@ -11,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { fetchAssociations } from '@/lib/admin';
+import { fetchAssociations, fetchPendingAssociations } from '@/lib/admin';
 import { getSession } from '@/lib/session';
 
 export default async function AssociationsPage() {
@@ -20,7 +21,10 @@ export default async function AssociationsPage() {
     redirect('/admin/login');
   }
 
-  const associations = await fetchAssociations(session.access_token);
+  const [associations, pending] = await Promise.all([
+    fetchAssociations(session.access_token),
+    fetchPendingAssociations(session.access_token),
+  ]);
 
   return (
     <AdminShell
@@ -33,6 +37,7 @@ export default async function AssociationsPage() {
       adminEmail={session.claims.email}
       actions={<AddAssociationDrawer />}
     >
+      <AssociationValidationQueue pending={pending} />
       {associations.length === 0 ? (
         <div className="rounded-xl border bg-card p-12 text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">

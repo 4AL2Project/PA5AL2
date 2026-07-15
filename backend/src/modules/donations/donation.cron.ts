@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import * as Sentry from '@sentry/node';
+import * as Sentry from '@sentry/nestjs';
 
 import { DonationOrchestratorService } from './donation-orchestrator.service';
 

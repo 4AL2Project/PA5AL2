@@ -11,8 +11,13 @@ import { config } from '../../core/config';
 import { haversineKm } from '../../core/geo.util';
 import { StorageService } from '../../core/storage/storage.service';
 import { prisma } from '../../database/client';
+import {
+  DONATION_TAX_REDUCTION_RATE,
+  DonationLineSnapshot,
+} from '../donations/donation.types';
 import { EmailService } from '../email/email.service';
 import { GeocodingService } from '../geocoding/geocoding.service';
+import { AssociationStatsService } from './association-stats.service';
 
 export interface CreateAssociationDto {
   name: string;
@@ -29,6 +34,7 @@ export interface CreateAssociationDto {
   contact_email?: string;
   contact_phone?: string;
   logo_url?: string;
+  pickup_windows?: { day: string; start: string; end: string }[];
 }
 
 export interface FindAllOptions {
@@ -41,7 +47,8 @@ export class AssociationsService {
   constructor(
     private readonly geocoding: GeocodingService,
     private readonly email: EmailService,
-    private readonly storage: StorageService
+    private readonly storage: StorageService,
+    private readonly stats: AssociationStatsService
   ) {}
 
   async create(dto: CreateAssociationDto) {
@@ -137,6 +144,107 @@ export class AssociationsService {
       await this.storage.delete(asso.logo_url);
     }
     return updated;
+  }
+
+  // ── Annuaire titulaire ──────────────────────────────────────────────────────
+
+  /**
+   * Annuaire des associations pour l'officine : distance, fiabilité (taux de
+   * récupération lissé, celui du matching), créneaux déclarés. Triée par
+   * distance croissante.
+   */
+  async annuaire(
+    pharmacyId: string,
+    opts: { category?: string; search?: string } = {}
+  ) {
+    const pharmacy = await prisma.pharmacy.findUnique({
+      where: { pharmacy_id: pharmacyId },
+    });
+    if (!pharmacy) throw new NotFoundException('Officine introuvable');
+
+    const assos = await this.findAll({ category: opts.category });
+    const filtered = opts.search
+      ? assos.filter((a) =>
+          a.name.toLowerCase().includes(opts.search!.toLowerCase())
+        )
+      : assos;
+    const reliability = await this.stats.getReliability(
+      filtered.map((a) => a.association_id)
+    );
+
+    return filtered
+      .map((a) => ({
+        association_id: a.association_id,
+        name: a.name,
+        city: a.city,
+        postal_code: a.postal_code,
+        logo_url: a.logo_url,
+        categories: a.categories,
+        pickup_windows: a.pickup_windows,
+        action_radius_km: a.action_radius_km,
+        distance_km:
+          pharmacy.lat != null && a.lat != null
+            ? Math.round(
+                haversineKm(pharmacy.lat, pharmacy.lng!, a.lat, a.lng!) * 10
+              ) / 10
+            : null,
+        reliability: reliability.get(a.association_id) ?? null,
+      }))
+      .sort(
+        (x, y) => (x.distance_km ?? Infinity) - (y.distance_km ?? Infinity)
+      );
+  }
+
+  /**
+   * Fiche détaillée pour le titulaire : profil, stats de fiabilité,
+   * historique des dons de SON officine avec valeur (coût de revient HT)
+   * et économie fiscale (60 %).
+   */
+  async fiche(id: string, pharmacyId: string) {
+    const [asso, pharmacy] = await Promise.all([
+      this.findOne(id),
+      prisma.pharmacy.findUnique({ where: { pharmacy_id: pharmacyId } }),
+    ]);
+    const stats = await this.stats.getStats(id);
+    const allocations = await prisma.donationAllocation.findMany({
+      where: { association_id: id, donation: { pharmacy_id: pharmacyId } },
+      orderBy: { pickup_slot_start: 'desc' },
+      take: 50,
+    });
+
+    const history = allocations.map((a) => {
+      const lines = a.lines as unknown as DonationLineSnapshot[];
+      return {
+        allocation_id: a.allocation_id,
+        status: a.status,
+        pickup_slot_start: a.pickup_slot_start,
+        picked_up_at: a.picked_up_at,
+        lines,
+        value:
+          a.status === 'RETIREE'
+            ? lines.reduce((s, l) => s + l.quantity * l.unit_value, 0)
+            : null,
+        cerfa_available: a.cerfa_number != null,
+      };
+    });
+    const totalValue = history.reduce((s, h) => s + (h.value ?? 0), 0);
+
+    return {
+      ...asso,
+      distance_km:
+        pharmacy?.lat != null && asso.lat != null
+          ? Math.round(
+              haversineKm(pharmacy.lat, pharmacy.lng!, asso.lat, asso.lng!) * 10
+            ) / 10
+          : null,
+      stats,
+      history,
+      totals: {
+        // Coût de revient HT + réduction d'impôt 60 % (art. 238 bis CGI)
+        total_value: totalValue,
+        tax_savings: totalValue * DONATION_TAX_REDUCTION_RATE,
+      },
+    };
   }
 
   // ── File de validation admin ────────────────────────────────────────────────

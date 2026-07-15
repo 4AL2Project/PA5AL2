@@ -16,6 +16,7 @@ import {
   Plus,
   XCircle,
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { use, useCallback, useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -52,6 +53,7 @@ interface ProposalView {
     status: string;
     pickup_slot_start: string;
     pickup_slot_end: string;
+    qr_code?: string | null;
   } | null;
 }
 
@@ -214,6 +216,20 @@ export default function DonProposalPage({
               lines={view.allocation.lines}
               title="Produits à récupérer"
             />
+            {view.allocation.qr_code && (
+              <div className="rounded-xl border bg-card p-4 text-center">
+                <p className="mb-3 text-sm font-medium">
+                  Présentez ce QR code au retrait
+                </p>
+                <div className="flex justify-center">
+                  <QRCodeSVG value={view.allocation.qr_code} size={180} />
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Le préparateur le scanne pour confirmer le retrait et
+                  déclencher votre reçu fiscal.
+                </p>
+              </div>
+            )}
             {view.allocation.status === 'RETIREE' && (
               <p className="text-sm text-emerald-700">
                 Retrait confirmé — votre reçu fiscal vous a été envoyé par

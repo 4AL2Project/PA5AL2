@@ -31,6 +31,7 @@ function seedDonation(
     category: 'Cosmétique',
     stock_quantity: 10,
     unit_price: 8,
+    cost_price: 5,
   });
   const donation = db.seed('donation', {
     pharmacy_id: pharmacyId,
@@ -167,6 +168,8 @@ describe('DonationsService — bilan RSE', () => {
     expect(bilan.total_withdrawn).toBe(1);
     // 3 × 8 € ; la non-récupérée ne compte pas
     expect(bilan.total_value_donated).toBe(24);
+    // Réduction d'impôt entreprise : 60 % (art. 238 bis CGI), pas 75 %
+    expect(bilan.tax_savings).toBeCloseTo(14.4);
     expect(bilan.total_associations).toBe(1);
     expect(bilan.donations_by_status.COMPLETEE).toBe(1);
   });
@@ -193,5 +196,8 @@ describe('DonationsService — aperçu éligibilité', () => {
     ]);
     expect(preview.count).toBe(1);
     expect(preview.associations[0].name).toBe('Éligible');
+    // Valorisation au coût de revient HT (2 × 5 €) + éco fiscale 60 %
+    expect(preview.cost_value).toBe(10);
+    expect(preview.tax_savings).toBeCloseTo(6);
   });
 });

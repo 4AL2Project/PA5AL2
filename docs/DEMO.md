@@ -51,11 +51,15 @@ Le seed crée 3 associations autour de la pharmacie démo (République, Paris 11
    lien déjà utilisé → page d'état propre (« proposition remplacée »), jamais
    d'erreur brute.
 
-4. **Retrait et Cerfa** — page Dons (web titulaire) : le retrait planifié
-   apparaît (aussi sur le dashboard et l'app préparateur). Confirmer avec le
-   nom du récupérateur → allocation RETIREE, reçu Cerfa généré **par
-   allocation** (envoyé à l'asso + téléchargeable), stock décrémenté. Quand
-   tout le lot est retiré → don COMPLETEE.
+4. **Retrait et Cerfa** — la page /don/:token acceptée affiche un **QR code**
+   que l'asso présente au retrait : le préparateur le scanne (app Flutter,
+   endpoint `POST /api/donations/pickup/scan`) pour confirmer — le web
+   titulaire reste un fallback (page Dons). Allocation RETIREE → reçu
+   **Cerfa 16216** (dons des entreprises, art. 238 bis CGI) généré **par
+   allocation**, valorisé au **coût de revient HT** (prix d'achat grossiste,
+   jamais le prix catalogue), envoyé à l'asso + téléchargeable. Quand tout le
+   lot est retiré → don COMPLETEE. Le bilan RSE affiche l'économie fiscale
+   (**60 %** de la valeur donnée, plafond 20 000 € ou 0,5 % du CA HT).
 
 5. **Échec** — si 5 assos sollicitées (ou 21 jours) sans preneur, le don
    passe ECHOUEE : l'action revient au centre d'actions avec le bandeau
@@ -74,3 +78,22 @@ Le seed crée 3 associations autour de la pharmacie démo (République, Paris 11
    matching ; Rejeter (motif) → email de refus.
 4. Fiche asso (icône stats) : zone d'action, taux de réponse/récupération,
    score de fiabilité utilisé par le matching, historique des retraits.
+
+## Annuaire des associations (web titulaire)
+
+Menu « Associations » : recherche, filtres catégorie et tri
+distance/fiabilité. La fiche détail montre les créneaux de passage déclarés
+par l'asso (V1 statiques, croisés avec les fenêtres de l'officine au moment
+de planifier un retrait), la fiabilité, l'historique des dons de l'officine
+avec les Cerfa téléchargeables, et le total donné avec l'économie fiscale
+(60 %). Le bouton « Modifier » ouvre un panneau d'édition (coordonnées,
+catégories, créneaux).
+
+## Arbitrage Promo B2C vs Don
+
+Pour un produit **HIGH** avec des assos éligibles, le dialog de validation
+affiche l'arbitrage : gain estimé de la promo vs économie fiscale du don
+(60 % du coût de revient), avec « Laisser Savely choisir » ou « Choisir
+moi-même ». Un produit **CRITICAL** part directement en don ; sans asso
+éligible, seule la promo est proposée. Un produit sans prix d'achat ne peut
+pas être donné (la valorisation fiscale serait impossible).

@@ -3,7 +3,7 @@
 // Suivi des dons côté titulaire : retraits à venir (avec confirmation) et
 // liste des lots avec leur statut — le pilotage de la cascade est automatique.
 
-import { CalendarClock, Heart, Loader2 } from 'lucide-react';
+import { CalendarClock, Heart, Leaf, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -14,7 +14,9 @@ import { DonationStatusBadge } from '@/components/donations/donation-status-badg
 import { Button } from '@/components/ui/button';
 import {
   DonationAllocationItem,
+  DonationBilan,
   DonationSummary,
+  fetchDonationBilan,
   fetchDonations,
   fetchUpcomingPickups,
 } from '@/lib/api';
@@ -22,6 +24,7 @@ import {
 export default function DonationsPage() {
   const [donations, setDonations] = useState<DonationSummary[]>([]);
   const [pickups, setPickups] = useState<DonationAllocationItem[]>([]);
+  const [bilan, setBilan] = useState<DonationBilan | null>(null);
   const [loading, setLoading] = useState(true);
   const [pickupToConfirm, setPickupToConfirm] =
     useState<DonationAllocationItem | null>(null);
@@ -29,12 +32,14 @@ export default function DonationsPage() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [dons, upcoming] = await Promise.all([
+      const [dons, upcoming, rse] = await Promise.all([
         fetchDonations(),
         fetchUpcomingPickups(),
+        fetchDonationBilan(),
       ]);
       setDonations(dons);
       setPickups(upcoming);
+      setBilan(rse);
     } catch {
       toast.error('Impossible de charger les dons');
     } finally {
@@ -52,6 +57,49 @@ export default function DonationsPage() {
       description="Savely propose vos lots aux associations de la zone et gère les relances — vous n'intervenez qu'au retrait."
     >
       <div className="space-y-6">
+        {/* Bilan RSE / fiscal */}
+        {bilan && bilan.total_donations > 0 && (
+          <section className="rounded-xl border bg-card">
+            <div className="flex items-center gap-2 border-b px-4 py-3">
+              <Leaf className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold">Bilan RSE</h2>
+            </div>
+            <div className="grid gap-4 px-4 py-4 sm:grid-cols-3">
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Valeur donnée (coût de revient HT)
+                </p>
+                <p className="text-lg font-semibold">
+                  {bilan.total_value_donated.toLocaleString('fr-FR', {
+                    style: 'currency',
+                    currency: 'EUR',
+                  })}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Économie fiscale (60 % — art. 238 bis CGI)
+                </p>
+                <p className="text-lg font-semibold text-emerald-700">
+                  {bilan.tax_savings.toLocaleString('fr-FR', {
+                    style: 'currency',
+                    currency: 'EUR',
+                  })}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  Plafond : 20 000 € ou 0,5 % du CA HT
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Dons complétés</p>
+                <p className="text-lg font-semibold">
+                  {bilan.donations_by_status.COMPLETEE ?? 0}
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Retraits à venir */}
         <section className="rounded-xl border bg-card">
           <div className="flex items-center gap-2 border-b px-4 py-3">

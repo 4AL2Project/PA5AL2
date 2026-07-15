@@ -285,7 +285,7 @@ export class EmailService {
         en piece jointe.</p>
         <p>Merci pour votre action.</p>
       `,
-      attachments: [{ filename: 'recu-cerfa.pdf', content: cerfaPdf }],
+      attachments: [{ filename: 'recu-cerfa-16216.pdf', content: cerfaPdf }],
     });
   }
 

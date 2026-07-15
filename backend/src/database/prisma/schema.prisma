@@ -221,6 +221,10 @@ model Association {
   email_verified_at DateTime?
   verify_token_hash String? @unique
   verify_token_expires_at DateTime?
+  // Créneaux hebdo de passage déclarés par l'asso (V1 statiques), affichés
+  // dans l'annuaire et intersectés avec les fenêtres de l'officine au moment
+  // de proposer les créneaux de retrait. Ex [{"day":"MON","start":"09:00","end":"17:00"}]
+  pickup_windows  Json?
   // Dénormalisé depuis DonationProposal.sent_at : sert au score d'équité du
   // matching sans requête d'agrégation à chaque classement
   last_proposal_at DateTime?
@@ -308,6 +312,9 @@ model DonationAllocation {
   // [{product_id, name, quantity, unit_value}]
   lines             Json
   status            String    @default("PLANIFIEE") // PLANIFIEE|RETIREE|NON_RECUPEREE
+  // QR présenté par l'asso au retrait, scanné par le préparateur (app
+  // Flutter) pour confirmer le pickup — le web reste un fallback titulaire
+  qr_code           String    @unique @default(uuid())
   pickup_slot_start DateTime
   pickup_slot_end   DateTime
   picked_up_by      String?

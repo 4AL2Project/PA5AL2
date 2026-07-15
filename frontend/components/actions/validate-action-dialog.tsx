@@ -89,6 +89,10 @@ export function ValidateActionDialog({
   const [donQuantity, setDonQuantity] = useState('');
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [preferredAssociationId, setPreferredAssociationId] = useState('');
+  // Arbitrage Promo B2C vs Don : uniquement pour les produits HIGH (les deux
+  // options viables) quand des assos sont éligibles. CRITICAL → don direct ;
+  // aucune asso → promo uniquement.
+  const [arbitrage, setArbitrage] = useState(false);
 
   useEffect(() => {
     fetchCategories()
@@ -108,13 +112,23 @@ export function ValidateActionDialog({
       setAdvancedOpen(false);
       setPreferredAssociationId('');
       setEligible(null);
+      setArbitrage(false);
       donationEligiblePreview([
         { product_id: action.productId, quantity: action.stock },
       ])
-        .then(setEligible)
+        .then((preview) => {
+          setEligible(preview);
+          // HIGH suggéré B2C + assos dispo → les deux options sont ouvertes
+          setArbitrage(action.type === 'B2C' && preview.count > 0);
+        })
         .catch(() => setEligible(null));
     }
   }, [open, action]);
+
+  // Règle « Laisser Savely choisir » (adaptation post-pivot : la DLP n'existe
+  // plus dans les exports LGO) : quantité > 3 → Promo B2C, sinon Don
+  const savelyChoice = (): DormantAction['type'] =>
+    action && action.stock > 3 ? 'B2C' : 'DON';
 
   const validate = (): ValidateActionPayload | null => {
     if (selectedType !== 'B2C') {
@@ -199,35 +213,89 @@ export function ValidateActionDialog({
               </div>
 
               {/* Type selector */}
-              <div className="space-y-1.5">
-                <Label>Action à effectuer</Label>
-                <Select
-                  value={selectedType}
-                  onValueChange={(v) => {
-                    setSelectedType(v as DormantAction['type']);
-                    setErrors({});
-                  }}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACTION_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selected && (
-                  <p className="text-xs text-muted-foreground">
-                    {selected.description}
-                  </p>
-                )}
-              </div>
+              {!arbitrage && (
+                <div className="space-y-1.5">
+                  <Label>Action à effectuer</Label>
+                  <Select
+                    value={selectedType}
+                    onValueChange={(v) => {
+                      setSelectedType(v as DormantAction['type']);
+                      setErrors({});
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACTION_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selected && (
+                    <p className="text-xs text-muted-foreground">
+                      {selected.description}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Arbitrage Promo vs Don (produits HIGH, deux options ouvertes) */}
+              {arbitrage && eligible && (
+                <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+                  <div className="space-y-1.5 text-sm">
+                    <p className="flex items-center justify-between">
+                      <span>💰 Promo B2C</span>
+                      <span className="font-medium">
+                        Gain estimé :{' '}
+                        {action.recoverableValue != null
+                          ? `~${Math.round(action.recoverableValue)} €`
+                          : '—'}
+                      </span>
+                    </p>
+                    <p className="flex items-center justify-between">
+                      <span>🎁 Don associatif</span>
+                      <span className="font-medium">
+                        Éco. fiscale :{' '}
+                        {eligible.tax_savings != null
+                          ? `${Math.round(eligible.tax_savings)} €`
+                          : 'prix d’achat manquant'}
+                      </span>
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      Don valorisé au coût de revient HT — réduction
+                      d&apos;impôt 60 % (art. 238 bis CGI).
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => {
+                        setSelectedType(savelyChoice());
+                        setArbitrage(false);
+                      }}
+                    >
+                      Laisser Savely choisir
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="flex-1"
+                      onClick={() => setArbitrage(false)}
+                    >
+                      Choisir moi-même
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               {/* DON : l'orchestrateur propose en cascade aux assos éligibles */}
-              {selectedType === 'DON' && (
+              {!arbitrage && selectedType === 'DON' && (
                 <div className="space-y-3">
                   <div className="rounded-lg border bg-muted/30 px-4 py-3 text-sm">
                     {eligible === null ? (
@@ -252,6 +320,14 @@ export function ValidateActionDialog({
                       </p>
                     )}
                   </div>
+
+                  {eligible !== null && eligible.cost_value === null && (
+                    <p className="text-xs text-destructive">
+                      Prix d&apos;achat manquant : renseignez le coût de revient
+                      du produit (import CSV ou fiche produit) — il sert de base
+                      au reçu fiscal (art. 238 bis CGI).
+                    </p>
+                  )}
 
                   <div className="space-y-1.5">
                     <Label htmlFor="don-qty">
@@ -321,7 +397,7 @@ export function ValidateActionDialog({
               )}
 
               {/* B2C fields */}
-              {selectedType === 'B2C' && (
+              {!arbitrage && selectedType === 'B2C' && (
                 <div className="space-y-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="offer-price">
@@ -440,7 +516,7 @@ export function ValidateActionDialog({
           <DrawerFooter className="flex-col gap-2 mt-auto">
             <Button
               onClick={handleConfirm}
-              disabled={loading}
+              disabled={loading || arbitrage}
               className="w-full"
             >
               Valider

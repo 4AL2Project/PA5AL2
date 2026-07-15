@@ -585,6 +585,10 @@ export interface EligiblePreview {
     name: string;
     distance_km: number;
   }[];
+  // Coût de revient HT du lot (null si un prix d'achat manque)
+  cost_value: number | null;
+  // 60 % du coût de revient (art. 238 bis CGI)
+  tax_savings: number | null;
 }
 
 export interface DonationLineItem {
@@ -698,4 +702,111 @@ export async function confirmPickup(
 
 export function donationCerfaUrl(allocationId: string): string {
   return `/api/be/api/donations/allocations/${allocationId}/cerfa`;
+}
+
+export interface DonationBilan {
+  total_donations: number;
+  total_withdrawn: number;
+  // Valeur au coût de revient HT (art. 238 bis CGI)
+  total_value_donated: number;
+  // 60 % de la valeur donnée (plafond 20 000 € ou 0,5 % du CA HT)
+  tax_savings: number;
+  total_associations: number;
+  total_products_donated: number;
+  donations_by_status: Record<string, number>;
+}
+
+export async function fetchDonationBilan(): Promise<DonationBilan> {
+  return apiFetch('/api/donations/bilan');
+}
+
+// ─── Annuaire des associations (titulaire) ──────────────────────────────────
+
+export interface AssociationWindow {
+  day: string;
+  start: string;
+  end: string;
+}
+
+export interface AnnuaireEntry {
+  association_id: string;
+  name: string;
+  city: string;
+  postal_code: string;
+  logo_url: string | null;
+  categories: string[];
+  pickup_windows: AssociationWindow[] | null;
+  action_radius_km: number;
+  distance_km: number | null;
+  reliability: number | null;
+}
+
+export interface AssociationFiche {
+  association_id: string;
+  name: string;
+  address: string;
+  city: string;
+  postal_code: string;
+  contact_email: string | null;
+  contact_phone: string | null;
+  logo_url: string | null;
+  categories: string[];
+  pickup_windows: AssociationWindow[] | null;
+  action_radius_km: number;
+  distance_km: number | null;
+  stats: {
+    proposals_received: number;
+    response_rate: number | null;
+    pickup_rate: number | null;
+    smoothed_reliability: number;
+    avg_response_hours: number | null;
+    last_donation_at: string | null;
+  };
+  history: {
+    allocation_id: string;
+    status: string;
+    pickup_slot_start: string;
+    picked_up_at: string | null;
+    lines: { name: string; quantity: number; unit_value: number }[];
+    value: number | null;
+    cerfa_available: boolean;
+  }[];
+  totals: { total_value: number; tax_savings: number };
+}
+
+export async function fetchAnnuaire(opts?: {
+  category?: string;
+  search?: string;
+}): Promise<AnnuaireEntry[]> {
+  const params = new URLSearchParams();
+  if (opts?.category) params.set('category', opts.category);
+  if (opts?.search) params.set('search', opts.search);
+  const qs = params.size ? `?${params}` : '';
+  return apiFetch(`/api/associations/annuaire${qs}`);
+}
+
+export async function fetchAssociationFiche(
+  id: string
+): Promise<AssociationFiche> {
+  return apiFetch(`/api/associations/${id}/fiche`);
+}
+
+export async function updateAssociation(
+  id: string,
+  payload: Partial<{
+    name: string;
+    address: string;
+    city: string;
+    postal_code: string;
+    contact_email: string;
+    contact_phone: string;
+    categories: string[];
+    pickup_windows: AssociationWindow[];
+  }>
+): Promise<void> {
+  await apiFetch(`/api/associations/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }

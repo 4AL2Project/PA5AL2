@@ -41,6 +41,13 @@ export interface PickupSlot {
   end: string; // ISO
 }
 
+// ── Règles fiscales (art. 238 bis CGI) ──────────────────────────────────────
+// La valeur du don est le COÛT DE REVIENT HT (prix d'achat grossiste,
+// Product.cost_price) — jamais le prix de vente catalogue. La réduction
+// d'impôt entreprise est de 60 % de la valeur du don, plafonnée à 20 000 €
+// ou 0,5 % du CA HT (plafond affiché côté front, non calculé ici).
+export const DONATION_TAX_REDUCTION_RATE = 0.6;
+
 // ── Constantes d'orchestration (ajustables) ─────────────────────────────────
 // Épuisement de la cascade : au-delà, le don passe ECHOUEE et l'action
 // revient au centre d'actions
@@ -123,4 +130,28 @@ function atTime(day: Date, hhmm: string): Date {
 export function parsePickupWindows(raw: unknown): PickupWindow[] {
   if (!Array.isArray(raw) || raw.length === 0) return DEFAULT_PICKUP_WINDOWS;
   return raw as PickupWindow[];
+}
+
+/**
+ * Intersecte les fenêtres de l'officine avec les créneaux de passage déclarés
+ * par l'asso (V1 statiques, optionnels). Sans déclaration asso, les fenêtres
+ * officine s'appliquent telles quelles.
+ */
+export function intersectWindows(
+  pharmacyWindows: PickupWindow[],
+  assoWindows: unknown
+): PickupWindow[] {
+  if (!Array.isArray(assoWindows) || assoWindows.length === 0) {
+    return pharmacyWindows;
+  }
+  const result: PickupWindow[] = [];
+  for (const pw of pharmacyWindows) {
+    for (const aw of assoWindows as PickupWindow[]) {
+      if (aw.day !== pw.day) continue;
+      const start = pw.start > aw.start ? pw.start : aw.start;
+      const end = pw.end < aw.end ? pw.end : aw.end;
+      if (start < end) result.push({ day: pw.day, start, end });
+    }
+  }
+  return result;
 }

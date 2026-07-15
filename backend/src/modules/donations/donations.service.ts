@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { prisma } from '../../database/client';
-import { DonationLineSnapshot, DonationStatus } from './donation.types';
+import {
+  DONATION_TAX_REDUCTION_RATE,
+  DonationLineSnapshot,
+  DonationStatus,
+} from './donation.types';
 import { DonationMatchingService } from './donation-matching.service';
 
 // Lecture côté titulaire : listes, détail (timeline), bilan RSE, retraits à
@@ -94,6 +98,18 @@ export class DonationsService {
         quantity: l.quantity,
       }))
     );
+    // Valorisation fiscale du lot (coût de revient HT, art. 238 bis CGI)
+    // pour l'arbitrage Promo B2C vs Don du dialog de validation
+    let costValue: number | null = 0;
+    for (const l of lines) {
+      const cost = byId.get(l.product_id)?.cost_price;
+      if (cost == null || cost <= 0) {
+        costValue = null;
+        break;
+      }
+      costValue += cost * l.quantity;
+    }
+
     return {
       count: ranked.length,
       associations: ranked.map((r) => ({
@@ -101,6 +117,11 @@ export class DonationsService {
         name: r.name,
         distance_km: r.distance_km,
       })),
+      // null si un cost_price manque — le don sera refusé tant qu'il n'est
+      // pas renseigné
+      cost_value: costValue,
+      tax_savings:
+        costValue != null ? costValue * DONATION_TAX_REDUCTION_RATE : null,
     };
   }
 
@@ -157,7 +178,11 @@ export class DonationsService {
     return {
       total_donations: donations.length,
       total_withdrawn: allocations.length,
+      // Valeur au coût de revient HT (art. 238 bis CGI)
       total_value_donated: totalValue,
+      // Réduction d'impôt entreprise : 60 % de la valeur du don
+      // (plafond 20 000 € ou 0,5 % du CA HT, affiché côté front)
+      tax_savings: totalValue * DONATION_TAX_REDUCTION_RATE,
       total_associations: new Set(allocations.map((a) => a.association_id))
         .size,
       total_products_donated: productIds.size,

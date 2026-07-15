@@ -70,7 +70,17 @@ function makeService(
     upload: jest.fn().mockResolvedValue('https://cdn.example/logo.png'),
     delete: jest.fn().mockResolvedValue(undefined),
   } as unknown as StorageService;
-  return new AssociationsService(mockGeocoding, mockEmail, mockStorage);
+  const mockStats = {
+    getReliability: jest.fn().mockResolvedValue(new Map()),
+    getStats: jest.fn(),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } as any;
+  return new AssociationsService(
+    mockGeocoding,
+    mockEmail,
+    mockStorage,
+    mockStats
+  );
 }
 
 // ---------------------------------------------------------------------------

@@ -106,7 +106,7 @@ Quand le moteur classe un produit en `high` → action « Mise en vente B2C » �
 
 ### En quoi consiste le module des dons ? Quel est son process ?
 
-**Le pourquoi :** un produit invendable a 3 sorties — détruire (perte sèche), solder (récupère une partie), ou **donner** (réduction d'impôt 60-75 % via reçu fiscal Cerfa). Le don est souvent **plus rentable que la destruction**. Le module matérialise cette bascille.
+**Le pourquoi :** un produit invendable a 3 sorties — détruire (perte sèche), solder (récupère une partie), ou **donner** (réduction d'impôt de 60 % (art. 238 bis CGI) via reçu fiscal Cerfa 16216). Le don est souvent **plus rentable que la destruction**. Le module matérialise cette bascille.
 
 **Quand le don se déclenche** (piloté par le risque + la DLP) :
 
@@ -126,8 +126,8 @@ Aujourd'hui `risk-calculator.ts` envoie les `critical` vers le label `'Don assoc
 2. MATCHING     Associations dans 50 km acceptant la catégorie (géoloc)
 3. PROPOSITION  Email auto à l'association (lot dispo, retrait avant le …)
 4. SUIVI STATUT proposé → accepté → retiré (pickup confirmé)
-5. REÇU FISCAL  PDF Cerfa (n°11580) traçable
-6. VALORISATION Dashboard RSE : produits sauvés, valeur donnée, économie 75 %
+5. REÇU FISCAL  PDF Cerfa entreprise (n°16216) traçable
+6. VALORISATION Dashboard RSE : produits sauvés, valeur donnée (coût de revient HT), économie fiscale 60 %
 ```
 
 **Données manquantes (vraie charge de travail) — absentes du schéma Prisma :**

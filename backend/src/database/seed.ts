@@ -571,6 +571,13 @@ const DEMO_ASSOCIATIONS = [
     action_radius_km: 5, // asso de quartier
     categories: ['Cosmétique', 'Dermatologie', 'Capillaire'],
     pickup_sla_days: 5,
+    pickup_windows: [
+      { day: 'MON', start: '09:00', end: '17:00' },
+      { day: 'TUE', start: '09:00', end: '17:00' },
+      { day: 'WED', start: '09:00', end: '17:00' },
+      { day: 'THU', start: '09:00', end: '17:00' },
+      { day: 'FRI', start: '09:00', end: '17:00' },
+    ],
     contact_email: 'contact@solidarite-republique.org',
     contact_phone: '0140000001',
     rna_or_siren: 'W751000001',
@@ -585,6 +592,10 @@ const DEMO_ASSOCIATIONS = [
     action_radius_km: 60, // domiciliée à Créteil, intervient sur toute l'IDF
     categories: ['Cosmétique', 'Solaire', 'Pédiatrie', 'Compléments'],
     pickup_sla_days: 7,
+    pickup_windows: [
+      { day: 'TUE', start: '10:00', end: '16:00' },
+      { day: 'THU', start: '10:00', end: '16:00' },
+    ],
     contact_email: 'dons@entraide-idf.org',
     contact_phone: '0140000002',
     rna_or_siren: 'W941000002',

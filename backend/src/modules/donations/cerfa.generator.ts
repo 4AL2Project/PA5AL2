@@ -1,5 +1,6 @@
-// Générateur PDF reçu Cerfa n°11580*03 — un reçu par ALLOCATION retirée
-// (les valeurs sont celles des lignes de cette allocation uniquement)
+// Générateur PDF reçu fiscal Cerfa n°16216 (dons des ENTREPRISES, art. 238
+// bis CGI) — un reçu par ALLOCATION retirée (les valeurs sont celles des
+// lignes de cette allocation uniquement, au coût de revient HT)
 import PDFDocument from 'pdfkit';
 
 export interface CerfaLine {
@@ -23,7 +24,7 @@ export interface CerfaData {
 }
 
 /**
- * Génère un Buffer PDF contenant le reçu Cerfa n°11580*03 pour un don de produits.
+ * Génère un Buffer PDF contenant le reçu Cerfa n°16216 pour un don de produits.
  * Retourne une promesse résolue avec le Buffer dès que le stream PDF est finalisé.
  */
 export function generateCerfaPdf(data: CerfaData): Promise<Buffer> {
@@ -39,12 +40,12 @@ export function generateCerfaPdf(data: CerfaData): Promise<Buffer> {
     doc
       .fontSize(14)
       .font('Helvetica-Bold')
-      .text('REÇU DU DON EN NATURE', { align: 'center' });
+      .text('REÇU DES DONS ET VERSEMENTS — ENTREPRISE', { align: 'center' });
 
     doc
       .fontSize(10)
       .font('Helvetica')
-      .text('(Article 200 et 238 bis du Code général des impôts)', {
+      .text('Cerfa n°16216 — (Article 238 bis du Code général des impôts)', {
         align: 'center',
       });
 
@@ -107,7 +108,8 @@ export function generateCerfaPdf(data: CerfaData): Promise<Buffer> {
       .fontSize(8)
       .font('Helvetica-Oblique')
       .text(
-        "Ce reçu est délivré au donateur conformément aux dispositions de l'article 200 du Code général des impôts. " +
+        "Ce reçu est délivré à l'entreprise donatrice conformément aux dispositions de l'article 238 bis du Code général des impôts " +
+          "(réduction d'impôt de 60 % du montant du don, dans la limite de 20 000 € ou de 0,5 % du chiffre d'affaires HT). " +
           'Il doit être conservé 5 ans minimum. ' +
           'Savely — plateforme de gestion de stock dormant pour officines.',
         { align: 'justify' }

@@ -3,6 +3,7 @@
 import {
   ClipboardList,
   FileStack,
+  Handshake,
   Heart,
   Inbox,
   LayoutDashboard,
@@ -28,6 +29,7 @@ const NAV = [
   { href: '/actions', label: "Centre d'actions", icon: Inbox, exact: false },
   { href: '/offers', label: 'Offres B2C', icon: ShoppingBag, exact: false },
   { href: '/donations', label: 'Dons', icon: Heart, exact: false },
+  { href: '/annuaire', label: 'Associations', icon: Handshake, exact: false },
   { href: '/orders', label: 'Commandes', icon: ClipboardList, exact: false },
   { href: '/imports', label: 'Imports', icon: FileStack, exact: false },
 ];

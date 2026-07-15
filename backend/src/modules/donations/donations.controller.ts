@@ -34,6 +34,7 @@ import {
   ConfirmPickupDto,
   CreateDonationDto,
   EligiblePreviewDto,
+  ScanPickupDto,
 } from './dto/donation.dto';
 
 @ApiTags('donations')
@@ -120,6 +121,24 @@ export class DonationsController {
     return this.orchestrator.cancelDonation(id, pharmacyId, userId);
   }
 
+  @Post('pickup/scan')
+  @ApiOperation({
+    summary:
+      "Confirmer un retrait par scan du QR de l'allocation (app préparateur)",
+  })
+  scanPickup(
+    @TenantPharmacyId() pharmacyId: string,
+    @CurrentUser() user: { sub: string; role: string },
+    @Body() dto: ScanPickupDto
+  ) {
+    return this.orchestrator.confirmPickupByQr(
+      dto.qr_code,
+      pharmacyId,
+      dto.picked_up_by,
+      `${user.role}:${user.sub}`
+    );
+  }
+
   @Post('allocations/:id/confirm-pickup')
   @ApiOperation({
     summary:
@@ -153,7 +172,7 @@ export class DonationsController {
     const pdf = await this.cerfaService.generateCerfa(id, pharmacyId);
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="cerfa-${id}.pdf"`
+      `attachment; filename="cerfa-16216-${id}.pdf"`
     );
     res.setHeader('Content-Length', pdf.length);
     res.end(pdf);

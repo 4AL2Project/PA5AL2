@@ -58,6 +58,8 @@ function seedProduct(
     category: 'Cosmétique',
     stock_quantity: 10,
     unit_price: 8,
+    // Coût de revient HT (base de valorisation du don, art. 238 bis CGI)
+    cost_price: 5,
     ...overrides,
   });
 }
@@ -131,6 +133,30 @@ describe('Création et première proposition', () => {
         lines: [{ product_id: product.product_id, quantity: 5 }],
       })
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('refuse le don si le coût de revient est manquant (base du Cerfa)', async () => {
+    const pharmacy = seedPharmacy();
+    const product = seedProduct(pharmacy.pharmacy_id, { cost_price: null });
+    seedAsso();
+    await expect(
+      orchestrator.createDonation(pharmacy.pharmacy_id, 'user-1', {
+        lines: [{ product_id: product.product_id, quantity: 2 }],
+      })
+    ).rejects.toThrow(/Prix d'achat manquant/);
+  });
+
+  it('valorise les lignes au coût de revient HT, pas au prix catalogue', async () => {
+    const pharmacy = seedPharmacy();
+    const product = seedProduct(pharmacy.pharmacy_id, {
+      unit_price: 12,
+      cost_price: 4,
+    });
+    seedAsso();
+    await orchestrator.createDonation(pharmacy.pharmacy_id, 'user-1', {
+      lines: [{ product_id: product.product_id, quantity: 2 }],
+    });
+    expect(db.tables.donationLine[0].unit_value).toBe(4);
   });
 
   it('mode avancé : propose d’abord à l’asso préférée si elle est éligible', async () => {
@@ -495,6 +521,28 @@ describe('Retrait, non-récupération, épuisement', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
+  it('confirme le retrait par scan du QR (app préparateur), scopé officine', async () => {
+    const { pharmacy, allocation } = await setupAccepted();
+
+    await expect(
+      orchestrator.confirmPickupByQr(
+        allocation.qr_code,
+        'autre-officine',
+        'Marie',
+        'PREPARATEUR:user-2'
+      )
+    ).rejects.toThrow(/QR inconnu/);
+
+    const result = await orchestrator.confirmPickupByQr(
+      allocation.qr_code,
+      pharmacy.pharmacy_id,
+      'Marie Bénévole',
+      'PREPARATEUR:user-2'
+    );
+    expect(result!.status).toBe('RETIREE');
+    expect(result!.cerfa_number).toMatch(/^CERFA-DON-/);
+  });
+
   it('non-récupération : quantités reversées, asso exclue, re-proposition', async () => {
     const { allocation } = await setupAccepted();
     const after = new Date(
@@ -705,6 +753,30 @@ describe('Scénario E2E : partiel → reliquat → 2 retraits → COMPLETEE', ()
       'RETRAIT_CONFIRME',
       'DON_COMPLETE',
     ]);
+  });
+});
+
+describe('Créneaux asso ∩ officine', () => {
+  it('ne propose que les créneaux compatibles avec les fenêtres de l’asso', async () => {
+    const pharmacy = seedPharmacy();
+    const product = seedProduct(pharmacy.pharmacy_id);
+    // L'asso ne passe que le lundi de 10h à 11h
+    seedAsso({
+      pickup_windows: [{ day: 'MON', start: '10:00', end: '11:00' }],
+    });
+    await orchestrator.createDonation(pharmacy.pharmacy_id, 'user-1', {
+      lines: [{ product_id: product.product_id, quantity: 2 }],
+    });
+
+    const view = await orchestrator.getProposalView(activeProposal()!.token);
+    expect(view.state).toBe('ACTIVE');
+    const slots = (view as { slots: { start: string; end: string }[] }).slots;
+    for (const slot of slots) {
+      const start = new Date(slot.start);
+      expect(start.getDay()).toBe(1); // lundi
+      expect(start.getHours()).toBe(10); // 10h (∩ de 09:00-12:00 et 10:00-11:00)
+      expect(new Date(slot.end).getHours()).toBe(11);
+    }
   });
 });
 

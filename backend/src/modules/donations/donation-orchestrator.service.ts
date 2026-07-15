@@ -15,6 +15,7 @@ import { CerfaService } from './cerfa.service';
 import {
   computePickupSlots,
   DonationLineSnapshot,
+  intersectWindows,
   isValidPickupSlot,
   MAX_DONATION_AGE_DAYS,
   MAX_PROPOSALS_PER_DONATION,
@@ -83,6 +84,14 @@ export class DonationOrchestratorService {
           `Quantité invalide pour ${product.name} (stock : ${product.stock_quantity})`
         );
       }
+      // Art. 238 bis CGI : le don est valorisé au coût de revient HT (prix
+      // d'achat grossiste) — le Cerfa engage fiscalement le pharmacien, on
+      // refuse de valoriser sans cette donnée
+      if (product.cost_price == null || product.cost_price <= 0) {
+        throw new BadRequestException(
+          `Prix d'achat manquant pour ${product.name} — renseignez le coût de revient (import CSV ou fiche produit) avant de donner`
+        );
+      }
     }
 
     const donation = await prisma.donation.create({
@@ -94,7 +103,8 @@ export class DonationOrchestratorService {
           create: input.lines.map((l) => ({
             product_id: l.product_id,
             quantity_total: l.quantity,
-            unit_value: byId.get(l.product_id)!.unit_price,
+            // Coût de revient HT, PAS le prix de vente catalogue
+            unit_value: byId.get(l.product_id)!.cost_price!,
           })),
         },
         events: {
@@ -347,6 +357,7 @@ export class DonationOrchestratorService {
         name: string;
         contact_email: string | null;
         pickup_sla_days: number;
+        pickup_windows: unknown;
       };
     },
     input: RespondInput
@@ -380,8 +391,9 @@ export class DonationOrchestratorService {
     }
     const slotStart = new Date(input.slot_start);
     const slotEnd = new Date(input.slot_end);
-    const windows = parsePickupWindows(
-      proposal.donation.pharmacy.donation_pickup_windows
+    const windows = intersectWindows(
+      parsePickupWindows(proposal.donation.pharmacy.donation_pickup_windows),
+      proposal.association.pickup_windows
     );
     if (
       isNaN(slotStart.getTime()) ||
@@ -646,6 +658,31 @@ export class DonationOrchestratorService {
     return prisma.donationAllocation.findUnique({
       where: { allocation_id: allocationId },
     });
+  }
+
+  /**
+   * Confirmation par scan du QR de l'allocation (app Flutter préparateur).
+   * Résout l'allocation dans le périmètre de l'officine puis délègue au flux
+   * de confirmation standard.
+   */
+  async confirmPickupByQr(
+    qrCode: string,
+    pharmacyId: string,
+    pickedUpBy: string,
+    actor: string
+  ) {
+    const allocation = await prisma.donationAllocation.findFirst({
+      where: { qr_code: qrCode, donation: { pharmacy_id: pharmacyId } },
+    });
+    if (!allocation) {
+      throw new NotFoundException('QR inconnu pour cette officine');
+    }
+    return this.confirmPickup(
+      allocation.allocation_id,
+      pharmacyId,
+      pickedUpBy,
+      actor
+    );
   }
 
   private async completeIfDone(donationId: string) {
@@ -941,13 +978,18 @@ export class DonationOrchestratorService {
         donation_pickup_windows?: unknown;
       };
     };
-    association: { name: string; pickup_sla_days: number };
+    association: {
+      name: string;
+      pickup_sla_days: number;
+      pickup_windows?: unknown;
+    };
     allocation: {
       lines: unknown;
       status: string;
       pickup_slot_start: Date;
       pickup_slot_end: Date;
       cerfa_number: string | null;
+      qr_code: string;
     } | null;
   }) {
     const base = {
@@ -970,8 +1012,9 @@ export class DonationOrchestratorService {
       ) {
         return { state: 'EXPIREE', ...base };
       }
-      const windows = parsePickupWindows(
-        proposal.donation.pharmacy.donation_pickup_windows
+      const windows = intersectWindows(
+        parsePickupWindows(proposal.donation.pharmacy.donation_pickup_windows),
+        proposal.association.pickup_windows
       );
       return {
         state: 'ACTIVE',
@@ -996,6 +1039,12 @@ export class DonationOrchestratorService {
               pickup_slot_start: proposal.allocation.pickup_slot_start,
               pickup_slot_end: proposal.allocation.pickup_slot_end,
               cerfa_available: proposal.allocation.cerfa_number != null,
+              // QR à présenter au retrait : scanné par le préparateur pour
+              // confirmer le pickup (uniquement tant que le retrait est dû)
+              qr_code:
+                proposal.allocation.status === 'PLANIFIEE'
+                  ? proposal.allocation.qr_code
+                  : null,
             }
           : null,
       };

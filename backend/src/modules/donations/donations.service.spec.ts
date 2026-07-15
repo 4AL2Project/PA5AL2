@@ -186,9 +186,9 @@ describe('DonationsService — getParametres / updateParametres', () => {
   it('doit créer une seule entrée même si appelé deux fois (idempotence)', async () => {
     await service.getParametres(PHARMACY_ID);
     await service.getParametres(PHARMACY_ID);
-    expect(db.tables['donParametres'].filter(
-      (r) => r.pharmacy_id === PHARMACY_ID
-    )).toHaveLength(1);
+    expect(
+      db.tables['donParametres'].filter((r) => r.pharmacy_id === PHARMACY_ID)
+    ).toHaveLength(1);
   });
 
   it('doit mettre à jour le seuil et le rayon dans les limites', async () => {

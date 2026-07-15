@@ -5,12 +5,7 @@
  *   avec alertes, filtres statut/pharmacie et accès au détail.
  * @module DonAssociatif
  */
-import {
-  AlertTriangle,
-  Clock,
-  Heart,
-  XCircle,
-} from 'lucide-react';
+import { AlertTriangle, Clock, Heart, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
@@ -45,7 +40,11 @@ const STATUS_VARIANTS: Record<string, string> = {
 export default async function AdminDonsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; pharmacy_id?: string; page?: string }>;
+  searchParams: Promise<{
+    status?: string;
+    pharmacy_id?: string;
+    page?: string;
+  }>;
 }) {
   const session = await getSession();
   if (!session || session.claims.role !== 'ADMIN_SAVELY') {
@@ -76,31 +75,34 @@ export default async function AdminDonsPage({
       }
     >
       {/* Alertes actives */}
-      {alerts && (alerts.blocked_count > 0 || alerts.expired_proposals > 0 || alerts.missed_pickups > 0) && (
-        <div className="mb-6 space-y-2">
-          {alerts.blocked_count > 0 && (
-            <AlertBanner
-              icon={<Clock className="h-4 w-4 text-red-600" />}
-              color="red"
-              message={`${alerts.blocked_count} don${alerts.blocked_count > 1 ? 's' : ''} bloqué${alerts.blocked_count > 1 ? 's' : ''} depuis plus de 5 jours`}
-            />
-          )}
-          {alerts.expired_proposals > 0 && (
-            <AlertBanner
-              icon={<AlertTriangle className="h-4 w-4 text-amber-600" />}
-              color="amber"
-              message={`${alerts.expired_proposals} proposition${alerts.expired_proposals > 1 ? 's' : ''} expirée${alerts.expired_proposals > 1 ? 's' : ''} non traitée${alerts.expired_proposals > 1 ? 's' : ''}`}
-            />
-          )}
-          {alerts.missed_pickups > 0 && (
-            <AlertBanner
-              icon={<XCircle className="h-4 w-4 text-amber-600" />}
-              color="amber"
-              message={`${alerts.missed_pickups} retrait${alerts.missed_pickups > 1 ? 's' : ''} manqué${alerts.missed_pickups > 1 ? 's' : ''}`}
-            />
-          )}
-        </div>
-      )}
+      {alerts &&
+        (alerts.blocked_count > 0 ||
+          alerts.expired_proposals > 0 ||
+          alerts.missed_pickups > 0) && (
+          <div className="mb-6 space-y-2">
+            {alerts.blocked_count > 0 && (
+              <AlertBanner
+                icon={<Clock className="h-4 w-4 text-red-600" />}
+                color="red"
+                message={`${alerts.blocked_count} don${alerts.blocked_count > 1 ? 's' : ''} bloqué${alerts.blocked_count > 1 ? 's' : ''} depuis plus de 5 jours`}
+              />
+            )}
+            {alerts.expired_proposals > 0 && (
+              <AlertBanner
+                icon={<AlertTriangle className="h-4 w-4 text-amber-600" />}
+                color="amber"
+                message={`${alerts.expired_proposals} proposition${alerts.expired_proposals > 1 ? 's' : ''} expirée${alerts.expired_proposals > 1 ? 's' : ''} non traitée${alerts.expired_proposals > 1 ? 's' : ''}`}
+              />
+            )}
+            {alerts.missed_pickups > 0 && (
+              <AlertBanner
+                icon={<XCircle className="h-4 w-4 text-amber-600" />}
+                color="amber"
+                message={`${alerts.missed_pickups} retrait${alerts.missed_pickups > 1 ? 's' : ''} manqué${alerts.missed_pickups > 1 ? 's' : ''}`}
+              />
+            )}
+          </div>
+        )}
 
       {/* Filtres rapides statut */}
       <div className="mb-4 flex flex-wrap gap-2">
@@ -122,7 +124,9 @@ export default async function AdminDonsPage({
       {donations.items.length === 0 ? (
         <div className="rounded-xl border bg-card p-12 text-center">
           <Heart className="mx-auto mb-3 h-8 w-8 text-muted-foreground opacity-30" />
-          <p className="text-sm text-muted-foreground">Aucun don sur cette période.</p>
+          <p className="text-sm text-muted-foreground">
+            Aucun don sur cette période.
+          </p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-xl border bg-card">
@@ -182,17 +186,22 @@ export default async function AdminDonsPage({
         <div className="mt-4 flex justify-center gap-2">
           {donations.page > 1 && (
             <Button asChild variant="outline" size="sm">
-              <Link href={`/admin/dons?page=${donations.page - 1}${sp.status ? `&status=${sp.status}` : ''}`}>
+              <Link
+                href={`/admin/dons?page=${donations.page - 1}${sp.status ? `&status=${sp.status}` : ''}`}
+              >
                 Précédent
               </Link>
             </Button>
           )}
           <span className="px-3 py-1.5 text-sm text-muted-foreground">
-            Page {donations.page} / {Math.ceil(donations.total / donations.limit)}
+            Page {donations.page} /{' '}
+            {Math.ceil(donations.total / donations.limit)}
           </span>
           {donations.page * donations.limit < donations.total && (
             <Button asChild variant="outline" size="sm">
-              <Link href={`/admin/dons?page=${donations.page + 1}${sp.status ? `&status=${sp.status}` : ''}`}>
+              <Link
+                href={`/admin/dons?page=${donations.page + 1}${sp.status ? `&status=${sp.status}` : ''}`}
+              >
                 Suivant
               </Link>
             </Button>
@@ -217,7 +226,9 @@ function AlertBanner({
       ? 'border-red-200 bg-red-50 text-red-800'
       : 'border-amber-200 bg-amber-50 text-amber-800';
   return (
-    <div className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm ${cls}`}>
+    <div
+      className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm ${cls}`}
+    >
       {icon}
       {message}
     </div>

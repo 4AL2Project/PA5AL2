@@ -38,7 +38,10 @@ async function forward(req: NextRequest, pathSegments: string[]) {
     });
   } catch {
     return NextResponse.json(
-      { success: false, error: { code: 'BACKEND_UNAVAILABLE', message: 'API indisponible' } },
+      {
+        success: false,
+        error: { code: 'BACKEND_UNAVAILABLE', message: 'API indisponible' },
+      },
       { status: 503 }
     );
   }

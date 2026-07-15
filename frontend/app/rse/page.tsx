@@ -9,13 +9,7 @@
  * @module DonAssociatif
  */
 
-import {
-  AlertTriangle,
-  Download,
-  FileText,
-  Leaf,
-  Loader2,
-} from 'lucide-react';
+import { AlertTriangle, Download, FileText, Leaf, Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -31,8 +25,8 @@ import {
 } from '@/components/ui/select';
 import {
   DonationAllocationItem,
-  DonationSummary,
   donationCerfaUrl,
+  DonationSummary,
   fetchDonations,
 } from '@/lib/api';
 
@@ -143,7 +137,9 @@ export default function RsePage() {
     ].join(';');
 
     const rows = cerfa.map((r) => {
-      const produits = r.lines.map((l) => `${l.name} ×${l.quantity}`).join(' | ');
+      const produits = r.lines
+        .map((l) => `${l.name} ×${l.quantity}`)
+        .join(' | ');
       return [
         r.picked_up_at
           ? new Date(r.picked_up_at).toLocaleDateString('fr-FR')
@@ -178,10 +174,7 @@ export default function RsePage() {
       <div className="space-y-6">
         {/* Sélecteur de période */}
         <div className="flex items-center justify-between gap-3">
-          <Select
-            value={period}
-            onValueChange={(v) => setPeriod(v as Period)}
-          >
+          <Select value={period} onValueChange={(v) => setPeriod(v as Period)}>
             <SelectTrigger className="w-44">
               <SelectValue />
             </SelectTrigger>

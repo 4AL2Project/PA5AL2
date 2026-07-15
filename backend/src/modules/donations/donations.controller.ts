@@ -80,7 +80,9 @@ export class DonationsController {
 
   @Get('parametres')
   @Roles(UserRole.TITULAIRE)
-  @ApiOperation({ summary: 'Paramètres de don (seuil dormance, rayon matching)' })
+  @ApiOperation({
+    summary: 'Paramètres de don (seuil dormance, rayon matching)',
+  })
   getParametres(@TenantPharmacyId() pharmacyId: string) {
     return this.donationsService.getParametres(pharmacyId);
   }

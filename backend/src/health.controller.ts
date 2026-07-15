@@ -14,6 +14,8 @@ export class HealthController {
   @Get('debug-sentry')
   @ApiOperation({ summary: '[TEMP] Déclenche une erreur pour tester Sentry' })
   debugSentry() {
-    throw new Error('[TEST] Sentry Backend Savely — supprimer après validation');
+    throw new Error(
+      '[TEST] Sentry Backend Savely — supprimer après validation'
+    );
   }
 }

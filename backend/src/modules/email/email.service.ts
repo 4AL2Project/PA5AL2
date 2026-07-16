@@ -175,7 +175,7 @@ export class EmailService {
         ${h1('Connexion à Savely')}
         ${p('Voici votre lien de connexion :')}
         ${btn('Me connecter', link)}
-        ${small('Ce lien expire dans 15 minutes. Si vous n\'êtes pas à l\'origine de cette demande, ignorez cet email.')}
+        ${small("Ce lien expire dans 15 minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.")}
       `),
     });
   }
@@ -192,7 +192,7 @@ export class EmailService {
       subject: 'Savely — Votre code de connexion',
       html: emailLayout(`
         ${h1('Votre code de connexion')}
-        ${p('Saisissez ce code dans l\'application Savely :')}
+        ${p("Saisissez ce code dans l'application Savely :")}
         <div style="text-align:center;margin:24px 0;">
           <span style="font-size:36px;font-weight:700;letter-spacing:10px;color:#16a34a;font-variant-numeric:tabular-nums;">${code}</span>
         </div>
@@ -228,7 +228,7 @@ export class EmailService {
       subject: "Savely — Votre demande est en cours d'examen",
       html: emailLayout(`
         ${h1(`Bonjour ${name},`)}
-        ${p('Votre adresse email est confirmée. Notre équipe examine votre demande d\'inscription et vous enverra une réponse sous quelques jours.')}
+        ${p("Votre adresse email est confirmée. Notre équipe examine votre demande d'inscription et vous enverra une réponse sous quelques jours.")}
         ${infoBox(`<p style="margin:0;font-size:13px;color:#166534;">✅ Email confirmé — dossier en cours d'examen</p>`)}
       `),
     });
@@ -241,9 +241,9 @@ export class EmailService {
       subject: 'Savely — Votre association est validée',
       html: emailLayout(`
         ${h1(`Bienvenue, ${name} !`)}
-        ${p('Votre association est maintenant validée sur Savely. Vous recevrez par email des propositions de dons de produits des officines de votre zone d\'action.')}
+        ${p("Votre association est maintenant validée sur Savely. Vous recevrez par email des propositions de dons de produits des officines de votre zone d'action.")}
         ${infoBox(`<p style="margin:0;font-size:13px;color:#166534;">🎉 Association validée — propositions de dons à venir</p>`)}
-        ${p('Aucun compte n\'est nécessaire : tout se passe via les liens que nous vous envoyons.')}
+        ${p("Aucun compte n'est nécessaire : tout se passe via les liens que nous vous envoyons.")}
       `),
     });
   }
@@ -255,9 +255,9 @@ export class EmailService {
       subject: "Savely — Votre demande n'a pas été retenue",
       html: emailLayout(`
         ${h1(`Bonjour ${name},`)}
-        ${p('Après examen, votre demande d\'inscription n\'a pas été retenue.')}
+        ${p("Après examen, votre demande d'inscription n'a pas été retenue.")}
         ${reason ? `${warnBox(`<p style="margin:0;font-size:13px;color:#92400e;">Motif : ${reason}</p>`)}` : ''}
-        ${p('N\'hésitez pas à nous contacter pour plus d\'informations.')}
+        ${p("N'hésitez pas à nous contacter pour plus d'informations.")}
       `),
     });
   }
@@ -297,7 +297,7 @@ export class EmailService {
       subject: 'Rappel — une proposition de don vous attend',
       html: emailLayout(`
         ${h1(`Bonjour ${assoName},`)}
-        ${p('Vous n\'avez pas encore répondu à la proposition de don en cours.')}
+        ${p("Vous n'avez pas encore répondu à la proposition de don en cours.")}
         ${btn('Répondre maintenant', link)}
         ${warnBox(`<p style="margin:0;font-size:13px;color:#92400e;">⏰ Cette proposition expire le ${expiresAt.toLocaleString('fr-FR')}.</p>`)}
       `),
@@ -411,9 +411,9 @@ export class EmailService {
       subject: `Accédez à votre espace Savely`,
       html: emailLayout(`
         ${h1(`Bonjour ${assoName},`)}
-        ${p('Voici votre lien d\'accès à votre espace association Savely :')}
+        ${p("Voici votre lien d'accès à votre espace association Savely :")}
         ${btn('Accéder à mon espace', link)}
-        ${small('Ce lien expire dans 24 heures. Si vous n\'êtes pas à l\'origine de cette demande, ignorez cet email.')}
+        ${small("Ce lien expire dans 24 heures. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.")}
       `),
     });
   }

@@ -56,36 +56,72 @@ function VerifyContent() {
         {state === 'success' && (
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-10">
             <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
-              <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              <svg
+                className="h-5 w-5 text-emerald-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                />
               </svg>
             </div>
             <p className="font-semibold text-foreground">Connexion réussie !</p>
-            <p className="mt-1 text-sm text-muted-foreground">Redirection en cours…</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Redirection en cours…
+            </p>
           </div>
         )}
 
         {state === 'expired' && (
           <div className="rounded-2xl border border-amber-200 bg-amber-50 p-10">
             <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
-              <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="h-5 w-5 text-amber-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
             <p className="font-semibold text-foreground">Ce lien a expiré</p>
-            <p className="mt-1 text-sm text-muted-foreground">Contactez l'équipe Savely pour recevoir un nouveau lien d'accès.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Contactez l'équipe Savely pour recevoir un nouveau lien d'accès.
+            </p>
           </div>
         )}
 
         {(state === 'invalid' || state === 'no_token') && (
           <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-10">
             <div className="mx-auto mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10">
-              <svg className="h-5 w-5 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="h-5 w-5 text-destructive"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </div>
             <p className="font-semibold text-foreground">Lien invalide</p>
-            <p className="mt-1 text-sm text-muted-foreground">Ce lien n'est pas valide. Contactez l'équipe Savely.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ce lien n'est pas valide. Contactez l'équipe Savely.
+            </p>
           </div>
         )}
       </div>
@@ -95,11 +131,13 @@ function VerifyContent() {
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      }
+    >
       <VerifyContent />
     </Suspense>
   );

@@ -53,7 +53,9 @@ export function ConfirmPickupDialog({
         return;
       }
       if (code.trim().toUpperCase().replace(/\s/g, '') !== expected) {
-        setCodeError('Code incorrect — vérifiez le code affiché sur le téléphone');
+        setCodeError(
+          'Code incorrect — vérifiez le code affiché sur le téléphone'
+        );
         return;
       }
     }
@@ -90,9 +92,7 @@ export function ConfirmPickupDialog({
         <div className="space-y-4">
           {expected && (
             <div className="space-y-1.5">
-              <Label htmlFor="don-code">
-                Code du don *
-              </Label>
+              <Label htmlFor="don-code">Code du don *</Label>
               <Input
                 id="don-code"
                 value={code}

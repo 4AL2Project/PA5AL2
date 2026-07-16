@@ -215,9 +215,14 @@ model Association {
   contact_email   String?
   contact_phone   String?
   logo_url        String?
-  // ACTIVE | EN_ATTENTE_VALIDATION | REJETEE | SUSPENDUE
+  // ACTIVE | EN_ATTENTE_VALIDATION | REJETEE | SUSPENDUE | BLACKLISTEE
   status          String    @default("ACTIVE")
   rejection_reason String?
+  // Agrément préfectoral / habilitation ouvrant droit au reçu fiscal (Cerfa)
+  agrement_numero  String?
+  agrement_valide  Boolean   @default(false)
+  // Horodatage de mise en liste noire (BLACKLISTEE, uniquement depuis SUSPENDUE)
+  blacklisted_at   DateTime?
   // Éligibilité au reçu fiscal vérifiée par l'admin (art. 200/238 bis CGI)
   fiscal_receipt_verified Boolean @default(false)
   email_verified_at DateTime?
@@ -241,6 +246,36 @@ model Association {
 
   proposals       DonationProposal[]
   allocations     DonationAllocation[]
+  notes           AssociationNote[]
+  logs            AssociationLog[]
+}
+
+// Note interne rédigée par un admin Savely sur une association (back-office).
+model AssociationNote {
+  note_id        String      @id @default(uuid())
+  association_id String
+  admin_email    String
+  contenu        String
+  created_at     DateTime    @default(now())
+
+  association    Association @relation(fields: [association_id], references: [association_id], onDelete: Cascade)
+
+  @@index([association_id, created_at(sort: Desc)])
+}
+
+// Journal d'audit des actions admin sur une association (back-office).
+// action : CREATED | INVITED | STATUS_CHANGED | NOTE_ADDED | UPDATED | ONBOARDED …
+model AssociationLog {
+  log_id         String      @id @default(uuid())
+  association_id String
+  admin_email    String?
+  action         String
+  details        String?
+  created_at     DateTime    @default(now())
+
+  association    Association @relation(fields: [association_id], references: [association_id], onDelete: Cascade)
+
+  @@index([association_id, created_at(sort: Desc)])
 }
 
 // Don = LOT multi-produits piloté par l'orchestrateur.

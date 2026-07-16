@@ -1,13 +1,12 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { ScheduleModule } from '@nestjs/schedule';
-import { APP_FILTER } from '@nestjs/core';
 import { SentryModule } from '@sentry/nestjs/setup';
 
-import { HttpExceptionFilter } from './core/http/http-exception.filter';
-
 import { config } from './core/config';
+import { HttpExceptionFilter } from './core/http/http-exception.filter';
 import { StorageModule } from './core/storage/storage.module';
 import { HealthController } from './health.controller';
 import { AnalysisJob } from './jobs/analysis.job';

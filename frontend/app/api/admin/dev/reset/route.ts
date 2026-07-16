@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { SERVER_API_BASE as API_BASE } from '@/lib/api-base';
 import { devToolsEnabled } from '@/lib/dev-tools';
 import { getSession } from '@/lib/session';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
 
 export async function POST(req: NextRequest) {
   // Le back refuse déjà la route, mais autant ne pas la proxifier pour rien.

@@ -1,8 +1,63 @@
 import 'server-only';
 
+import { redirect } from 'next/navigation';
+
+import { SERVER_API_BASE as API_BASE } from './api-base';
 import { PharmacyDetail, PharmacyListItem } from './auth';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
+/** Échec d'un appel backend : API injoignable (`status: null`) ou réponse en erreur. */
+export class ApiError extends Error {
+  constructor(
+    readonly status: number | null,
+    readonly endpoint: string,
+    options?: ErrorOptions
+  ) {
+    super(
+      status === null
+        ? `API injoignable : ${endpoint}`
+        : `API ${status} sur ${endpoint}`,
+      options
+    );
+    this.name = 'ApiError';
+  }
+}
+
+/**
+ * Appelle le backend et laisse remonter les échecs : une API en panne ne doit pas
+ * se déguiser en résultat vide. Les 401/403 renvoient au login (session expirée).
+ */
+async function request(
+  accessToken: string,
+  path: string,
+  init?: RequestInit
+): Promise<Response> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      cache: 'no-store',
+      ...init,
+      headers: { Authorization: `Bearer ${accessToken}`, ...init?.headers },
+    });
+  } catch (cause) {
+    throw new ApiError(null, path, { cause });
+  }
+
+  if (res.status === 401 || res.status === 403) redirect('/admin/login');
+  return res;
+}
+
+/** Déballe l'enveloppe `{ success, data }` posée par le backend sur toute réponse. */
+function unwrap<T>(payload: unknown): T {
+  if (
+    typeof payload === 'object' &&
+    payload !== null &&
+    'success' in payload &&
+    'data' in payload
+  ) {
+    return (payload as { data: T }).data;
+  }
+  return payload as T;
+}
 
 export interface Association {
   association_id: string;
@@ -31,92 +86,45 @@ export async function fetchAssociations(
   accessToken: string,
   opts: { category?: string } = {}
 ): Promise<Association[]> {
-  try {
-    const params = new URLSearchParams();
-    if (opts.category) params.set('category', opts.category);
-    const qs = params.size ? `?${params}` : '';
+  const params = new URLSearchParams();
+  if (opts.category) params.set('category', opts.category);
+  const qs = params.size ? `?${params}` : '';
+  const path = `/api/associations${qs}`;
 
-    const res = await fetch(`${API_BASE}/api/associations${qs}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      cache: 'no-store',
-    });
-    if (!res.ok) return [];
-    const payload = (await res.json()) as
-      | Association[]
-      | { data: Association[] };
-    return Array.isArray(payload) ? payload : (payload.data ?? []);
-  } catch {
-    return [];
-  }
+  const res = await request(accessToken, path);
+  if (!res.ok) throw new ApiError(res.status, path);
+  return unwrap<Association[]>(await res.json()) ?? [];
 }
 
 export async function fetchPendingAssociations(
   accessToken: string
 ): Promise<Association[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/associations/pending`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      cache: 'no-store',
-    });
-    if (!res.ok) return [];
-    const payload = (await res.json()) as
-      | Association[]
-      | { data: Association[] };
-    return Array.isArray(payload) ? payload : (payload.data ?? []);
-  } catch {
-    return [];
-  }
+  const path = '/api/associations/pending';
+  const res = await request(accessToken, path);
+  if (!res.ok) throw new ApiError(res.status, path);
+  return unwrap<Association[]>(await res.json()) ?? [];
 }
 
 export async function fetchPharmacies(
   accessToken: string
 ): Promise<PharmacyListItem[]> {
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/pharmacies`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      cache: 'no-store',
-    });
-    if (!res.ok) return [];
-    const payload = (await res.json()) as
-      | { success: true; data: { pharmacies?: PharmacyListItem[] } }
-      | { success: false; error: unknown }
-      | { pharmacies?: PharmacyListItem[] };
-    const data =
-      'success' in payload && payload.success
-        ? payload.data
-        : 'pharmacies' in payload
-          ? payload
-          : { pharmacies: [] };
-    return data.pharmacies ?? [];
-  } catch {
-    return [];
-  }
+  const path = '/api/admin/pharmacies';
+  const res = await request(accessToken, path);
+  if (!res.ok) throw new ApiError(res.status, path);
+  const data = unwrap<{ pharmacies?: PharmacyListItem[] }>(await res.json());
+  return data?.pharmacies ?? [];
 }
 
+/** `null` uniquement si l'officine n'existe pas — une panne API lève. */
 export async function fetchPharmacy(
   accessToken: string,
   pharmacyId: string
 ): Promise<PharmacyDetail | null> {
-  try {
-    const res = await fetch(
-      `${API_BASE}/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}`,
-      {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        cache: 'no-store',
-      }
-    );
-    if (!res.ok) return null;
-    const payload = (await res.json()) as
-      | { success: true; data: PharmacyDetail }
-      | { success: false; error: unknown }
-      | PharmacyDetail;
-    if ('success' in payload) {
-      return payload.success ? payload.data : null;
-    }
-    return payload;
-  } catch {
-    return null;
-  }
+  const path = `/api/admin/pharmacies/${encodeURIComponent(pharmacyId)}`;
+  const res = await request(accessToken, path);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new ApiError(res.status, path);
+  return unwrap<PharmacyDetail>(await res.json());
 }
 
 // ─── Admin donations ──────────────────────────────────────────────────────────
@@ -207,24 +215,16 @@ export interface AdminMonitoring {
   };
 }
 
+/** `null` uniquement sur 404 (ressource absente) — une panne API lève. */
 async function adminFetch<T>(
   accessToken: string,
   path: string,
   init?: RequestInit
 ): Promise<T | null> {
-  try {
-    const res = await fetch(`${API_BASE}${path}`, {
-      headers: { Authorization: `Bearer ${accessToken}`, ...init?.headers },
-      cache: 'no-store',
-      ...init,
-    });
-    if (!res.ok) return null;
-    const payload = await res.json();
-    if ('success' in payload) return payload.success ? payload.data : null;
-    return payload as T;
-  } catch {
-    return null;
-  }
+  const res = await request(accessToken, path, init);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new ApiError(res.status, path);
+  return unwrap<T>(await res.json());
 }
 
 export async function fetchAdminDonations(
@@ -289,33 +289,13 @@ export async function fetchAdminDonParametres(
 
 type DevCounts = Record<string, number>;
 
-type DevCountsEnvelope =
-  | { success: true; data: DevCounts }
-  | { success: false; error: unknown };
-
-// `DevCounts` a une signature d'index : la seule présence de `success` ne suffit
-// pas à distinguer l'enveloppe des compteurs, d'où le test sur son type.
-function isEnvelope(
-  payload: DevCountsEnvelope | DevCounts
-): payload is DevCountsEnvelope {
-  return typeof (payload as DevCountsEnvelope).success === 'boolean';
-}
-
 /**
  * Compteurs de lignes par table (page développeur, dev uniquement).
- * L'endpoint n'existe pas quand les outils sont désactivés : on renvoie `null`.
+ * L'endpoint n'existe pas quand les outils sont désactivés : `adminFetch`
+ * renvoie alors `null` sur le 404.
  */
 export async function fetchDevCounts(
   accessToken: string
 ): Promise<DevCounts | null> {
-  const res = await fetch(`${API_BASE}/api/dev/counts`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    cache: 'no-store',
-  });
-  if (!res.ok) return null;
-  const payload = (await res.json()) as DevCountsEnvelope | DevCounts;
-  if (isEnvelope(payload)) {
-    return payload.success ? payload.data : null;
-  }
-  return payload;
+  return adminFetch<DevCounts>(accessToken, '/api/dev/counts');
 }

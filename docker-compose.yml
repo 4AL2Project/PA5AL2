@@ -1,0 +1,27 @@
+# Compose racine : lance les deux frontends (Next.js).
+# - frontend       (application pharmacie)  → http://localhost:3000
+# - frontend-asso  (application association) → http://localhost:3001
+#
+#   docker compose up --build
+#
+# NEXT_PUBLIC_API_URL doit pointer vers le backend joignable depuis le
+# navigateur (par défaut http://localhost:3005).
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3005}
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+
+  frontend-asso:
+    build:
+      context: ./frontend-asso
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3005}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3001}
+    restart: unless-stopped
+    ports:
+      - '3001:3001'

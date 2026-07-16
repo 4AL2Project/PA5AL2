@@ -165,7 +165,8 @@ export default function OffrePage() {
           <h2 className="text-xl font-bold text-gray-900">Don accepté !</h2>
           <p className="text-gray-600">
             Rendez-vous à l&apos;officine au créneau convenu. Votre QR code de
-            récupération est disponible dans l&apos;onglet <strong>Dons</strong>.
+            récupération est disponible dans l&apos;onglet <strong>Dons</strong>
+            .
           </p>
           <button
             onClick={() => router.push('/dons')}
@@ -301,8 +302,8 @@ export default function OffrePage() {
                 /* ── Créneaux fixés par le titulaire ────────────────── */
                 <div className="space-y-2">
                   <p className="text-sm text-gray-600">
-                    L&apos;officine a proposé les créneaux suivants. Sélectionnez
-                    celui qui vous convient :
+                    L&apos;officine a proposé les créneaux suivants.
+                    Sélectionnez celui qui vous convient :
                   </p>
                   {titulaireSLots.map((slot) => {
                     const { date, heure } = fmtSlot(slot);

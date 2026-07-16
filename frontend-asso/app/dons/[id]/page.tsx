@@ -6,8 +6,7 @@ import { useEffect, useState } from 'react';
 import Shell from '@/components/shell';
 import { type Don, fetchDon } from '@/lib/api';
 
-const ASSO_APP_URL =
-  process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
+const ASSO_APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3001';
 
 function fmt(iso: string) {
   return new Date(iso).toLocaleString('fr-FR', {
@@ -76,7 +75,9 @@ export default function DonPage() {
                   : 'bg-amber-100 text-amber-700'
               }`}
             >
-              {don.status === 'RETIREE' ? '✅ Récupéré' : '⏳ En attente de récupération'}
+              {don.status === 'RETIREE'
+                ? '✅ Récupéré'
+                : '⏳ En attente de récupération'}
             </span>
           </div>
 

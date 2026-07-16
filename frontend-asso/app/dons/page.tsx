@@ -1,4 +1,5 @@
 'use client';
+import { Gift } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -6,12 +7,18 @@ import { useEffect, useState } from 'react';
 import Shell from '@/components/shell';
 import { type Don, fetchDons } from '@/lib/api';
 
-type Filter = 'Tous' | 'En cours' | 'Récupérés' | 'Refusés';
+type Filter = 'Tous' | 'En cours' | 'Récupérés';
 
 const STATUS_LABELS: Record<string, string> = {
-  PLANIFIEE: 'En attente pickup',
+  PLANIFIEE: 'Planifié',
   RETIREE: 'Récupéré',
   NON_RECUPEREE: 'Non récupéré',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  PLANIFIEE: 'bg-amber-100 text-amber-700',
+  RETIREE: 'bg-emerald-100 text-emerald-700',
+  NON_RECUPEREE: 'bg-gray-100 text-gray-500',
 };
 
 function matchFilter(don: Don, filter: Filter): boolean {
@@ -19,6 +26,14 @@ function matchFilter(don: Don, filter: Filter): boolean {
   if (filter === 'Récupérés') return don.status === 'RETIREE';
   if (filter === 'En cours') return don.status === 'PLANIFIEE';
   return false;
+}
+
+function Spinner() {
+  return (
+    <div className="flex justify-center py-16">
+      <div className="w-8 h-8 border-4 border-savely-600 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 }
 
 export default function DonsPage() {
@@ -42,53 +57,68 @@ export default function DonsPage() {
 
   return (
     <Shell>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Mes dons</h1>
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-gray-900">Mes dons</h1>
+        <p className="text-sm text-gray-500 mt-1">
+          Dons acceptés et leur statut de récupération
+        </p>
+      </div>
 
+      {/* Filters */}
       <div className="flex gap-2 mb-6 flex-wrap">
         {(['Tous', 'En cours', 'Récupérés'] as Filter[]).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${filter === f ? 'bg-savely-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:border-savely-400'}`}
+            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              filter === f
+                ? 'bg-savely-600 text-white'
+                : 'bg-white border border-gray-200 text-gray-600 hover:border-savely-400 hover:text-savely-700'
+            }`}
           >
             {f}
           </button>
         ))}
       </div>
 
-      {loading && (
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-savely-600 border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
+      {loading && <Spinner />}
 
       {!loading && filtered.length === 0 && (
-        <div className="text-center py-16 text-gray-400">
-          <div className="text-4xl mb-3">📦</div>
-          <p className="font-medium">Aucun don</p>
+        <div className="bg-white rounded-xl border border-gray-200 text-center py-16 px-6">
+          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+            <Gift className="h-6 w-6 text-gray-400" />
+          </div>
+          <p className="font-medium text-gray-700">Aucun don</p>
+          <p className="text-sm text-gray-400 mt-1">
+            Acceptez des offres pour les voir apparaître ici.
+          </p>
         </div>
       )}
 
       {!loading && filtered.length > 0 && (
-        <div className="space-y-3">
+        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
           {filtered.map((don) => (
             <Link
               key={don.allocation_id}
               href={`/dons/${don.allocation_id}`}
-              className="flex items-center justify-between bg-white border border-gray-100 rounded-xl px-5 py-4 hover:shadow-sm transition-shadow"
+              className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors first:rounded-t-xl last:rounded-b-xl"
             >
-              <div>
-                <p className="text-sm font-semibold text-gray-900">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-gray-900 truncate">
                   {don.donation?.pharmacy?.name ?? 'Officine'}
                 </p>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {don.lines.map((l) => `${l.name} ×${l.quantity}`).join(', ')}
                 </p>
                 <p className="text-xs text-gray-400 mt-1">
-                  {new Date(don.pickup_slot_start).toLocaleDateString('fr-FR')}
+                  Retrait :{' '}
+                  {new Date(don.pickup_slot_start).toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'long',
+                  })}
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3 shrink-0">
                 {don.cerfa_url && (
                   <a
                     href={don.cerfa_url}
@@ -101,7 +131,7 @@ export default function DonsPage() {
                   </a>
                 )}
                 <span
-                  className={`text-xs font-medium px-2 py-1 rounded-full ${don.status === 'RETIREE' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}
+                  className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLORS[don.status] ?? 'bg-gray-100 text-gray-600'}`}
                 >
                   {STATUS_LABELS[don.status] ?? don.status}
                 </span>

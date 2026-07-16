@@ -57,10 +57,16 @@ export default function OffresPage() {
       router.replace('/auth/verify');
       return;
     }
-    fetchOffres()
-      .then(setOffres)
-      .catch(() => router.replace('/auth/verify'))
-      .finally(() => setLoading(false));
+
+    const load = () =>
+      fetchOffres()
+        .then(setOffres)
+        .catch(() => router.replace('/auth/verify'))
+        .finally(() => setLoading(false));
+
+    load();
+    const interval = setInterval(load, 30_000);
+    return () => clearInterval(interval);
   }, [router]);
 
   const pending = offres.filter((o) => o.status === 'ENVOYEE');

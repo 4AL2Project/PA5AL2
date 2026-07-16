@@ -1,4 +1,3 @@
-// Roger — v1.0
 import {
   Injectable,
   InternalServerErrorException,
@@ -9,6 +8,85 @@ import * as nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 
 import { config } from '../../core/config';
+
+// ── Template HTML branded Savely ─────────────────────────────────────────────
+
+function emailLayout(body: string): string {
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Savely</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:ui-sans-serif,system-ui,-apple-system,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
+
+        <!-- Logo -->
+        <tr><td style="padding-bottom:24px;" align="center">
+          <table cellpadding="0" cellspacing="0"><tr>
+            <td style="background:#16a34a;border-radius:10px;width:36px;height:36px;text-align:center;vertical-align:middle;">
+              <span style="color:#fff;font-size:20px;font-weight:700;line-height:36px;display:block;">S</span>
+            </td>
+            <td style="padding-left:10px;vertical-align:middle;">
+              <span style="font-size:18px;font-weight:700;color:#111827;letter-spacing:-0.3px;">Savely</span>
+            </td>
+          </tr></table>
+        </td></tr>
+
+        <!-- Card -->
+        <tr><td style="background:#fff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.08);">
+          ${body}
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="padding-top:20px;text-align:center;">
+          <p style="margin:0;font-size:12px;color:#9ca3af;">
+            L'équipe Savely · <a href="https://savely.fr" style="color:#16a34a;text-decoration:none;">savely.fr</a>
+          </p>
+          <p style="margin:4px 0 0;font-size:11px;color:#d1d5db;">
+            Vous recevez cet email car votre association est partenaire Savely.
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+function btn(label: string, href: string): string {
+  return `<table cellpadding="0" cellspacing="0" style="margin-top:20px;">
+    <tr><td style="background:#16a34a;border-radius:8px;">
+      <a href="${href}" style="display:inline-block;color:#fff;font-size:14px;font-weight:600;padding:12px 24px;text-decoration:none;border-radius:8px;">${label}</a>
+    </td></tr>
+  </table>`;
+}
+
+function h1(text: string): string {
+  return `<h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#111827;">${text}</h1>`;
+}
+
+function p(text: string): string {
+  return `<p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#374151;">${text}</p>`;
+}
+
+function small(text: string): string {
+  return `<p style="margin:16px 0 0;font-size:12px;color:#9ca3af;">${text}</p>`;
+}
+
+function infoBox(content: string): string {
+  return `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:16px 0;">${content}</div>`;
+}
+
+function warnBox(content: string): string {
+  return `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0;">${content}</div>`;
+}
+
+// ── Service ───────────────────────────────────────────────────────────────────
 
 @Injectable()
 export class EmailService {
@@ -77,14 +155,14 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: 'Bienvenue sur Savely -- Finalisez votre compte',
-      html: `
-        <p>Bonjour,</p>
-        <p>Vous avez ete invite(e) a rejoindre Savely.</p>
-        <p>Cliquez sur le lien ci-dessous pour finaliser votre compte :</p>
-        <p><a href="${link}">${link}</a></p>
-        <p>Ce lien expire dans 48 heures.</p>
-      `,
+      subject: 'Bienvenue sur Savely — Finalisez votre compte',
+      html: emailLayout(`
+        ${h1('Bienvenue sur Savely')}
+        ${p('Vous avez été invité(e) à rejoindre Savely.')}
+        ${p('Cliquez ci-dessous pour finaliser votre compte :')}
+        ${btn('Finaliser mon compte', link)}
+        ${small('Ce lien expire dans 48 heures.')}
+      `),
     });
   }
 
@@ -92,13 +170,13 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: 'Savely -- Votre lien de connexion',
-      html: `
-        <p>Bonjour,</p>
-        <p>Voici votre lien de connexion a Savely :</p>
-        <p><a href="${link}">${link}</a></p>
-        <p>Ce lien expire dans 15 minutes.</p>
-      `,
+      subject: 'Savely — Votre lien de connexion',
+      html: emailLayout(`
+        ${h1('Connexion à Savely')}
+        ${p('Voici votre lien de connexion :')}
+        ${btn('Me connecter', link)}
+        ${small('Ce lien expire dans 15 minutes. Si vous n\'êtes pas à l\'origine de cette demande, ignorez cet email.')}
+      `),
     });
   }
 
@@ -111,14 +189,15 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: 'Savely -- Votre code de connexion',
-      html: `
-        <p>Bonjour,</p>
-        <p>Voici votre code de connexion a Savely :</p>
-        <p style="font-size:28px;font-weight:bold;letter-spacing:6px;">${code}</p>
-        <p>Ce code expire dans ${ttlMinutes} minutes.</p>
-        <p>Si vous n'etes pas a l'origine de cette demande, ignorez cet email.</p>
-      `,
+      subject: 'Savely — Votre code de connexion',
+      html: emailLayout(`
+        ${h1('Votre code de connexion')}
+        ${p('Saisissez ce code dans l\'application Savely :')}
+        <div style="text-align:center;margin:24px 0;">
+          <span style="font-size:36px;font-weight:700;letter-spacing:10px;color:#16a34a;font-variant-numeric:tabular-nums;">${code}</span>
+        </div>
+        ${small(`Ce code expire dans ${ttlMinutes} minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.`)}
+      `),
     });
   }
 
@@ -132,14 +211,13 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: 'Savely -- Confirmez votre adresse email',
-      html: `
-        <p>Bonjour ${name},</p>
-        <p>Merci pour votre inscription sur Savely.</p>
-        <p>Confirmez votre adresse email pour que nous puissions examiner votre demande :</p>
-        <p><a href="${link}">${link}</a></p>
-        <p>Ce lien expire dans 48 heures.</p>
-      `,
+      subject: 'Savely — Confirmez votre adresse email',
+      html: emailLayout(`
+        ${h1(`Bonjour ${name},`)}
+        ${p('Merci pour votre inscription sur Savely. Confirmez votre adresse email pour que nous puissions examiner votre demande :')}
+        ${btn('Confirmer mon email', link)}
+        ${small('Ce lien expire dans 48 heures.')}
+      `),
     });
   }
 
@@ -147,12 +225,12 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: "Savely -- Votre demande est en cours d'examen",
-      html: `
-        <p>Bonjour ${name},</p>
-        <p>Votre adresse email est confirmee. Notre equipe examine votre demande
-        d'inscription : vous recevrez une reponse sous quelques jours.</p>
-      `,
+      subject: "Savely — Votre demande est en cours d'examen",
+      html: emailLayout(`
+        ${h1(`Bonjour ${name},`)}
+        ${p('Votre adresse email est confirmée. Notre équipe examine votre demande d\'inscription et vous enverra une réponse sous quelques jours.')}
+        ${infoBox(`<p style="margin:0;font-size:13px;color:#166534;">✅ Email confirmé — dossier en cours d'examen</p>`)}
+      `),
     });
   }
 
@@ -160,14 +238,13 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: 'Savely -- Votre association est validee',
-      html: `
-        <p>Bonjour ${name},</p>
-        <p>Votre association est validee sur Savely. Vous recevrez desormais par
-        email des propositions de dons de produits des officines de votre zone
-        d'action. Aucun compte n'est necessaire : tout se passe via les liens
-        que nous vous envoyons.</p>
-      `,
+      subject: 'Savely — Votre association est validée',
+      html: emailLayout(`
+        ${h1(`Bienvenue, ${name} !`)}
+        ${p('Votre association est maintenant validée sur Savely. Vous recevrez par email des propositions de dons de produits des officines de votre zone d\'action.')}
+        ${infoBox(`<p style="margin:0;font-size:13px;color:#166534;">🎉 Association validée — propositions de dons à venir</p>`)}
+        ${p('Aucun compte n\'est nécessaire : tout se passe via les liens que nous vous envoyons.')}
+      `),
     });
   }
 
@@ -175,13 +252,13 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: "Savely -- Votre demande n'a pas ete retenue",
-      html: `
-        <p>Bonjour ${name},</p>
-        <p>Apres examen, votre demande d'inscription n'a pas ete retenue.</p>
-        ${reason ? `<p>Motif : ${reason}</p>` : ''}
-        <p>Vous pouvez nous contacter pour plus d'informations.</p>
-      `,
+      subject: "Savely — Votre demande n'a pas été retenue",
+      html: emailLayout(`
+        ${h1(`Bonjour ${name},`)}
+        ${p('Après examen, votre demande d\'inscription n\'a pas été retenue.')}
+        ${reason ? `${warnBox(`<p style="margin:0;font-size:13px;color:#92400e;">Motif : ${reason}</p>`)}` : ''}
+        ${p('N\'hésitez pas à nous contacter pour plus d\'informations.')}
+      `),
     });
   }
 
@@ -197,17 +274,14 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: `Savely -- ${pharmacyName} vous propose un don de produits`,
-      html: `
-        <p>Bonjour ${assoName},</p>
-        <p>La pharmacie <strong>${pharmacyName}</strong> souhaite vous donner un
-        lot de produits (parapharmacie / cosmetique).</p>
-        <p>Consultez le detail et repondez ici :</p>
-        <p><a href="${link}">${link}</a></p>
-        <p>Sans reponse de votre part avant le
-        ${expiresAt.toLocaleString('fr-FR')}, la proposition sera transmise a
-        une autre association.</p>
-      `,
+      subject: `${pharmacyName} vous propose un don de produits`,
+      html: emailLayout(`
+        ${h1(`Bonjour ${assoName},`)}
+        ${p(`La pharmacie <strong>${pharmacyName}</strong> souhaite vous donner un lot de produits (parapharmacie / cosmétique).`)}
+        ${btn('Voir la proposition de don', link)}
+        ${warnBox(`<p style="margin:0;font-size:13px;color:#92400e;">⏰ Sans réponse de votre part avant le ${expiresAt.toLocaleString('fr-FR')}, la proposition sera transmise à une autre association.</p>`)}
+        ${small('Cliquez sur le bouton ci-dessus ou copiez ce lien dans votre navigateur : ' + link)}
+      `),
     });
   }
 
@@ -220,13 +294,13 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: 'Savely -- Rappel : une proposition de don vous attend',
-      html: `
-        <p>Bonjour ${assoName},</p>
-        <p>Vous n'avez pas encore repondu a la proposition de don en cours.</p>
-        <p><a href="${link}">${link}</a></p>
-        <p>Elle expire le ${expiresAt.toLocaleString('fr-FR')}.</p>
-      `,
+      subject: 'Rappel — une proposition de don vous attend',
+      html: emailLayout(`
+        ${h1(`Bonjour ${assoName},`)}
+        ${p('Vous n\'avez pas encore répondu à la proposition de don en cours.')}
+        ${btn('Répondre maintenant', link)}
+        ${warnBox(`<p style="margin:0;font-size:13px;color:#92400e;">⏰ Cette proposition expire le ${expiresAt.toLocaleString('fr-FR')}.</p>`)}
+      `),
     });
   }
 
@@ -237,17 +311,20 @@ export class EmailService {
     slotStart: Date,
     slotEnd: Date
   ) {
+    const slot = `${slotStart.toLocaleString('fr-FR')} – ${slotEnd.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}`;
     await this.send({
       from: config.email.from,
       to,
-      subject: 'Savely -- Don confirme : votre creneau de retrait',
-      html: `
-        <p>Bonjour ${assoName},</p>
-        <p>Votre acceptation est enregistree. Retrait du lot :</p>
-        <p><strong>${slotStart.toLocaleString('fr-FR')} - ${slotEnd.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</strong></p>
-        <p>Pharmacie ${pharmacy.name}<br/>${pharmacy.address}</p>
-        <p>Pensez a indiquer le nom de la personne qui viendra recuperer le lot.</p>
-      `,
+      subject: 'Don confirmé — votre créneau de retrait',
+      html: emailLayout(`
+        ${h1(`Bonjour ${assoName},`)}
+        ${p('Votre acceptation est enregistrée. Voici les détails du retrait :')}
+        ${infoBox(`
+          <p style="margin:0 0 4px;font-size:13px;color:#166534;font-weight:600;">📅 ${slot}</p>
+          <p style="margin:0;font-size:13px;color:#166534;">${pharmacy.name} · ${pharmacy.address}</p>
+        `)}
+        ${p('Pensez à vous munir du QR code disponible dans votre espace Savely lors du retrait.')}
+      `),
     });
   }
 
@@ -261,12 +338,12 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: `Savely -- Retrait de votre don dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`,
-      html: `
-        <p>Bonjour ${assoName},</p>
-        <p>Rappel : le retrait de votre don a la pharmacie ${pharmacyName} est
-        prevu le <strong>${slotStart.toLocaleString('fr-FR')}</strong>.</p>
-      `,
+      subject: `Retrait de votre don dans ${daysLeft} jour${daysLeft > 1 ? 's' : ''}`,
+      html: emailLayout(`
+        ${h1(`Bonjour ${assoName},`)}
+        ${p(`Rappel : le retrait de votre don à la pharmacie <strong>${pharmacyName}</strong> est prévu le <strong>${slotStart.toLocaleString('fr-FR')}</strong>.`)}
+        ${infoBox(`<p style="margin:0;font-size:13px;color:#166534;">📅 J-${daysLeft} — pensez à préparer votre équipe de bénévoles.</p>`)}
+      `),
     });
   }
 
@@ -278,13 +355,13 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: 'Savely -- Retrait confirme, votre recu fiscal est joint',
-      html: `
-        <p>Bonjour ${assoName},</p>
-        <p>Le retrait de votre don est confirme. Vous trouverez le recu Cerfa
-        en piece jointe.</p>
-        <p>Merci pour votre action.</p>
-      `,
+      subject: 'Retrait confirmé — votre reçu fiscal est joint',
+      html: emailLayout(`
+        ${h1(`Merci ${assoName} !`)}
+        ${p('Le retrait de votre don est confirmé. Vous trouverez le reçu fiscal Cerfa 16216 en pièce jointe.')}
+        ${infoBox(`<p style="margin:0;font-size:13px;color:#166534;">✅ Ce reçu ouvre droit à une réduction d'impôt de 60 % du montant du don (art. 238 bis CGI).</p>`)}
+        ${p('Conservez ce document 5 ans minimum.')}
+      `),
       attachments: [{ filename: 'recu-cerfa-16216.pdf', content: cerfaPdf }],
     });
   }
@@ -297,13 +374,12 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: 'Savely -- Retrait non effectue',
-      html: `
-        <p>Bonjour ${assoName},</p>
-        <p>Le retrait prevu a la pharmacie ${pharmacyName} n'a pas ete effectue
-        dans le delai. Le lot est repropose a une autre association.</p>
-        <p>Ce manquement est pris en compte dans votre fiabilite Savely.</p>
-      `,
+      subject: 'Retrait non effectué',
+      html: emailLayout(`
+        ${h1(`Bonjour ${assoName},`)}
+        ${p(`Le retrait prévu à la pharmacie <strong>${pharmacyName}</strong> n'a pas été effectué dans le délai. Le lot est reproposé à une autre association.`)}
+        ${warnBox(`<p style="margin:0;font-size:13px;color:#92400e;">⚠️ Ce manquement est pris en compte dans votre indice de fiabilité Savely.</p>`)}
+      `),
     });
   }
 
@@ -315,14 +391,12 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: "Savely -- Un retrait de don n'a pas eu lieu",
-      html: `
-        <p>Bonjour,</p>
-        <p>L'association ${assoName} n'est pas venue recuperer le lot
-        (${productSummary}) dans le delai prevu.</p>
-        <p>Savely repropose automatiquement ces produits a une autre
-        association : vous n'avez rien a faire.</p>
-      `,
+      subject: "Un retrait de don n'a pas eu lieu",
+      html: emailLayout(`
+        ${h1('Retrait non effectué')}
+        ${p(`L'association <strong>${assoName}</strong> n'est pas venue récupérer le lot (${productSummary}) dans le délai prévu.`)}
+        ${infoBox(`<p style="margin:0;font-size:13px;color:#166534;">🔄 Savely repropose automatiquement ces produits à une autre association — vous n'avez rien à faire.</p>`)}
+      `),
     });
   }
 
@@ -332,16 +406,15 @@ export class EmailService {
     link: string
   ): Promise<void> {
     await this.send({
-      from: 'Savely <noreply@savelypharma.fr>',
+      from: config.email.from,
       to,
-      subject: `Savely — Accédez à votre espace association`,
-      html: `
-        <p>Bonjour ${assoName},</p>
-        <p>Cliquez sur le lien ci-dessous pour accéder à votre espace Savely :</p>
-        <p><a href="${link}" style="background:#16a34a;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Accéder à mon espace</a></p>
-        <p>Ce lien expire dans 24 heures.</p>
-        <p>L'équipe Savely</p>
-      `,
+      subject: `Accédez à votre espace Savely`,
+      html: emailLayout(`
+        ${h1(`Bonjour ${assoName},`)}
+        ${p('Voici votre lien d\'accès à votre espace association Savely :')}
+        ${btn('Accéder à mon espace', link)}
+        ${small('Ce lien expire dans 24 heures. Si vous n\'êtes pas à l\'origine de cette demande, ignorez cet email.')}
+      `),
     });
   }
 
@@ -355,15 +428,12 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: `Savely — Don annulé par la pharmacie ${pharmacyName}`,
-      html: `
-        <p>Bonjour ${assoName},</p>
-        <p>La pharmacie <strong>${pharmacyName}</strong> a annulé le don de produits
-        (${productSummary}) prévu le <strong>${slotStart.toLocaleString('fr-FR')}</strong>.</p>
-        <p>Nous sommes désolés de cet inconvénient. D'autres propositions pourront
-        vous parvenir prochainement.</p>
-        <p>L'équipe Savely</p>
-      `,
+      subject: `Don annulé par la pharmacie ${pharmacyName}`,
+      html: emailLayout(`
+        ${h1(`Bonjour ${assoName},`)}
+        ${p(`La pharmacie <strong>${pharmacyName}</strong> a annulé le don de produits (${productSummary}) prévu le <strong>${slotStart.toLocaleString('fr-FR')}</strong>.`)}
+        ${warnBox(`<p style="margin:0;font-size:13px;color:#92400e;">Nous sommes désolés de cet inconvénient. D'autres propositions pourront vous parvenir prochainement.</p>`)}
+      `),
     });
   }
 
@@ -376,15 +446,13 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: `Savely — Reçu Cerfa disponible (don à ${assoName})`,
-      html: `
-        <p>Bonjour,</p>
-        <p>Le retrait du don (${productSummary}) par <strong>${assoName}</strong>
-        a été confirmé. Vous trouverez le reçu fiscal Cerfa 16216 en pièce jointe.</p>
-        <p>Ce reçu est également disponible dans votre espace Savely.</p>
-        <p>Merci pour votre contribution.</p>
-        <p>L'équipe Savely</p>
-      `,
+      subject: `Reçu Cerfa disponible (don à ${assoName})`,
+      html: emailLayout(`
+        ${h1('Reçu fiscal Cerfa disponible')}
+        ${p(`Le retrait du don (${productSummary}) par <strong>${assoName}</strong> a été confirmé. Vous trouverez le reçu fiscal Cerfa 16216 en pièce jointe.`)}
+        ${infoBox(`<p style="margin:0;font-size:13px;color:#166534;">✅ Ce reçu est également disponible dans votre espace Savely.</p>`)}
+        ${p('Merci pour votre contribution.')}
+      `),
       attachments: [{ filename: 'recu-cerfa-16216.pdf', content: cerfaPdf }],
     });
   }
@@ -393,13 +461,11 @@ export class EmailService {
     await this.send({
       from: config.email.from,
       to,
-      subject: "Savely -- Un don n'a pas trouve preneur",
-      html: `
-        <p>Bonjour,</p>
-        <p>Malgre plusieurs propositions, le don (${productSummary}) n'a pas
-        trouve preneur. L'action est revenue dans votre centre d'actions avec
-        des suggestions alternatives.</p>
-      `,
+      subject: "Un don n'a pas trouvé preneur",
+      html: emailLayout(`
+        ${h1('Don sans preneur')}
+        ${p(`Malgré plusieurs propositions, le don (${productSummary}) n'a pas trouvé preneur. L'action est revenue dans votre centre d'actions avec des suggestions alternatives.`)}
+      `),
     });
   }
 

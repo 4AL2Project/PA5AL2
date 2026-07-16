@@ -257,7 +257,7 @@ export class DonationOrchestratorService {
             next.contact_email!,
             next.name,
             donation.pharmacy.name,
-            `${config.frontUrl}/don/${proposal.token}`,
+            `${config.assoAppUrl}/offres/${proposal.proposal_id}`,
             expiresAt
           )
       );
@@ -911,7 +911,7 @@ export class DonationOrchestratorService {
           this.email.sendDonationReminderEmail(
             proposal.association.contact_email!,
             proposal.association.name,
-            `${config.frontUrl}/don/${proposal.token}`,
+            `${config.assoAppUrl}/offres/${proposal.proposal_id}`,
             proposal.expires_at
           )
       );

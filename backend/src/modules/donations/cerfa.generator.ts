@@ -1,7 +1,8 @@
 // Générateur PDF reçu fiscal Cerfa n°16216 (dons des ENTREPRISES, art. 238
 // bis CGI) — un reçu par ALLOCATION retirée (les valeurs sont celles des
 // lignes de cette allocation uniquement, au coût de revient HT)
-import PDFDocument from 'pdfkit';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const PDFDocument = require('pdfkit') as typeof import('pdfkit');
 
 export interface CerfaLine {
   product_name: string;

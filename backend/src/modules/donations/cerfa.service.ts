@@ -56,7 +56,9 @@ export class CerfaService {
     );
 
     return generateCerfaPdf({
-      cerfa_number: allocation.cerfa_number ?? `CERFA-DON-${allocation.allocation_id.slice(0, 8).toUpperCase()}`,
+      cerfa_number:
+        allocation.cerfa_number ??
+        `CERFA-DON-${allocation.allocation_id.slice(0, 8).toUpperCase()}`,
       pharmacy_name: allocation.donation.pharmacy.name,
       pharmacy_address: allocation.donation.pharmacy.address ?? '',
       pharmacy_siret: allocation.donation.pharmacy.siret,

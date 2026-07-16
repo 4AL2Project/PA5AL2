@@ -37,7 +37,7 @@ describe('EmailService — sendInvitationEmail (US-67)', () => {
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'test@pharma.fr',
-        subject: 'Bienvenue sur Savely -- Finalisez votre compte',
+        subject: 'Bienvenue sur Savely — Finalisez votre compte',
       })
     );
   });
@@ -115,7 +115,7 @@ describe('EmailService — sendMagicLinkEmail (US-67)', () => {
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'test@pharma.fr',
-        subject: 'Savely -- Votre lien de connexion',
+        subject: 'Savely — Votre lien de connexion',
       })
     );
   });
@@ -193,7 +193,7 @@ describe('EmailService — sendInvitationEmail (US-67)', () => {
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'test@pharma.fr',
-        subject: 'Bienvenue sur Savely -- Finalisez votre compte',
+        subject: 'Bienvenue sur Savely — Finalisez votre compte',
       })
     );
   });
@@ -257,7 +257,7 @@ describe('EmailService — sendMagicLinkEmail (US-67)', () => {
     expect(mockSend).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'test@pharma.fr',
-        subject: 'Savely -- Votre lien de connexion',
+        subject: 'Savely — Votre lien de connexion',
       })
     );
   });
@@ -328,7 +328,7 @@ describe('EmailService — transport SMTP (MailHog)', () => {
     expect(mockSendMail).toHaveBeenCalledWith(
       expect.objectContaining({
         to: 'test@pharma.fr',
-        subject: 'Bienvenue sur Savely -- Finalisez votre compte',
+        subject: 'Bienvenue sur Savely — Finalisez votre compte',
       })
     );
   });

@@ -65,9 +65,10 @@ export class DonationsService {
       quantity_remaining: l.quantity_total - l.quantity_allocated,
       unit_value: l.unit_value,
     }));
-    // Le titulaire peut toujours annuler un don EN_COURS — s'il y a une
-    // allocation PLANIFIEE, l'asso sera notifiée par email à l'annulation.
-    const cancellable = donation.status === 'EN_COURS';
+    const hasScheduledPickup = donation.allocations.some(
+      (a) => a.pickup_slot_start != null
+    );
+    const cancellable = donation.status === 'EN_COURS' && !hasScheduledPickup;
 
     return { ...donation, remaining, cancellable };
   }

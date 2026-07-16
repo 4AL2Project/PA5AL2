@@ -572,6 +572,11 @@ export class DonationOrchestratorService {
         `Un don ${donation.status} ne peut pas être annulé`
       );
     }
+    if (donation.allocations.length > 0) {
+      throw new BadRequestException(
+        'Un retrait est déjà planifié, le don ne peut plus être annulé'
+      );
+    }
 
     await prisma.$transaction(async (tx) => {
       const claimed = await tx.donation.updateMany({
@@ -658,6 +663,9 @@ export class DonationOrchestratorService {
       },
     });
     if (!allocation) throw new NotFoundException('Allocation introuvable');
+    if (pickedUpBy !== undefined && !pickedUpBy.trim()) {
+      throw new BadRequestException('Le nom du récupérateur ne peut pas être vide');
+    }
     if (allocation.status !== 'PLANIFIEE') {
       throw new BadRequestException(
         `Retrait non confirmable (statut : ${allocation.status})`

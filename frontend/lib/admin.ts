@@ -286,3 +286,36 @@ export async function fetchAdminDonParametres(
     `/api/admin/donations/parametres/${encodeURIComponent(pharmacyId)}`
   );
 }
+
+type DevCounts = Record<string, number>;
+
+type DevCountsEnvelope =
+  | { success: true; data: DevCounts }
+  | { success: false; error: unknown };
+
+// `DevCounts` a une signature d'index : la seule présence de `success` ne suffit
+// pas à distinguer l'enveloppe des compteurs, d'où le test sur son type.
+function isEnvelope(
+  payload: DevCountsEnvelope | DevCounts
+): payload is DevCountsEnvelope {
+  return typeof (payload as DevCountsEnvelope).success === 'boolean';
+}
+
+/**
+ * Compteurs de lignes par table (page développeur, dev uniquement).
+ * L'endpoint n'existe pas quand les outils sont désactivés : on renvoie `null`.
+ */
+export async function fetchDevCounts(
+  accessToken: string
+): Promise<DevCounts | null> {
+  const res = await fetch(`${API_BASE}/api/dev/counts`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+  if (!res.ok) return null;
+  const payload = (await res.json()) as DevCountsEnvelope | DevCounts;
+  if (isEnvelope(payload)) {
+    return payload.success ? payload.data : null;
+  }
+  return payload;
+}

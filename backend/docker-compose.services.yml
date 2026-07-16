@@ -16,6 +16,10 @@ x-backend: &backend
     NODE_ENV: production
     DATABASE_URL: postgresql://pharma:pharma@db:5432/pharma_risk
     REDIS_URL: redis://redis:6379
+    # Stack locale : `NODE_ENV=production` sert seulement à obtenir une image
+    # prod-like, on veut quand même la page développeur (/admin/dev → reset+seed
+    # de la base). Ne JAMAIS définir ce flag sur un déploiement réel.
+    DEV_TOOLS_ENABLED: 'true'
     # Emails capturés par MailHog en dev. `mailhog` = nom du service (réseau
     # Docker) : depuis un conteneur, `localhost` ne pointerait PAS vers MailHog.
     EMAIL_TRANSPORT: smtp

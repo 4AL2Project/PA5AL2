@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { AuthModule } from '../auth/auth.module';
+import { AssoAuthModule } from '../asso-auth/asso-auth.module';
 import { EmailModule } from '../email/email.module';
 import { GeocodingModule } from '../geocoding/geocoding.module';
 import { AssociationPublicController } from './association-public.controller';
@@ -10,7 +11,7 @@ import { AssociationsController } from './associations.controller';
 import { AssociationsService } from './associations.service';
 
 @Module({
-  imports: [AuthModule, GeocodingModule, EmailModule],
+  imports: [AuthModule, GeocodingModule, EmailModule, AssoAuthModule],
   controllers: [AssociationsController, AssociationPublicController],
   providers: [
     AssociationsService,

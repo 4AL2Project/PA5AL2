@@ -28,6 +28,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { UserRole } from '../auth/roles.enum';
+import { AssoAuthService } from '../asso-auth/asso-auth.service';
 import { AssociationStatsService } from './association-stats.service';
 import {
   AssociationsService,
@@ -48,7 +49,8 @@ const ALLOWED_IMAGE_MIME = /^image\/(jpe?g|png|webp|gif|svg\+xml)$/;
 export class AssociationsController {
   constructor(
     private readonly associationsService: AssociationsService,
-    private readonly statsService: AssociationStatsService
+    private readonly statsService: AssociationStatsService,
+    private readonly assoAuthService: AssoAuthService
   ) {}
 
   @Get('annuaire')
@@ -204,5 +206,16 @@ export class AssociationsController {
   })
   allocations(@Param('id') id: string) {
     return this.associationsService.allocationHistory(id);
+  }
+
+  @Post(':id/inviter')
+  @Roles(UserRole.ADMIN_SAVELY)
+  @ApiOperation({
+    summary:
+      "Envoyer le magic link d'accès à l'espace association (admin Savely)",
+  })
+  async inviter(@Param('id') id: string) {
+    await this.assoAuthService.sendMagicLink(id);
+    return { success: true };
   }
 }

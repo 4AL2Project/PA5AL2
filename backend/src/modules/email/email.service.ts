@@ -326,6 +326,25 @@ export class EmailService {
     });
   }
 
+  async sendAssoMagicLinkEmail(
+    to: string,
+    assoName: string,
+    link: string
+  ): Promise<void> {
+    await this.send({
+      from: 'Savely <noreply@savelypharma.fr>',
+      to,
+      subject: `Savely — Accédez à votre espace association`,
+      html: `
+        <p>Bonjour ${assoName},</p>
+        <p>Cliquez sur le lien ci-dessous pour accéder à votre espace Savely :</p>
+        <p><a href="${link}" style="background:#16a34a;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block">Accéder à mon espace</a></p>
+        <p>Ce lien expire dans 24 heures.</p>
+        <p>L'équipe Savely</p>
+      `,
+    });
+  }
+
   async sendDonationFailedEmail(to: string, productSummary: string) {
     await this.send({
       from: config.email.from,

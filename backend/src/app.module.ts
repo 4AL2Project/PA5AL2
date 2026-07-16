@@ -12,6 +12,8 @@ import { HealthController } from './health.controller';
 import { ActionsModule } from './modules/actions/actions.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AnalysisModule } from './modules/analysis/analysis.module';
+import { AssoAuthModule } from './modules/asso-auth/asso-auth.module';
+import { AssoModule } from './modules/asso/asso.module';
 import { AssociationsModule } from './modules/associations/associations.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { CategoryModule } from './modules/category/category.module';
@@ -57,6 +59,8 @@ import { SchedulingModule } from './modules/scheduling/scheduling.module';
     AnalysisModule,
     ActionsModule,
     AssociationsModule,
+    AssoAuthModule,
+    AssoModule,
     DonationsModule,
     ProductModule,
     PharmacyModule,

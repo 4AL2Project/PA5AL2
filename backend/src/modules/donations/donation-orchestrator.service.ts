@@ -1,17 +1,18 @@
 import { randomUUID } from 'node:crypto';
 
+import * as QRCode from 'qrcode';
+
 import {
   BadRequestException,
   ConflictException,
-  HttpException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import * as Sentry from '@sentry/nestjs';
 
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
+import { StorageService } from '../../core/storage/storage.service';
 import { EmailService } from '../email/email.service';
 import { CerfaService } from './cerfa.service';
 import {
@@ -58,7 +59,8 @@ export class DonationOrchestratorService {
   constructor(
     private readonly matching: DonationMatchingService,
     private readonly email: EmailService,
-    private readonly cerfa: CerfaService
+    private readonly cerfa: CerfaService,
+    private readonly storage: StorageService
   ) {}
 
   // ── Création (le titulaire valide le don UNE fois, ensuite le système pilote)
@@ -121,22 +123,10 @@ export class DonationOrchestratorService {
     });
 
     this.logger.log(`[${pharmacyId}] Donation ${donation.donation_id} créée`);
-    try {
-      await this.proposeNext(
-        donation.donation_id,
-        input.preferred_association_id
-      );
-    } catch (err) {
-      // proposeNext est asynchrone et critique — une erreur ici laisse un don
-      // EN_COURS sans proposition, ce que le filtre HTTP ne peut pas capturer
-      if (!(err instanceof HttpException)) {
-        Sentry.captureException(err, {
-          tags: { module: 'don', action: 'initier-don' },
-          extra: { pharmacyId, donationId: donation.donation_id },
-        });
-      }
-      throw err;
-    }
+    await this.proposeNext(
+      donation.donation_id,
+      input.preferred_association_id
+    );
     return prisma.donation.findUnique({
       where: { donation_id: donation.donation_id },
       include: { lines: true, proposals: true },
@@ -517,6 +507,36 @@ export class DonationOrchestratorService {
       );
     }
 
+    // Générer et stocker l'image QR code sur S3 après le commit de l'allocation
+    try {
+      const allocation = await prisma.donationAllocation.findUnique({
+        where: { proposal_id: proposal.proposal_id },
+        select: { allocation_id: true, qr_code: true },
+      });
+      if (allocation) {
+        const qrUrl = `${config.assoAppUrl}/pickup/${allocation.qr_code}`;
+        const qrBuffer = await QRCode.toBuffer(qrUrl, {
+          type: 'png',
+          width: 300,
+        });
+        const qrCodeUrl = await this.storage.upload({
+          key: `dons/qrcodes/${allocation.allocation_id}.png`,
+          body: qrBuffer,
+          contentType: 'image/png',
+        });
+        await prisma.donationAllocation.update({
+          where: { allocation_id: allocation.allocation_id },
+          data: { qr_code_url: qrCodeUrl },
+        });
+        this.logger.log(
+          `[allocation ${allocation.allocation_id}] QR code uploadé → ${qrCodeUrl}`
+        );
+      }
+    } catch (err) {
+      // Non bloquant : le QR code peut être regénéré à la demande
+      this.logger.warn(`QR code upload failed: ${err}`);
+    }
+
     // Le reliquat n'est re-proposé qu'après commit de l'allocation (cas n°3)
     if (isPartial) {
       await this.proposeNext(proposal.donation_id);
@@ -654,33 +674,52 @@ export class DonationOrchestratorService {
     });
 
     // Cerfa envoyé à l'asso + disponible côté titulaire (endpoint PDF)
-    if (allocation.association.contact_email) {
-      await this.sendOnce(
-        { allocation_id: allocationId, email_type: 'CONFIRMATION_RETRAIT' },
-        async () => {
-          const pdf = await this.cerfa.generateCerfa(allocationId, pharmacyId);
-          await this.email.sendPickupConfirmedEmail(
-            allocation.association.contact_email!,
-            allocation.association.name,
-            pdf
-          );
-        }
+    // Le PDF est aussi stocké sur S3 pour consultation ultérieure (cerfa_url)
+    try {
+      const pdf = await this.cerfa.generateCerfa(allocationId, pharmacyId);
+      const cerfaUrl = await this.storage.upload({
+        key: `dons/cerfa/${allocationId}/cerfa-${cerfaNumber}.pdf`,
+        body: pdf,
+        contentType: 'application/pdf',
+      });
+      await prisma.donationAllocation.update({
+        where: { allocation_id: allocationId },
+        data: { cerfa_url: cerfaUrl },
+      });
+      this.logger.log(
+        `[allocation ${allocationId}] Cerfa uploadé → ${cerfaUrl}`
       );
+
+      if (allocation.association.contact_email) {
+        await this.sendOnce(
+          { allocation_id: allocationId, email_type: 'CONFIRMATION_RETRAIT' },
+          () =>
+            this.email.sendPickupConfirmedEmail(
+              allocation.association.contact_email!,
+              allocation.association.name,
+              pdf
+            )
+        );
+      }
+    } catch (err) {
+      // Fallback : générer le Cerfa à la volée si l'upload échoue
+      this.logger.error(`Cerfa upload failed, falling back to on-the-fly: ${err}`);
+      if (allocation.association.contact_email) {
+        await this.sendOnce(
+          { allocation_id: allocationId, email_type: 'CONFIRMATION_RETRAIT' },
+          async () => {
+            const pdf = await this.cerfa.generateCerfa(allocationId, pharmacyId);
+            await this.email.sendPickupConfirmedEmail(
+              allocation.association.contact_email!,
+              allocation.association.name,
+              pdf
+            );
+          }
+        );
+      }
     }
 
-    try {
-      await this.completeIfDone(allocation.donation_id);
-    } catch (err) {
-      // completeIfDone peut échouer silencieusement (ex : contrainte Prisma) —
-      // le don resterait EN_COURS alors que tous les retraits sont RETIREE
-      if (!(err instanceof HttpException)) {
-        Sentry.captureException(err, {
-          tags: { module: 'don', action: 'confirmer-pickup' },
-          extra: { allocationId, donId: allocation.donation_id, pharmacyId },
-        });
-      }
-      throw err;
-    }
+    await this.completeIfDone(allocation.donation_id);
     return prisma.donationAllocation.findUnique({
       where: { allocation_id: allocationId },
     });

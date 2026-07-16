@@ -35,21 +35,6 @@ model Pharmacy {
   don_parametres    DonParametres?
 }
 
-// Paramètres de configuration du module don par officine.
-// Un enregistrement par pharmacie (relation 1-1 unique).
-// seuil_dormance_jours : durée minimale d'immobilisation déclenchant une
-// recommandation de don (plage réglementaire 63–117 jours selon art. L5112-1 CSP).
-// rayon_matching_km : rayon maximal de recherche d'associations éligibles.
-model DonParametres {
-  id                   String   @id @default(uuid())
-  pharmacy_id          String   @unique
-  seuil_dormance_jours Int      @default(90)
-  rayon_matching_km    Int      @default(50)
-  created_at           DateTime @default(now())
-  updated_at           DateTime @updatedAt
-  pharmacy             Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
-}
-
 // Catégorie de classement d'une Offer B2C (référentiel exposé au catalogue mobile).
 // Portée : `pharmacy_id = null` → catégorie système partagée (les 6 par défaut,
 // dont "Autres" utilisée comme repli). Sinon → catégorie propre à une pharmacie.
@@ -246,6 +231,13 @@ model Association {
   // matching sans requête d'agrégation à chaque classement
   last_proposal_at DateTime?
   created_at      DateTime  @default(now())
+  // Espace association : magic link de connexion
+  magic_link_token_hash  String?   @unique
+  magic_link_expires_at  DateTime?
+  // true après le premier passage dans PUT /asso/me (onboarding complété)
+  is_onboarded           Boolean   @default(false)
+  description            String?
+  site_web               String?
 
   proposals       DonationProposal[]
   allocations     DonationAllocation[]
@@ -337,6 +329,8 @@ model DonationAllocation {
   picked_up_by      String?
   picked_up_at      DateTime?
   cerfa_number      String?
+  cerfa_url         String?   // URL S3/CloudFront du PDF Cerfa généré
+  qr_code_url       String?   // URL S3/CloudFront de l'image QR code
 
   donation          Donation    @relation(fields: [donation_id], references: [donation_id], onDelete: Cascade)
   association       Association @relation(fields: [association_id], references: [association_id])
@@ -548,4 +542,14 @@ model Notification {
 
   @@index([customer_id, created_at])
   @@index([user_id, created_at])
+}
+
+model DonParametres {
+  id                   String   @id @default(uuid())
+  pharmacy_id          String   @unique
+  seuil_dormance_jours Int      @default(90)
+  rayon_matching_km    Int      @default(50)
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+  pharmacy             Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
 }

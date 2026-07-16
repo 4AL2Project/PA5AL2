@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 
+import { StorageModule } from '../../core/storage/storage.module';
 import { AssociationsModule } from '../associations/associations.module';
 import { AuthModule } from '../auth/auth.module';
 import { EmailModule } from '../email/email.module';
-import { AdminDonationsController } from './admin-donations.controller';
 import { CerfaService } from './cerfa.service';
 import { DonationCron } from './donation.cron';
 import { DonationMatchingService } from './donation-matching.service';
@@ -13,12 +13,8 @@ import { DonationsController } from './donations.controller';
 import { DonationsService } from './donations.service';
 
 @Module({
-  imports: [AuthModule, EmailModule, AssociationsModule],
-  controllers: [
-    DonationsController,
-    DonationPublicController,
-    AdminDonationsController,
-  ],
+  imports: [AuthModule, EmailModule, AssociationsModule, StorageModule],
+  controllers: [DonationsController, DonationPublicController],
   providers: [
     DonationsService,
     DonationMatchingService,

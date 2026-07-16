@@ -215,7 +215,7 @@ export default function ActionsPage() {
   );
 
   const handleCreneauxConfirm = useCallback(
-    async (slots: PickupSlot[]) => {
+    async (slots: PickupSlot[] | undefined) => {
       const pending = pendingDonPayloadRef.current;
       if (!pending) return;
       const { id, payload, action } = pending;
@@ -231,7 +231,7 @@ export default function ActionsPage() {
             { product_id: action.productId, quantity: payload.donQuantity! },
           ],
           preferred_association_id: payload.preferredAssociationId,
-          pickup_windows: slots,
+          ...(slots ? { pickup_windows: slots } : {}),
         });
         toast.success(
           'Don validé — Savely propose le lot aux associations de la zone'

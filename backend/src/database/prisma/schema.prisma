@@ -72,6 +72,7 @@ model User {
   auth_tokens AuthToken[]
   otps        UserOtp[]
   order_activities OrderActivity[]
+  notifications    Notification[]
 }
 
 model AuthToken {
@@ -396,7 +397,8 @@ model Customer {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  orders      Order[]
+  orders        Order[]
+  notifications Notification[]
 }
 
 // Code OTP à usage unique pour la connexion Customer B2C (app mobile).
@@ -510,4 +512,24 @@ model OrderActivity {
   actor       User?    @relation(fields: [actor_id], references: [user_id])
 
   @@index([order_id, created_at])
+}
+
+// Historique des notifications reçues, alimentant le centre in-app (cloche).
+// Un seul destinataire renseigné : customer_id (B2C) ou user_id (préparateur).
+model Notification {
+  notification_id String    @id @default(uuid())
+  customer_id     String?
+  user_id         String?
+  type            String    // ORDER_CONFIRMED|ORDER_READY|ORDER_CANCELLED|NEW_ORDER_FOR_PREP
+  title           String
+  body            String
+  data            Json?
+  read_at         DateTime?
+  created_at      DateTime  @default(now())
+
+  customer        Customer? @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade)
+  user            User?     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([customer_id, created_at])
+  @@index([user_id, created_at])
 }

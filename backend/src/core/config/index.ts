@@ -54,6 +54,7 @@ export const config = {
     },
   },
   frontUrl: process.env.FRONT_URL || 'http://localhost:3000',
+  assoAppUrl: process.env.ASSO_APP_URL ?? 'http://localhost:3001',
   // Secret partageant l'accès à l'endpoint de déclenchement des tâches planifiées
   // (`POST /internal/scheduler/*`). En prod, un scheduler tiers (Cloud Scheduler…)
   // envoie ce secret dans l'en-tête `X-Scheduler-Key` pour enfiler une tâche.

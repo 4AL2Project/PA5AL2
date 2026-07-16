@@ -22,6 +22,7 @@ import {
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 
+import { AssoAuthService } from '../asso-auth/asso-auth.service';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { TenantPharmacyId } from '../auth/decorators/tenant-pharmacy.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -48,7 +49,8 @@ const ALLOWED_IMAGE_MIME = /^image\/(jpe?g|png|webp|gif|svg\+xml)$/;
 export class AssociationsController {
   constructor(
     private readonly associationsService: AssociationsService,
-    private readonly statsService: AssociationStatsService
+    private readonly statsService: AssociationStatsService,
+    private readonly assoAuthService: AssoAuthService
   ) {}
 
   @Get('annuaire')
@@ -204,5 +206,16 @@ export class AssociationsController {
   })
   allocations(@Param('id') id: string) {
     return this.associationsService.allocationHistory(id);
+  }
+
+  @Post(':id/inviter')
+  @Roles(UserRole.ADMIN_SAVELY)
+  @ApiOperation({
+    summary:
+      "Envoyer le magic link d'accès à l'espace association (admin Savely)",
+  })
+  async inviter(@Param('id') id: string) {
+    await this.assoAuthService.sendMagicLink(id);
+    return { success: true };
   }
 }

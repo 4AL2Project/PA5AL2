@@ -184,7 +184,12 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     const access = (await cookies()).get('savely_access')?.value;
     if (access) headers.set('Authorization', `Bearer ${access}`);
   }
-  const res = await fetch(url, { cache: 'no-store', ...init, headers });
+  let res: Response;
+  try {
+    res = await fetch(url, { cache: 'no-store', ...init, headers });
+  } catch {
+    throw new Error('API indisponible');
+  }
   const payload = await res.json().catch(() => null);
   if (payload && typeof payload === 'object' && 'success' in payload) {
     const env = payload as
@@ -524,7 +529,11 @@ export async function fetchAdminUsers(): Promise<{
   users: AdminUser[];
   total: number;
 }> {
-  return apiFetch('/api/admin/users');
+  try {
+    return await apiFetch('/api/admin/users');
+  } catch {
+    return { users: [], total: 0 };
+  }
 }
 
 export async function createAdminUser(payload: {
@@ -615,6 +624,7 @@ export interface DonationAllocationItem {
   picked_up_by: string | null;
   picked_up_at: string | null;
   cerfa_number: string | null;
+  qr_code: string | null;
   association: { name: string; contact_phone?: string | null };
 }
 
@@ -647,6 +657,7 @@ export interface DonationDetail extends DonationSummary {
     unit_value: number;
   }[];
   cancellable: boolean;
+  pickup_windows?: { start: string; end: string }[] | null;
 }
 
 export async function donationEligiblePreview(
@@ -663,6 +674,7 @@ export async function createDonation(payload: {
   action_id?: string;
   lines: DonationLinePayload[];
   preferred_association_id?: string;
+  pickup_windows?: { start: string; end: string }[];
 }): Promise<DonationSummary> {
   return apiFetch('/api/donations', {
     method: 'POST',
@@ -691,7 +703,7 @@ export async function fetchUpcomingPickups(): Promise<
 
 export async function confirmPickup(
   allocationId: string,
-  pickedUpBy: string
+  pickedUpBy?: string
 ): Promise<void> {
   await apiFetch(`/api/donations/allocations/${allocationId}/confirm-pickup`, {
     method: 'POST',
@@ -808,5 +820,28 @@ export async function updateAssociation(
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+  });
+}
+
+// ─── Paramètres de don ────────────────────────────────────────────────────────
+
+export interface DonParametres {
+  id: string;
+  pharmacy_id: string;
+  seuil_dormance_jours: number;
+  rayon_matching_km: number;
+}
+
+export async function fetchDonParametres(): Promise<DonParametres> {
+  return apiFetch<DonParametres>('/api/donations/parametres');
+}
+
+export async function saveDonParametres(
+  data: Pick<DonParametres, 'seuil_dormance_jours' | 'rayon_matching_km'>
+): Promise<DonParametres> {
+  return apiFetch<DonParametres>('/api/donations/parametres', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
   });
 }

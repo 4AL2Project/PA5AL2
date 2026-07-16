@@ -8,6 +8,7 @@ import {
   IsOptional,
   IsString,
   IsUUID,
+  Max,
   MaxLength,
   Min,
   ValidateNested,
@@ -20,6 +21,14 @@ export class DonationLineDto {
   @IsInt()
   @Min(0)
   quantity!: number;
+}
+
+export class PickupSlotDto {
+  @IsISO8601()
+  start!: string;
+
+  @IsISO8601()
+  end!: string;
 }
 
 export class CreateDonationDto {
@@ -36,6 +45,12 @@ export class CreateDonationDto {
   @IsOptional()
   @IsUUID()
   preferred_association_id?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PickupSlotDto)
+  pickup_windows?: PickupSlotDto[];
 }
 
 export class EligiblePreviewDto {
@@ -71,9 +86,10 @@ export class RespondProposalDto {
 }
 
 export class ConfirmPickupDto {
+  @IsOptional()
   @IsString()
   @MaxLength(120)
-  picked_up_by!: string;
+  picked_up_by?: string;
 }
 
 // Scan du QR de l'allocation par le préparateur (app Flutter)
@@ -82,7 +98,20 @@ export class ScanPickupDto {
   @MaxLength(64)
   qr_code!: string;
 
+  @IsOptional()
   @IsString()
   @MaxLength(120)
-  picked_up_by!: string;
+  picked_up_by?: string;
+}
+
+export class UpdateDonParametresDto {
+  @IsInt()
+  @Min(63)
+  @Max(117)
+  seuil_dormance_jours!: number;
+
+  @IsInt()
+  @Min(10)
+  @Max(100)
+  rayon_matching_km!: number;
 }

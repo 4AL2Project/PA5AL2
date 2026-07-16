@@ -101,7 +101,10 @@ beforeEach(() => {
   orchestrator = new DonationOrchestratorService(
     matching,
     email as never,
-    { generateCerfa: jest.fn().mockResolvedValue(Buffer.from('pdf')) } as never
+    { generateCerfa: jest.fn().mockResolvedValue(Buffer.from('pdf')) } as never,
+    {
+      upload: jest.fn().mockResolvedValue('https://cdn.savely.fr/cerfa.pdf'),
+    } as never
   );
 });
 

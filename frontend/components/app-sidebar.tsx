@@ -1,15 +1,18 @@
 'use client';
 
 import {
+  ChevronDown,
   ClipboardList,
   FileStack,
   Handshake,
   Heart,
   Inbox,
   LayoutDashboard,
+  Leaf,
   LogOut,
   Package,
   Settings,
+  Settings2,
   ShoppingBag,
   Tag,
   Users,
@@ -20,26 +23,48 @@ import { useEffect, useState } from 'react';
 
 import { SavelyLogo } from '@/components/savely-logo';
 import { Button } from '@/components/ui/button';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { endSession, Role } from '@/lib/auth';
 import { cn } from '@/lib/utils';
 
-const NAV = [
+const NAV_TOP = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/products', label: 'Produits', icon: Package, exact: false },
   { href: '/actions', label: "Centre d'actions", icon: Inbox, exact: false },
   { href: '/offers', label: 'Offres B2C', icon: ShoppingBag, exact: false },
-  { href: '/donations', label: 'Dons', icon: Heart, exact: false },
-  { href: '/annuaire', label: 'Associations', icon: Handshake, exact: false },
+];
+
+const DON_NAV = [
+  { href: '/donations', label: 'Mes dons', icon: Heart },
+  { href: '/annuaire', label: 'Associations', icon: Handshake },
+  { href: '/rse', label: 'Bilan RSE', icon: Leaf },
+  { href: '/don-parametres', label: 'Paramètres', icon: Settings2 },
+];
+
+const NAV_BOTTOM = [
   { href: '/orders', label: 'Commandes', icon: ClipboardList, exact: false },
   { href: '/imports', label: 'Imports', icon: FileStack, exact: false },
 ];
+
+const DON_PREFIXES = DON_NAV.map((n) => n.href);
 
 export function AppSidebar({ userEmail }: { userEmail?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const [role, setRole] = useState<Role | null>(null);
 
-  // Récupère le rôle pour afficher les entrées réservées au titulaire.
+  const isDonSection = DON_PREFIXES.some((p) => pathname.startsWith(p));
+  const [donOpen, setDonOpen] = useState(isDonSection);
+
+  // Ouvre automatiquement si on navigue vers un sous-chemin Don
+  useEffect(() => {
+    if (isDonSection) setDonOpen(true);
+  }, [isDonSection]);
+
   useEffect(() => {
     let active = true;
     fetch('/api/session')
@@ -58,20 +83,12 @@ export function AppSidebar({ userEmail }: { userEmail?: string }) {
     router.replace('/login');
   };
 
-  const nav = [...NAV];
+  const navBottom = [...NAV_BOTTOM];
   if (role === 'TITULAIRE') {
-    nav.push({
-      href: '/categories',
-      label: 'Catégories',
-      icon: Tag,
-      exact: false,
-    });
-    nav.push({
-      href: '/team',
-      label: 'Préparateurs',
-      icon: Users,
-      exact: false,
-    });
+    navBottom.push(
+      { href: '/categories', label: 'Catégories', icon: Tag, exact: false },
+      { href: '/team', label: 'Préparateurs', icon: Users, exact: false }
+    );
   }
 
   return (
@@ -82,8 +99,75 @@ export function AppSidebar({ userEmail }: { userEmail?: string }) {
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-4">
-        {nav.map((item) => {
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        {/* Navigation principale */}
+        {NAV_TOP.map((item) => {
+          const active = item.exact
+            ? pathname === item.href
+            : pathname.startsWith(item.href);
+          const Icon = item.icon;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-colors',
+                active
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {item.label}
+            </Link>
+          );
+        })}
+
+        {/* Section Don Associatif — collapsible */}
+        <Collapsible open={donOpen} onOpenChange={setDonOpen}>
+          <CollapsibleTrigger
+            className={cn(
+              'flex w-full items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-colors',
+              isDonSection
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+            )}
+          >
+            <Heart className="h-4 w-4" />
+            <span className="flex-1 text-left">Don Associatif</span>
+            <ChevronDown
+              className={cn(
+                'h-3.5 w-3.5 transition-transform duration-200',
+                donOpen && 'rotate-180'
+              )}
+            />
+          </CollapsibleTrigger>
+
+          <CollapsibleContent className="mt-0.5 space-y-0.5 pl-3">
+            {DON_NAV.map((item) => {
+              const active = pathname.startsWith(item.href);
+              const Icon = item.icon;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex items-center gap-2.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                    active
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {item.label}
+                </Link>
+              );
+            })}
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Navigation secondaire */}
+        {navBottom.map((item) => {
           const active = item.exact
             ? pathname === item.href
             : pathname.startsWith(item.href);

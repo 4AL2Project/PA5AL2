@@ -7,6 +7,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   Ban,
+  CalendarClock,
   CheckCircle2,
   Clock,
   FileText,
@@ -182,6 +183,55 @@ export default function DonationDetailPage({
             </div>
           )}
 
+          {/* Créneaux proposés aux associations */}
+          {donation.pickup_windows && donation.pickup_windows.length > 0 && (
+            <section className="rounded-xl border bg-card">
+              <div className="flex items-center gap-2 border-b px-4 py-3">
+                <CalendarClock className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-sm font-semibold">
+                  Créneaux proposés aux associations
+                </h2>
+              </div>
+              <ul className="divide-y">
+                {donation.pickup_windows.map((slot, i) => {
+                  const start = new Date(slot.start);
+                  const end = new Date(slot.end);
+                  const past = start < new Date();
+                  return (
+                    <li
+                      key={i}
+                      className={`flex items-center justify-between px-4 py-3 text-sm ${past ? 'opacity-50' : ''}`}
+                    >
+                      <span className="capitalize text-gray-800">
+                        {start.toLocaleDateString('fr-FR', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long',
+                        })}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {start.toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                        {' – '}
+                        {end.toLocaleTimeString('fr-FR', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                        {past && (
+                          <span className="ml-2 text-xs text-amber-600">
+                            passé
+                          </span>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
           {/* Lot et reliquat */}
           <section className="rounded-xl border bg-card">
             <div className="flex items-center justify-between border-b px-4 py-3">
@@ -297,7 +347,11 @@ export default function DonationDetailPage({
         open={confirmCancel}
         onOpenChange={setConfirmCancel}
         title="Annuler ce don ?"
-        description="Les propositions en cours seront retirées et le produit reviendra au centre d'actions."
+        description={
+          donation?.allocations.some((a) => a.status === 'PLANIFIEE')
+            ? "Une association a déjà accepté ce don. Elle sera notifiée par email de l'annulation. Le produit reviendra dans votre centre d'actions."
+            : "Les propositions en cours seront retirées. Le produit reviendra dans votre centre d'actions."
+        }
         confirmLabel={cancelling ? 'Annulation…' : 'Annuler le don'}
         onConfirm={handleCancel}
       />

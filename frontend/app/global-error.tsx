@@ -1,10 +1,19 @@
 'use client';
 
+import * as Sentry from '@sentry/nextjs';
+import { useEffect } from 'react';
+
 export default function GlobalError({
   error,
+  reset,
 }: {
   error: Error & { digest?: string };
+  reset?: () => void;
 }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   const pathname =
     typeof window !== 'undefined' ? window.location.pathname : '';
 
@@ -140,6 +149,22 @@ export default function GlobalError({
                 <pre className="error-stack">{error.stack}</pre>
               </div>
             </div>
+          )}
+          {reset && (
+            <button
+              onClick={reset}
+              style={{
+                marginTop: '1.5rem',
+                padding: '0.4rem 0.9rem',
+                fontSize: '12px',
+                cursor: 'pointer',
+                border: '1px solid #d4d4d4',
+                borderRadius: '6px',
+                background: '#fff',
+              }}
+            >
+              Réessayer
+            </button>
           )}
         </div>
       </body>

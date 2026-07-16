@@ -1,8 +1,9 @@
 'use client';
+import { ArrowLeft } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import Shell from '@/components/shell';
+import { AssoLayout } from '@/components/asso-layout';
 import {
   accepterOffre,
   fetchOffre,
@@ -43,6 +44,9 @@ function fmtSlot(slot: PickupSlot) {
   return { date, heure: `${heureDebut} – ${heureFin}` };
 }
 
+const inputCls =
+  'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-shadow focus:ring-2 focus:ring-ring';
+
 export default function OffrePage() {
   const router = useRouter();
   const params = useParams();
@@ -54,7 +58,6 @@ export default function OffrePage() {
     'detail' | 'accept_done' | 'refuse_form' | 'refuse_done'
   >('detail');
 
-  // Slot selection — titulaire-provided slots vs free inputs
   const [selectedSlot, setSelectedSlot] = useState<PickupSlot | null>(null);
   const [slotStart, setSlotStart] = useState('');
   const [slotEnd, setSlotEnd] = useState('');
@@ -133,13 +136,23 @@ export default function OffrePage() {
     }
   };
 
+  const breadcrumb = (
+    <button
+      onClick={() => router.back()}
+      className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+    >
+      <ArrowLeft className="h-3.5 w-3.5" />
+      Retour aux offres
+    </button>
+  );
+
   if (loading)
     return (
-      <Shell>
-        <div className="flex justify-center py-12">
-          <div className="w-8 h-8 border-4 border-savely-600 border-t-transparent rounded-full animate-spin" />
+      <AssoLayout title="Offre de don" breadcrumb={breadcrumb}>
+        <div className="flex justify-center py-16">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
         </div>
-      </Shell>
+      </AssoLayout>
     );
   if (!offre) return null;
 
@@ -149,28 +162,21 @@ export default function OffrePage() {
   );
 
   return (
-    <Shell>
-      <button
-        onClick={() => router.back()}
-        className="text-sm text-gray-500 hover:text-gray-700 mb-6 flex items-center gap-1"
-      >
-        ← Retour
-      </button>
-
+    <AssoLayout title="Offre de don" breadcrumb={breadcrumb}>
       {view === 'accept_done' && (
-        <div className="bg-white border border-green-200 rounded-2xl p-8 text-center space-y-4">
-          <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center mx-auto text-2xl">
-            ✅
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-8 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100">
+            <Check className="h-7 w-7 text-emerald-600" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900">Don accepté !</h2>
-          <p className="text-gray-600">
+          <h2 className="text-xl font-bold text-foreground">Don accepté !</h2>
+          <p className="mt-2 text-sm text-muted-foreground">
             Rendez-vous à l&apos;officine au créneau convenu. Votre QR code de
-            récupération est disponible dans l&apos;onglet <strong>Dons</strong>
-            .
+            récupération est disponible dans l&apos;onglet{' '}
+            <strong>Mes dons</strong>.
           </p>
           <button
             onClick={() => router.push('/dons')}
-            className="mt-2 bg-savely-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-savely-700 transition-colors"
+            className="mt-4 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
           >
             Voir mes dons
           </button>
@@ -178,15 +184,17 @@ export default function OffrePage() {
       )}
 
       {view === 'refuse_done' && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center space-y-4">
-          <div className="text-3xl">🙏</div>
-          <h2 className="text-xl font-bold text-gray-900">Refus enregistré</h2>
-          <p className="text-gray-500 text-sm">
+        <div className="rounded-xl border border-border bg-card p-8 text-center">
+          <p className="mb-2 text-3xl">🙏</p>
+          <h2 className="text-xl font-bold text-foreground">
+            Refus enregistré
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
             L&apos;officine en sera informée. Merci pour votre réponse.
           </p>
           <button
             onClick={() => router.push('/offres')}
-            className="mt-2 border border-gray-300 text-gray-700 px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+            className="mt-4 rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Retour aux offres
           </button>
@@ -194,13 +202,13 @@ export default function OffrePage() {
       )}
 
       {view === 'refuse_form' && (
-        <div className="bg-white border border-gray-200 rounded-2xl p-6 space-y-4 max-w-lg">
-          <h2 className="font-semibold text-gray-900">Raison du refus</h2>
+        <div className="max-w-lg space-y-4 rounded-xl border border-border bg-card p-6">
+          <h2 className="font-semibold text-foreground">Raison du refus</h2>
           <div className="space-y-2">
             {[...REFUSAL_REASONS, 'Autre'].map((r) => (
               <label
                 key={r}
-                className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 cursor-pointer hover:border-savely-400 transition-colors"
+                className="flex cursor-pointer items-center gap-3 rounded-lg border border-border p-3 transition-colors hover:border-primary"
               >
                 <input
                   type="radio"
@@ -208,9 +216,9 @@ export default function OffrePage() {
                   value={r}
                   checked={refusalReason === r}
                   onChange={() => setRefusalReason(r)}
-                  className="text-savely-600"
+                  className="text-primary"
                 />
-                <span className="text-sm text-gray-800">{r}</span>
+                <span className="text-sm text-foreground">{r}</span>
               </label>
             ))}
           </div>
@@ -220,21 +228,21 @@ export default function OffrePage() {
               onChange={(e) => setCustomReason(e.target.value)}
               placeholder="Précisez…"
               rows={3}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 outline-none"
+              className={inputCls}
             />
           )}
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-3">
             <button
               onClick={() => setView('detail')}
-              className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              className="flex-1 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
             >
               Annuler
             </button>
             <button
               onClick={handleRefuse}
               disabled={!refusalReason || submitting}
-              className="flex-1 bg-red-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-40 transition-colors"
+              className="flex-1 rounded-lg bg-destructive py-2.5 text-sm font-medium text-destructive-foreground transition-colors hover:opacity-90 disabled:opacity-40"
             >
               {submitting ? 'Envoi…' : 'Confirmer le refus'}
             </button>
@@ -243,65 +251,63 @@ export default function OffrePage() {
       )}
 
       {view === 'detail' && (
-        <div className="space-y-6 max-w-2xl">
+        <div className="max-w-2xl space-y-4">
           {/* Fiche don */}
-          <div className="bg-white border border-gray-100 rounded-2xl p-6">
-            <h1 className="text-xl font-bold text-gray-900 mb-4">
-              Offre de don
-            </h1>
+          <div className="rounded-xl border border-border bg-card p-6">
             <div className="mb-4">
-              <p className="text-xs font-medium text-gray-500 uppercase mb-1">
+              <p className="mb-0.5 text-xs font-medium uppercase text-muted-foreground">
                 De
               </p>
-              <p className="font-semibold text-gray-900">
+              <p className="font-semibold text-foreground">
                 {offre.donation?.pharmacy?.name}
               </p>
               {offre.donation?.pharmacy?.address && (
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-muted-foreground">
                   {offre.donation.pharmacy.address}
                 </p>
               )}
             </div>
+
             <div className="mb-4">
-              <p className="text-xs font-medium text-gray-500 uppercase mb-2">
+              <p className="mb-2 text-xs font-medium uppercase text-muted-foreground">
                 Produits proposés
               </p>
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {offre.proposed_lines.map((l, i) => (
                   <div key={i} className="flex justify-between text-sm">
-                    <span className="text-gray-800">
+                    <span className="text-foreground">
                       {l.name}{' '}
-                      <span className="text-gray-500">× {l.quantity}</span>
+                      <span className="text-muted-foreground">
+                        × {l.quantity}
+                      </span>
                     </span>
-                    <span className="text-gray-600 font-medium">
+                    <span className="font-medium text-foreground">
                       {(l.quantity * l.unit_value).toFixed(2)} €
                     </span>
                   </div>
                 ))}
               </div>
-              <div className="border-t border-gray-100 mt-3 pt-3 flex justify-between text-sm font-semibold">
+              <div className="mt-3 flex justify-between border-t border-border pt-3 text-sm font-semibold">
                 <span>Valeur totale HT</span>
-                <span className="text-savely-700">
-                  {totalValue.toFixed(2)} €
-                </span>
+                <span className="text-primary">{totalValue.toFixed(2)} €</span>
               </div>
             </div>
-            <p className="text-xs text-gray-500 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+
+            <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-xs text-amber-700">
               ⏰ Expire le {fmt(offre.expires_at)}
             </p>
           </div>
 
           {/* Formulaire d'acceptation */}
           {offre.status === 'ENVOYEE' && (
-            <div className="bg-white border border-gray-100 rounded-2xl p-6 space-y-5">
-              <h2 className="font-semibold text-gray-900">
+            <div className="space-y-5 rounded-xl border border-border bg-card p-6">
+              <h2 className="font-semibold text-foreground">
                 Créneau de récupération
               </h2>
 
               {hasTitulaireSlots ? (
-                /* ── Créneaux fixés par le titulaire ────────────────── */
                 <div className="space-y-2">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     L&apos;officine a proposé les créneaux suivants.
                     Sélectionnez celui qui vous convient :
                   </p>
@@ -315,16 +321,16 @@ export default function OffrePage() {
                         key={slot.start}
                         type="button"
                         onClick={() => setSelectedSlot(slot)}
-                        className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                        className={`w-full rounded-xl border-2 p-4 text-left transition-all ${
                           isSelected
-                            ? 'border-savely-600 bg-savely-50'
-                            : 'border-gray-200 hover:border-savely-300 bg-white'
+                            ? 'border-primary bg-primary-tint'
+                            : 'border-border bg-card hover:border-primary/50'
                         }`}
                       >
-                        <p className="font-medium text-gray-900 capitalize">
+                        <p className="font-medium capitalize text-foreground">
                           {date}
                         </p>
-                        <p className="text-sm text-savely-700 font-semibold mt-0.5">
+                        <p className="mt-0.5 text-sm font-semibold text-primary">
                           🕐 {heure}
                         </p>
                       </button>
@@ -332,32 +338,31 @@ export default function OffrePage() {
                   })}
                 </div>
               ) : (
-                /* ── Saisie libre (pas de créneaux fixés) ───────────── */
                 <div className="space-y-3">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     Indiquez quand vous pourrez passer récupérer le don :
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
                         Début *
                       </label>
                       <input
                         type="datetime-local"
                         value={slotStart}
                         onChange={(e) => setSlotStart(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 outline-none"
+                        className={inputCls}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
                         Fin *
                       </label>
                       <input
                         type="datetime-local"
                         value={slotEnd}
                         onChange={(e) => setSlotEnd(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 outline-none"
+                        className={inputCls}
                       />
                     </div>
                   </div>
@@ -365,24 +370,24 @@ export default function OffrePage() {
               )}
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
                   Nom du récupérateur *
                 </label>
                 <input
                   value={pickedUpBy}
                   onChange={(e) => setPickedUpBy(e.target.value)}
                   placeholder="Prénom Nom"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 outline-none"
+                  className={inputCls}
                 />
               </div>
 
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 En acceptant, vous vous engagez à récupérer les produits au
                 créneau choisi. Un reçu fiscal Cerfa vous sera transmis après
                 récupération.
               </p>
 
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-destructive">{error}</p>}
 
               <div className="flex gap-3">
                 <button
@@ -391,13 +396,13 @@ export default function OffrePage() {
                     submitting ||
                     (hasTitulaireSlots ? !selectedSlot : !slotStart || !slotEnd)
                   }
-                  className="flex-1 bg-savely-600 text-white py-3 rounded-xl font-semibold hover:bg-savely-700 disabled:opacity-40 transition-colors"
+                  className="flex-1 rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-40"
                 >
                   {submitting ? 'Envoi…' : '✅ Accepter ce don'}
                 </button>
                 <button
                   onClick={() => setView('refuse_form')}
-                  className="px-4 py-3 border border-red-200 text-red-600 rounded-xl hover:bg-red-50 transition-colors text-sm font-medium"
+                  className="rounded-xl border border-destructive/30 px-4 py-3 text-sm font-medium text-destructive transition-colors hover:bg-destructive/5"
                 >
                   ❌ Refuser
                 </button>
@@ -406,6 +411,20 @@ export default function OffrePage() {
           )}
         </div>
       )}
-    </Shell>
+    </AssoLayout>
+  );
+}
+
+function Check({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2.5}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+    </svg>
   );
 }

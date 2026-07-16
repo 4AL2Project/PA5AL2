@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import Shell from '@/components/shell';
+import { AssoLayout } from '@/components/asso-layout';
 import { type Don, fetchDons } from '@/lib/api';
 
 type Filter = 'Tous' | 'En cours' | 'Récupérés';
@@ -18,7 +18,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_COLORS: Record<string, string> = {
   PLANIFIEE: 'bg-amber-100 text-amber-700',
   RETIREE: 'bg-emerald-100 text-emerald-700',
-  NON_RECUPEREE: 'bg-gray-100 text-gray-500',
+  NON_RECUPEREE: 'bg-muted text-muted-foreground',
 };
 
 function matchFilter(don: Don, filter: Filter): boolean {
@@ -31,7 +31,7 @@ function matchFilter(don: Don, filter: Filter): boolean {
 function Spinner() {
   return (
     <div className="flex justify-center py-16">
-      <div className="w-8 h-8 border-4 border-savely-600 border-t-transparent rounded-full animate-spin" />
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
     </div>
   );
 }
@@ -56,24 +56,20 @@ export default function DonsPage() {
   const filtered = dons.filter((d) => matchFilter(d, filter));
 
   return (
-    <Shell>
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Mes dons</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Dons acceptés et leur statut de récupération
-        </p>
-      </div>
-
-      {/* Filters */}
-      <div className="flex gap-2 mb-6 flex-wrap">
+    <AssoLayout
+      title="Mes dons"
+      description="Dons acceptés et leur statut de récupération"
+    >
+      {/* Filtres */}
+      <div className="mb-6 flex flex-wrap gap-2">
         {(['Tous', 'En cours', 'Récupérés'] as Filter[]).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+            className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
               filter === f
-                ? 'bg-savely-600 text-white'
-                : 'bg-white border border-gray-200 text-gray-600 hover:border-savely-400 hover:text-savely-700'
+                ? 'bg-primary text-primary-foreground'
+                : 'border border-border bg-card text-muted-foreground hover:border-primary hover:text-primary'
             }`}
           >
             {f}
@@ -84,33 +80,33 @@ export default function DonsPage() {
       {loading && <Spinner />}
 
       {!loading && filtered.length === 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 text-center py-16 px-6">
-          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Gift className="h-6 w-6 text-gray-400" />
+        <div className="rounded-xl border border-border bg-card px-6 py-16 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Gift className="h-6 w-6 text-muted-foreground" />
           </div>
-          <p className="font-medium text-gray-700">Aucun don</p>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="font-medium text-foreground">Aucun don</p>
+          <p className="mt-1 text-sm text-muted-foreground">
             Acceptez des offres pour les voir apparaître ici.
           </p>
         </div>
       )}
 
       {!loading && filtered.length > 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+        <div className="divide-y divide-border rounded-xl border border-border bg-card">
           {filtered.map((don) => (
             <Link
               key={don.allocation_id}
               href={`/dons/${don.allocation_id}`}
-              className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors first:rounded-t-xl last:rounded-b-xl"
+              className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-accent first:rounded-t-xl last:rounded-b-xl"
             >
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">
+                <p className="truncate text-sm font-semibold text-foreground">
                   {don.donation?.pharmacy?.name ?? 'Officine'}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {don.lines.map((l) => `${l.name} ×${l.quantity}`).join(', ')}
                 </p>
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Retrait :{' '}
                   {new Date(don.pickup_slot_start).toLocaleDateString('fr-FR', {
                     day: 'numeric',
@@ -118,20 +114,20 @@ export default function DonsPage() {
                   })}
                 </p>
               </div>
-              <div className="flex items-center gap-3 shrink-0">
+              <div className="flex shrink-0 items-center gap-3">
                 {don.cerfa_url && (
                   <a
                     href={don.cerfa_url}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
-                    className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-1 rounded-md hover:bg-blue-100 transition-colors font-medium"
+                    className="rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-100"
                   >
                     ⬇ Cerfa
                   </a>
                 )}
                 <span
-                  className={`text-xs font-medium px-2.5 py-1 rounded-full ${STATUS_COLORS[don.status] ?? 'bg-gray-100 text-gray-600'}`}
+                  className={`rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_COLORS[don.status] ?? 'bg-muted text-muted-foreground'}`}
                 >
                   {STATUS_LABELS[don.status] ?? don.status}
                 </span>
@@ -140,6 +136,6 @@ export default function DonsPage() {
           ))}
         </div>
       )}
-    </Shell>
+    </AssoLayout>
   );
 }

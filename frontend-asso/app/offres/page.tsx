@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-import Shell from '@/components/shell';
+import { AssoLayout } from '@/components/asso-layout';
 import { fetchOffres, type Offre } from '@/lib/api';
 
 function timeLeft(expires: string): string {
@@ -19,7 +19,7 @@ const STATUS_COLORS: Record<string, string> = {
   ENVOYEE: 'bg-amber-100 text-amber-700 border-amber-200',
   ACCEPTEE: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   REFUSEE: 'bg-red-100 text-red-700 border-red-200',
-  EXPIREE: 'bg-gray-100 text-gray-500 border-gray-200',
+  EXPIREE: 'bg-muted text-muted-foreground border-border',
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -32,7 +32,7 @@ const STATUS_LABELS: Record<string, string> = {
 function StatusBadge({ status }: { status: string }) {
   return (
     <span
-      className={`inline-flex items-center text-xs font-medium px-2 py-0.5 rounded-full border ${STATUS_COLORS[status] ?? 'bg-gray-100 text-gray-600 border-gray-200'}`}
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[status] ?? 'bg-muted text-muted-foreground border-border'}`}
     >
       {STATUS_LABELS[status] ?? status}
     </span>
@@ -42,7 +42,7 @@ function StatusBadge({ status }: { status: string }) {
 function Spinner() {
   return (
     <div className="flex justify-center py-16">
-      <div className="w-8 h-8 border-4 border-savely-600 border-t-transparent rounded-full animate-spin" />
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
     </div>
   );
 }
@@ -67,23 +67,19 @@ export default function OffresPage() {
   const history = offres.filter((o) => o.status !== 'ENVOYEE');
 
   return (
-    <Shell>
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-900">Offres de dons</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Propositions reçues des officines partenaires
-        </p>
-      </div>
-
+    <AssoLayout
+      title="Offres de dons"
+      description="Propositions reçues des officines partenaires"
+    >
       {loading && <Spinner />}
 
       {!loading && pending.length > 0 && (
         <section className="mb-8">
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <div className="mb-3 flex items-center gap-2">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               En attente de réponse
             </h2>
-            <span className="bg-amber-100 text-amber-700 text-xs font-medium px-1.5 py-0.5 rounded-full">
+            <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
               {pending.length}
             </span>
           </div>
@@ -92,19 +88,19 @@ export default function OffresPage() {
               <Link
                 key={offre.proposal_id}
                 href={`/offres/${offre.proposal_id}`}
-                className="block bg-white border border-amber-200 rounded-xl p-5 hover:shadow-sm hover:border-amber-300 transition-all"
+                className="block rounded-xl border border-amber-200 bg-card p-5 transition-all hover:border-amber-300 hover:shadow-sm"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <p className="font-semibold text-gray-900 truncate">
+                    <p className="truncate font-semibold text-foreground">
                       {offre.donation?.pharmacy?.name ?? 'Officine'}
                     </p>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="mt-1 text-sm text-muted-foreground">
                       {offre.proposed_lines
                         .map((l) => `${l.name} × ${l.quantity}`)
                         .join(' · ')}
                     </p>
-                    <p className="text-xs text-amber-600 mt-2 font-medium">
+                    <p className="mt-2 text-xs font-medium text-amber-600">
                       ⏰ {timeLeft(offre.expires_at)}
                     </p>
                   </div>
@@ -118,21 +114,21 @@ export default function OffresPage() {
 
       {!loading && history.length > 0 && (
         <section>
-          <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Historique
           </h2>
-          <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+          <div className="divide-y divide-border rounded-xl border border-border bg-card">
             {history.map((offre) => (
               <Link
                 key={offre.proposal_id}
                 href={`/offres/${offre.proposal_id}`}
-                className="flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors first:rounded-t-xl last:rounded-b-xl"
+                className="flex items-center justify-between px-5 py-4 transition-colors hover:bg-accent first:rounded-t-xl last:rounded-b-xl"
               >
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="truncate text-sm font-medium text-foreground">
                     {offre.donation?.pharmacy?.name ?? 'Officine'}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="mt-0.5 text-xs text-muted-foreground">
                     {offre.proposed_lines
                       .map((l) => `${l.name} ×${l.quantity}`)
                       .join(', ')}
@@ -146,18 +142,18 @@ export default function OffresPage() {
       )}
 
       {!loading && offres.length === 0 && (
-        <div className="bg-white rounded-xl border border-gray-200 text-center py-16 px-6">
-          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-            <Package className="h-6 w-6 text-gray-400" />
+        <div className="rounded-xl border border-border bg-card px-6 py-16 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Package className="h-6 w-6 text-muted-foreground" />
           </div>
-          <p className="font-medium text-gray-700">
+          <p className="font-medium text-foreground">
             Aucune offre pour le moment
           </p>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="mt-1 text-sm text-muted-foreground">
             Vous recevrez un email dès qu&apos;une officine vous propose un don.
           </p>
         </div>
       )}
-    </Shell>
+    </AssoLayout>
   );
 }

@@ -34,8 +34,8 @@ export default function AdminError({
           Impossible de charger les données
         </h2>
         <p className="mx-auto mt-1 max-w-sm text-xs text-muted-foreground">
-          L’API n’a pas répondu. Ce n’est pas un manque de données : vérifiez que
-          le backend tourne et qu’il est joignable depuis le serveur Next.
+          L’API n’a pas répondu. Ce n’est pas un manque de données : vérifiez
+          que le backend tourne et qu’il est joignable depuis le serveur Next.
         </p>
         {error.digest && (
           <p className="mt-3 font-mono text-[11px] text-muted-foreground">

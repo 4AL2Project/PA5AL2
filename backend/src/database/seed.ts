@@ -605,7 +605,8 @@ const DEMO_ASSOCIATIONS: {
     agrement_numero: 'W751000001',
     agrement_valide: true,
     is_onboarded: true,
-    description: 'Association de quartier spécialisée dans le soin aux personnes vulnérables.',
+    description:
+      'Association de quartier spécialisée dans le soin aux personnes vulnérables.',
   },
   // ── Active + agrément validé + onboardée + bonne fiabilité (IDF large)
   {
@@ -628,7 +629,7 @@ const DEMO_ASSOCIATIONS: {
     agrement_numero: 'W941000002',
     agrement_valide: true,
     is_onboarded: true,
-    description: 'Réseau d\'entraide couvrant toute l\'Île-de-France.',
+    description: "Réseau d'entraide couvrant toute l'Île-de-France.",
   },
   // ── Active + pas d'agrément + onboardée (fiabilité faible — rate ses créneaux)
   {
@@ -737,7 +738,7 @@ const DEMO_ASSOCIATIONS: {
     agrement_numero: 'W780000008',
     agrement_valide: true,
     is_onboarded: true,
-    description: 'Distribution de produits de soin et d\'hygiène en Yvelines.',
+    description: "Distribution de produits de soin et d'hygiène en Yvelines.",
   },
 ];
 
@@ -746,7 +747,14 @@ async function seedAssociations() {
   let updated = 0;
   const byName = new Map<string, string>();
   for (const a of DEMO_ASSOCIATIONS) {
-    const { status, agrement_numero, agrement_valide, is_onboarded, description, ...rest } = a;
+    const {
+      status,
+      agrement_numero,
+      agrement_valide,
+      is_onboarded,
+      description,
+      ...rest
+    } = a;
     const existing = await prisma.association.findFirst({
       where: { name: a.name },
     });

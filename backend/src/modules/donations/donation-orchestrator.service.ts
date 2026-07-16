@@ -32,6 +32,10 @@ export interface CreateDonationInput {
   // Mode avancé : proposer d'abord à cette asso (si elle est éligible) —
   // le reste de la cascade reste piloté par l'orchestrateur
   preferred_association_id?: string;
+  // Créneaux spécifiques fixés par le titulaire à la création du don.
+  // Si renseigné, ces slots sont utilisés pour toutes les propositions de
+  // ce don (sinon l'orchestrateur calcule depuis pharmacy.donation_pickup_windows).
+  pickup_windows?: { start: string; end: string }[];
 }
 
 export interface RespondInput {
@@ -102,6 +106,9 @@ export class DonationOrchestratorService {
         pharmacy_id: pharmacyId,
         action_id: input.action_id ?? null,
         status: 'EN_COURS',
+        pickup_windows: input.pickup_windows
+          ? JSON.parse(JSON.stringify(input.pickup_windows))
+          : undefined,
         lines: {
           create: input.lines.map((l) => ({
             product_id: l.product_id,
@@ -1041,6 +1048,7 @@ export class DonationOrchestratorService {
     donation: {
       donation_id: string;
       status: string;
+      pickup_windows?: unknown;
       pharmacy: {
         name: string;
         address: string | null;
@@ -1081,18 +1089,25 @@ export class DonationOrchestratorService {
       ) {
         return { state: 'EXPIREE', ...base };
       }
-      const windows = intersectWindows(
-        parsePickupWindows(proposal.donation.pharmacy.donation_pickup_windows),
-        proposal.association.pickup_windows
-      );
-      return {
-        state: 'ACTIVE',
-        ...base,
-        slots: computePickupSlots(
-          windows,
-          proposal.association.pickup_sla_days
-        ),
-      };
+      // Si le titulaire a fixé des créneaux spécifiques à la création du don,
+      // on les utilise directement. Sinon on calcule depuis les fenêtres
+      // hebdomadaires de la pharmacie et de l'association.
+      const donationSlots = proposal.donation.pickup_windows as
+        | { start: string; end: string }[]
+        | null
+        | undefined;
+      const slots = donationSlots?.length
+        ? donationSlots
+        : computePickupSlots(
+            intersectWindows(
+              parsePickupWindows(
+                proposal.donation.pharmacy.donation_pickup_windows
+              ),
+              proposal.association.pickup_windows
+            ),
+            proposal.association.pickup_sla_days
+          );
+      return { state: 'ACTIVE', ...base, slots };
     }
     if (
       proposal.status === 'ACCEPTEE' ||

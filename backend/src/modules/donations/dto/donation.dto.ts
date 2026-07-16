@@ -23,6 +23,14 @@ export class DonationLineDto {
   quantity!: number;
 }
 
+export class PickupSlotDto {
+  @IsISO8601()
+  start!: string;
+
+  @IsISO8601()
+  end!: string;
+}
+
 export class CreateDonationDto {
   @IsOptional()
   @IsUUID()
@@ -37,6 +45,12 @@ export class CreateDonationDto {
   @IsOptional()
   @IsUUID()
   preferred_association_id?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => PickupSlotDto)
+  pickup_windows?: PickupSlotDto[];
 }
 
 export class EligiblePreviewDto {

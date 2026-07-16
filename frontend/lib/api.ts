@@ -672,6 +672,7 @@ export async function createDonation(payload: {
   action_id?: string;
   lines: DonationLinePayload[];
   preferred_association_id?: string;
+  pickup_windows?: { start: string; end: string }[];
 }): Promise<DonationSummary> {
   return apiFetch('/api/donations', {
     method: 'POST',

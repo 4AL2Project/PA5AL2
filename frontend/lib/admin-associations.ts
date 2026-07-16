@@ -127,13 +127,18 @@ export interface AssoListParams {
 
 const BASE = '/api/be/api/admin/associations';
 
-async function readError(res: Response): Promise<string> {
+// Le backend enveloppe toutes les réponses dans { success: true, data: ... }.
+// Cette fonction extrait le contenu et propage les erreurs proprement.
+async function parseData<T>(res: Response): Promise<T> {
   const payload = await res.json().catch(() => null);
-  return (
-    payload?.error?.message ??
-    payload?.message ??
-    'Une erreur est survenue. Réessayez.'
-  );
+  if (!res.ok) {
+    const msg =
+      payload?.error?.message ??
+      payload?.message ??
+      'Une erreur est survenue. Réessayez.';
+    throw new Error(msg);
+  }
+  return ('success' in (payload ?? {}) ? payload.data : payload) as T;
 }
 
 export async function fetchAdminAssociations(
@@ -152,16 +157,14 @@ export async function fetchAdminAssociations(
   const url = qs.size ? `${BASE}?${qs}` : BASE;
 
   const res = await fetch(url, { cache: 'no-store' });
-  if (!res.ok) throw new Error(await readError(res));
-  return res.json();
+  return parseData<AssociationAdminList>(res);
 }
 
 export async function fetchAdminAssociationDetail(
   id: string
 ): Promise<AssociationAdminDetail> {
   const res = await fetch(`${BASE}/${id}`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(await readError(res));
-  return res.json();
+  return parseData<AssociationAdminDetail>(res);
 }
 
 export async function createAdminAssociation(
@@ -172,8 +175,7 @@ export async function createAdminAssociation(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dto),
   });
-  if (!res.ok) throw new Error(await readError(res));
-  return res.json();
+  return parseData<AssociationAdminRow>(res);
 }
 
 export async function updateAdminAssociation(
@@ -185,8 +187,7 @@ export async function updateAdminAssociation(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dto),
   });
-  if (!res.ok) throw new Error(await readError(res));
-  return res.json();
+  return parseData<AssociationAdminRow>(res);
 }
 
 export async function patchAssoStatut(
@@ -198,19 +199,17 @@ export async function patchAssoStatut(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(dto),
   });
-  if (!res.ok) throw new Error(await readError(res));
-  return res.json();
+  return parseData<AssociationAdminRow>(res);
 }
 
 export async function inviterAsso(id: string): Promise<void> {
   const res = await fetch(`${BASE}/${id}/inviter`, { method: 'POST' });
-  if (!res.ok) throw new Error(await readError(res));
+  await parseData<unknown>(res);
 }
 
 export async function fetchAssoNotes(id: string): Promise<AssoNote[]> {
   const res = await fetch(`${BASE}/${id}/notes`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(await readError(res));
-  return res.json();
+  return parseData<AssoNote[]>(res);
 }
 
 export async function addAssoNote(
@@ -222,8 +221,7 @@ export async function addAssoNote(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ contenu }),
   });
-  if (!res.ok) throw new Error(await readError(res));
-  return res.json();
+  return parseData<AssoNote>(res);
 }
 
 export interface AssoLogsPage {
@@ -240,8 +238,7 @@ export async function fetchAssoLogs(
   const res = await fetch(`${BASE}/${id}/logs?page=${page}`, {
     cache: 'no-store',
   });
-  if (!res.ok) throw new Error(await readError(res));
-  return res.json();
+  return parseData<AssoLogsPage>(res);
 }
 
 // Historique complet des allocations (tous statuts) — sert la section
@@ -266,13 +263,15 @@ export async function fetchAssoAllocationHistory(
   const res = await fetch(`/api/be/api/associations/${id}/allocations`, {
     cache: 'no-store',
   });
-  if (!res.ok) throw new Error(await readError(res));
-  return res.json();
+  return parseData<AssoAllocationHistoryItem[]>(res);
 }
 
 export async function exportAssoCsv(): Promise<void> {
   const res = await fetch(`${BASE}/export`, { cache: 'no-store' });
-  if (!res.ok) throw new Error(await readError(res));
+  if (!res.ok) {
+    const err = await res.json().catch(() => null);
+    throw new Error(err?.message ?? 'Export impossible. Réessayez.');
+  }
   const blob = await res.blob();
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

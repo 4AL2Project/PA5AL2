@@ -283,14 +283,18 @@ model AssociationLog {
 // version : optimistic locking sur les transitions concurrentes (réponse asso
 // vs annulation titulaire vs cron d'expiration).
 model Donation {
-  donation_id   String    @id @default(uuid())
-  pharmacy_id   String
-  action_id     String?
-  status        String    @default("EN_COURS") // EN_COURS|COMPLETEE|ECHOUEE|ANNULEE
-  attempt_count Int       @default(0)
-  version       Int       @default(0)
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  donation_id      String    @id @default(uuid())
+  pharmacy_id      String
+  action_id        String?
+  status           String    @default("EN_COURS") // EN_COURS|COMPLETEE|ECHOUEE|ANNULEE
+  attempt_count    Int       @default(0)
+  version          Int       @default(0)
+  // Créneaux de récupération spécifiques fixés par le titulaire à la création
+  // du don. Format : [{ start: ISO, end: ISO }]. Si null, l'orchestrateur
+  // calcule les créneaux depuis pharmacy.donation_pickup_windows.
+  pickup_windows   Json?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
 
   pharmacy      Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
   action        Action?   @relation(fields: [action_id], references: [action_id])

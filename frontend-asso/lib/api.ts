@@ -123,7 +123,7 @@ export async function accepterOffre(
   data: {
     pickup_slot_start: string;
     pickup_slot_end: string;
-    picked_up_by: string;
+    picked_up_by?: string;
   }
 ): Promise<unknown> {
   return apiFetch(`/asso/offres/${id}/accepter`, {

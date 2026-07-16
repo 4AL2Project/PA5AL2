@@ -101,10 +101,6 @@ export default function OffrePage() {
       setError('Veuillez sélectionner un créneau de récupération');
       return;
     }
-    if (!pickedUpBy.trim()) {
-      setError('Veuillez indiquer le nom du récupérateur');
-      return;
-    }
     setSubmitting(true);
     setError('');
     try {
@@ -371,7 +367,8 @@ export default function OffrePage() {
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  Nom du récupérateur *
+                  Nom du récupérateur{' '}
+                  <span className="font-normal text-muted-foreground/70">(optionnel)</span>
                 </label>
                 <input
                   value={pickedUpBy}

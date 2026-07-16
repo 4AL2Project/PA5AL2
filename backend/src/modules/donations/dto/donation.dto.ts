@@ -86,9 +86,10 @@ export class RespondProposalDto {
 }
 
 export class ConfirmPickupDto {
+  @IsOptional()
   @IsString()
   @MaxLength(120)
-  picked_up_by!: string;
+  picked_up_by?: string;
 }
 
 // Scan du QR de l'allocation par le préparateur (app Flutter)
@@ -97,9 +98,10 @@ export class ScanPickupDto {
   @MaxLength(64)
   qr_code!: string;
 
+  @IsOptional()
   @IsString()
   @MaxLength(120)
-  picked_up_by!: string;
+  picked_up_by?: string;
 }
 
 export class UpdateDonParametresDto {

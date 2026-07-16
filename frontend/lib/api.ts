@@ -624,6 +624,7 @@ export interface DonationAllocationItem {
   picked_up_by: string | null;
   picked_up_at: string | null;
   cerfa_number: string | null;
+  qr_code: string | null;
   association: { name: string; contact_phone?: string | null };
 }
 
@@ -702,7 +703,7 @@ export async function fetchUpcomingPickups(): Promise<
 
 export async function confirmPickup(
   allocationId: string,
-  pickedUpBy: string
+  pickedUpBy?: string
 ): Promise<void> {
   await apiFetch(`/api/donations/allocations/${allocationId}/confirm-pickup`, {
     method: 'POST',

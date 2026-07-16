@@ -642,7 +642,7 @@ export class DonationOrchestratorService {
   async confirmPickup(
     allocationId: string,
     pharmacyId: string,
-    pickedUpBy: string,
+    pickedUpBy: string | undefined,
     actor: string
   ) {
     const allocation = await prisma.donationAllocation.findFirst({
@@ -663,10 +663,6 @@ export class DonationOrchestratorService {
         `Retrait non confirmable (statut : ${allocation.status})`
       );
     }
-    if (!pickedUpBy?.trim()) {
-      throw new BadRequestException('Le nom du récupérateur est requis');
-    }
-
     // Suffixe aléatoire : deux retraits confirmés dans la même milliseconde
     // ne doivent jamais partager un numéro de reçu fiscal
     const cerfaNumber = `CERFA-DON-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
@@ -677,7 +673,7 @@ export class DonationOrchestratorService {
         where: { allocation_id: allocationId, status: 'PLANIFIEE' },
         data: {
           status: 'RETIREE',
-          picked_up_by: pickedUpBy.trim(),
+          picked_up_by: pickedUpBy?.trim() ?? null,
           picked_up_at: new Date(),
           cerfa_number: cerfaNumber,
         },
@@ -711,7 +707,7 @@ export class DonationOrchestratorService {
           actor,
           payload: {
             association_name: allocation.association.name,
-            picked_up_by: pickedUpBy.trim(),
+            picked_up_by: pickedUpBy?.trim() ?? null,
             cerfa_number: cerfaNumber,
             lines: allocation.lines as object[],
           },
@@ -808,7 +804,7 @@ export class DonationOrchestratorService {
   async confirmPickupByQr(
     qrCode: string,
     pharmacyId: string,
-    pickedUpBy: string,
+    pickedUpBy: string | undefined,
     actor: string
   ) {
     const allocation = await prisma.donationAllocation.findFirst({

@@ -64,9 +64,10 @@ class AccepterOffreDto {
   @IsISO8601()
   pickup_slot_end!: string;
 
+  @IsOptional()
   @IsString()
   @MaxLength(120)
-  picked_up_by!: string;
+  picked_up_by?: string;
 }
 
 class RefuserOffreDto {

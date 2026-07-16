@@ -10,9 +10,7 @@ import { Label } from '@/components/ui/label';
 import {
   ASSO_CATEGORY_OPTIONS,
   AssociationAdminRow,
-  AssoPickupWindow,
   CreateAssoDto,
-  PICKUP_DAYS,
 } from '@/lib/admin-associations';
 import { isValidEmail } from '@/lib/validation';
 
@@ -26,21 +24,7 @@ export interface AssoFormValues {
   agrement_numero: string;
   agrement_valide: boolean;
   categories: string[];
-  windows: Record<string, { start: string; end: string; closed: boolean }>;
   send_invitation: boolean;
-}
-
-function defaultWindows(
-  initial?: AssoPickupWindow[] | null
-): AssoFormValues['windows'] {
-  const map: AssoFormValues['windows'] = {};
-  for (const d of PICKUP_DAYS) {
-    const existing = initial?.find((w) => w.day === d.value);
-    map[d.value] = existing
-      ? { start: existing.start, end: existing.end, closed: false }
-      : { start: '09:00', end: '12:00', closed: true };
-  }
-  return map;
 }
 
 export function emptyAssoForm(): AssoFormValues {
@@ -54,7 +38,6 @@ export function emptyAssoForm(): AssoFormValues {
     agrement_numero: '',
     agrement_valide: false,
     categories: [],
-    windows: defaultWindows(),
     send_invitation: true,
   };
 }
@@ -70,19 +53,11 @@ export function assoFormFrom(a: AssociationAdminRow): AssoFormValues {
     agrement_numero: a.agrement_numero ?? '',
     agrement_valide: a.agrement_valide,
     categories: a.categories,
-    windows: defaultWindows(a.pickup_windows),
     send_invitation: false,
   };
 }
 
 export function formToDto(v: AssoFormValues): CreateAssoDto {
-  const windows: AssoPickupWindow[] = PICKUP_DAYS.filter(
-    (d) => !v.windows[d.value].closed
-  ).map((d) => ({
-    day: d.value,
-    start: v.windows[d.value].start,
-    end: v.windows[d.value].end,
-  }));
   return {
     name: v.name.trim(),
     email: v.email.trim(),
@@ -93,7 +68,6 @@ export function formToDto(v: AssoFormValues): CreateAssoDto {
     agrement_numero: v.agrement_numero.trim() || undefined,
     agrement_valide: v.agrement_valide,
     categories: v.categories,
-    pickup_windows: windows,
     send_invitation: v.send_invitation,
   };
 }
@@ -129,24 +103,13 @@ export function AssoAdminForm({
         : [...f.categories, cat],
     }));
 
-  const setWindow = (
-    day: string,
-    patch: Partial<{ start: string; end: string; closed: boolean }>
-  ) =>
-    setForm((f) => ({
-      ...f,
-      windows: { ...f.windows, [day]: { ...f.windows[day], ...patch } },
-    }));
-
-  const hasWindow = PICKUP_DAYS.some((d) => !form.windows[d.value].closed);
   const emailOk = isValidEmail(form.email.trim());
   const canSubmit =
     form.name.trim() !== '' &&
     emailOk &&
     form.address.trim() !== '' &&
     form.city.trim() !== '' &&
-    form.categories.length > 0 &&
-    hasWindow;
+    form.categories.length > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -267,51 +230,6 @@ export function AssoAdminForm({
         {form.categories.length === 0 && (
           <p className="text-[11px] text-destructive">
             Sélectionnez au moins une catégorie.
-          </p>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-xs">Créneaux de récupération *</Label>
-        <div className="space-y-1.5">
-          {PICKUP_DAYS.map((d) => {
-            const w = form.windows[d.value];
-            return (
-              <div key={d.value} className="flex items-center gap-2 text-xs">
-                <span className="w-20 shrink-0">{d.label}</span>
-                <Input
-                  type="time"
-                  className="h-8 w-28"
-                  value={w.start}
-                  disabled={w.closed || submitting}
-                  onChange={(e) =>
-                    setWindow(d.value, { start: e.target.value })
-                  }
-                />
-                <span className="text-muted-foreground">→</span>
-                <Input
-                  type="time"
-                  className="h-8 w-28"
-                  value={w.end}
-                  disabled={w.closed || submitting}
-                  onChange={(e) => setWindow(d.value, { end: e.target.value })}
-                />
-                <label className="ml-2 flex cursor-pointer items-center gap-1.5">
-                  <Checkbox
-                    checked={w.closed}
-                    onCheckedChange={(v) =>
-                      setWindow(d.value, { closed: v === true })
-                    }
-                  />
-                  Fermé
-                </label>
-              </div>
-            );
-          })}
-        </div>
-        {!hasWindow && (
-          <p className="text-[11px] text-destructive">
-            Déclarez au moins un créneau.
           </p>
         )}
       </div>

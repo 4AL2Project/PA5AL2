@@ -198,7 +198,7 @@ export function AssociationsAdminClient({
     }
   };
 
-  const { stats } = data;
+  const stats = data?.stats ?? { total: 0, actives: 0, agrement_manquant: 0 };
   const totalPages = Math.max(1, Math.ceil(data.total / PAGE_SIZE));
 
   return (

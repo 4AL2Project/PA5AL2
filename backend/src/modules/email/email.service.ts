@@ -345,6 +345,50 @@ export class EmailService {
     });
   }
 
+  async sendDonationCancelledByPharmacyEmail(
+    to: string,
+    assoName: string,
+    pharmacyName: string,
+    productSummary: string,
+    slotStart: Date
+  ) {
+    await this.send({
+      from: config.email.from,
+      to,
+      subject: `Savely — Don annulé par la pharmacie ${pharmacyName}`,
+      html: `
+        <p>Bonjour ${assoName},</p>
+        <p>La pharmacie <strong>${pharmacyName}</strong> a annulé le don de produits
+        (${productSummary}) prévu le <strong>${slotStart.toLocaleString('fr-FR')}</strong>.</p>
+        <p>Nous sommes désolés de cet inconvénient. D'autres propositions pourront
+        vous parvenir prochainement.</p>
+        <p>L'équipe Savely</p>
+      `,
+    });
+  }
+
+  async sendCerfaToPharmacyEmail(
+    to: string,
+    assoName: string,
+    productSummary: string,
+    cerfaPdf: Buffer
+  ) {
+    await this.send({
+      from: config.email.from,
+      to,
+      subject: `Savely — Reçu Cerfa disponible (don à ${assoName})`,
+      html: `
+        <p>Bonjour,</p>
+        <p>Le retrait du don (${productSummary}) par <strong>${assoName}</strong>
+        a été confirmé. Vous trouverez le reçu fiscal Cerfa 16216 en pièce jointe.</p>
+        <p>Ce reçu est également disponible dans votre espace Savely.</p>
+        <p>Merci pour votre contribution.</p>
+        <p>L'équipe Savely</p>
+      `,
+      attachments: [{ filename: 'recu-cerfa-16216.pdf', content: cerfaPdf }],
+    });
+  }
+
   async sendDonationFailedEmail(to: string, productSummary: string) {
     await this.send({
       from: config.email.from,

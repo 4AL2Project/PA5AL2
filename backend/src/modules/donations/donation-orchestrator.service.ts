@@ -555,17 +555,21 @@ export class DonationOrchestratorService {
   async cancelDonation(donationId: string, pharmacyId: string, userId: string) {
     const donation = await prisma.donation.findFirst({
       where: { donation_id: donationId, pharmacy_id: pharmacyId },
-      include: { allocations: { where: { status: 'PLANIFIEE' } } },
+      include: {
+        allocations: {
+          where: { status: 'PLANIFIEE' },
+          include: {
+            association: { select: { name: true, contact_email: true } },
+          },
+        },
+        lines: { include: { product: { select: { name: true } } } },
+        pharmacy: { select: { name: true } },
+      },
     });
     if (!donation) throw new NotFoundException('Don introuvable');
     if (donation.status !== 'EN_COURS') {
       throw new BadRequestException(
         `Un don ${donation.status} ne peut pas être annulé`
-      );
-    }
-    if (donation.allocations.length > 0) {
-      throw new BadRequestException(
-        'Un retrait est déjà planifié — le don ne peut plus être annulé'
       );
     }
 
@@ -584,14 +588,43 @@ export class DonationOrchestratorService {
         where: { donation_id: donationId, status: 'ENVOYEE' },
         data: { status: 'SUPERSEDED' },
       });
+      // Si une asso avait déjà accepté, on marque son allocation comme non récupérée
+      if (donation.allocations.length > 0) {
+        await tx.donationAllocation.updateMany({
+          where: { donation_id: donationId, status: 'PLANIFIEE' },
+          data: { status: 'NON_RECUPEREE' },
+        });
+      }
       await tx.donationEvent.create({
         data: {
           donation_id: donationId,
           type: 'DON_ANNULE',
           actor: `TITULAIRE:${userId}`,
+          payload:
+            donation.allocations.length > 0
+              ? {
+                  notified_assos: donation.allocations.map((a) => a.association.name),
+                }
+              : undefined,
         },
       });
     });
+
+    // Notifier les associations dont le retrait était planifié
+    const productSummary = donation.lines
+      .map((l) => `${l.product.name} ×${l.quantity_total}`)
+      .join(', ');
+    for (const allocation of donation.allocations) {
+      if (allocation.association.contact_email) {
+        await this.email.sendDonationCancelledByPharmacyEmail(
+          allocation.association.contact_email,
+          allocation.association.name,
+          donation.pharmacy.name,
+          productSummary,
+          allocation.pickup_slot_start
+        );
+      }
+    }
 
     if (donation.action_id) {
       await prisma.action.updateMany({
@@ -615,7 +648,10 @@ export class DonationOrchestratorService {
         allocation_id: allocationId,
         donation: { pharmacy_id: pharmacyId },
       },
-      include: { donation: true, association: true },
+      include: {
+        donation: { include: { pharmacy: { select: { name: true, email: true } } } },
+        association: true,
+      },
     });
     if (!allocation) throw new NotFoundException('Allocation introuvable');
     if (allocation.status !== 'PLANIFIEE') {
@@ -679,8 +715,9 @@ export class DonationOrchestratorService {
       });
     });
 
-    // Cerfa envoyé à l'asso + disponible côté titulaire (endpoint PDF)
+    // Cerfa envoyé à l'asso + au titulaire + disponible côté titulaire (endpoint PDF)
     // Le PDF est aussi stocké sur S3 pour consultation ultérieure (cerfa_url)
+    const lineSummary = lines.map((l) => `${l.name} ×${l.quantity}`).join(', ');
     try {
       const pdf = await this.cerfa.generateCerfa(allocationId, pharmacyId);
       const cerfaUrl = await this.storage.upload({
@@ -707,6 +744,17 @@ export class DonationOrchestratorService {
             )
         );
       }
+      // Cerfa également envoyé au titulaire de l'officine
+      await this.sendOnce(
+        { allocation_id: allocationId, email_type: 'CERFA_TITULAIRE' },
+        () =>
+          this.email.sendCerfaToPharmacyEmail(
+            allocation.donation.pharmacy.email,
+            allocation.association.name,
+            lineSummary,
+            pdf
+          )
+      );
     } catch (err) {
       // Fallback : générer le Cerfa à la volée si l'upload échoue
       this.logger.error(
@@ -728,6 +776,18 @@ export class DonationOrchestratorService {
           }
         );
       }
+      await this.sendOnce(
+        { allocation_id: allocationId, email_type: 'CERFA_TITULAIRE' },
+        async () => {
+          const pdf = await this.cerfa.generateCerfa(allocationId, pharmacyId);
+          await this.email.sendCerfaToPharmacyEmail(
+            allocation.donation.pharmacy.email,
+            allocation.association.name,
+            lineSummary,
+            pdf
+          );
+        }
+      );
     }
 
     await this.completeIfDone(allocation.donation_id);

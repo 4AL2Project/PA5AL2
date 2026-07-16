@@ -656,6 +656,7 @@ export interface DonationDetail extends DonationSummary {
     unit_value: number;
   }[];
   cancellable: boolean;
+  pickup_windows?: { start: string; end: string }[] | null;
 }
 
 export async function donationEligiblePreview(

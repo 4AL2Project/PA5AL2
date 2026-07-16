@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 
-import { AuthModule } from '../auth/auth.module';
 import { AssoAuthModule } from '../asso-auth/asso-auth.module';
+import { AuthModule } from '../auth/auth.module';
 import { EmailModule } from '../email/email.module';
 import { GeocodingModule } from '../geocoding/geocoding.module';
 import { AssociationPublicController } from './association-public.controller';

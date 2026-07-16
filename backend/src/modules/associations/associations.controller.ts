@@ -22,13 +22,13 @@ import {
 } from '@nestjs/swagger';
 import { memoryStorage } from 'multer';
 
+import { AssoAuthService } from '../asso-auth/asso-auth.service';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { TenantPharmacyId } from '../auth/decorators/tenant-pharmacy.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { TenantGuard } from '../auth/guards/tenant.guard';
 import { UserRole } from '../auth/roles.enum';
-import { AssoAuthService } from '../asso-auth/asso-auth.service';
 import { AssociationStatsService } from './association-stats.service';
 import {
   AssociationsService,

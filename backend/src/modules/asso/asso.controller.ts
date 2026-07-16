@@ -8,6 +8,7 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   IsArray,
   IsISO8601,
@@ -15,7 +16,6 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { prisma } from '../../database/client';
 import { AssoId } from '../asso-auth/asso-id.decorator';
@@ -96,8 +96,7 @@ export class AssoController {
 
   @Put('me')
   @ApiOperation({
-    summary:
-      'Mettre à jour mon profil (onboarding complété au premier appel)',
+    summary: 'Mettre à jour mon profil (onboarding complété au premier appel)',
   })
   updateMe(@AssoId() assoId: string, @Body() dto: UpdateProfileDto) {
     return this.assoService.updateProfile(assoId, dto);
@@ -165,7 +164,9 @@ export class AssoController {
   }
 
   @Get('dons/:id')
-  @ApiOperation({ summary: "Détail d'un don (allocation) + cerfa_url si disponible" })
+  @ApiOperation({
+    summary: "Détail d'un don (allocation) + cerfa_url si disponible",
+  })
   getDon(@AssoId() assoId: string, @Param('id') allocationId: string) {
     return this.assoService.getDon(assoId, allocationId);
   }

@@ -38,7 +38,7 @@ export class AssoAuthController {
 
   @Get('verify')
   @ApiOperation({
-    summary: "Vérifier le magic link et obtenir un JWT association (public)",
+    summary: 'Vérifier le magic link et obtenir un JWT association (public)',
   })
   verify(@Query() dto: VerifyTokenDto) {
     return this.assoAuthService.verifyToken(dto.token);

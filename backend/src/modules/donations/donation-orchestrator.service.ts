@@ -1,7 +1,5 @@
 import { randomUUID } from 'node:crypto';
 
-import * as QRCode from 'qrcode';
-
 import {
   BadRequestException,
   ConflictException,
@@ -9,10 +7,11 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import * as QRCode from 'qrcode';
 
 import { config } from '../../core/config';
-import { prisma } from '../../database/client';
 import { StorageService } from '../../core/storage/storage.service';
+import { prisma } from '../../database/client';
 import { EmailService } from '../email/email.service';
 import { CerfaService } from './cerfa.service';
 import {
@@ -703,12 +702,17 @@ export class DonationOrchestratorService {
       }
     } catch (err) {
       // Fallback : générer le Cerfa à la volée si l'upload échoue
-      this.logger.error(`Cerfa upload failed, falling back to on-the-fly: ${err}`);
+      this.logger.error(
+        `Cerfa upload failed, falling back to on-the-fly: ${err}`
+      );
       if (allocation.association.contact_email) {
         await this.sendOnce(
           { allocation_id: allocationId, email_type: 'CONFIRMATION_RETRAIT' },
           async () => {
-            const pdf = await this.cerfa.generateCerfa(allocationId, pharmacyId);
+            const pdf = await this.cerfa.generateCerfa(
+              allocationId,
+              pharmacyId
+            );
             await this.email.sendPickupConfirmedEmail(
               allocation.association.contact_email!,
               allocation.association.name,

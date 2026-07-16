@@ -1,16 +1,21 @@
-import { GoneException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import {
+  GoneException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { config } from '../../core/config';
 import { prisma } from '../../database/client';
-import { EmailService } from '../email/email.service';
 import { generateToken, hashToken } from '../auth/token.util';
+import { EmailService } from '../email/email.service';
 
 /** Payload JWT pour un token d'espace association. */
 export interface AssoJwtPayload {
-  sub: string;           // association_id
+  sub: string; // association_id
   type: 'association';
-  email: string | null;  // contact_email
+  email: string | null; // contact_email
 }
 
 const MAGIC_LINK_TTL_MS = 24 * 60 * 60 * 1000; // 24h
@@ -65,7 +70,9 @@ export class AssoAuthService {
   /**
    * Vérifie le token brut, consomme le magic link et émet un JWT association.
    */
-  async verifyToken(rawToken: string): Promise<{ access_token: string; is_onboarded: boolean }> {
+  async verifyToken(
+    rawToken: string
+  ): Promise<{ access_token: string; is_onboarded: boolean }> {
     const tokenHash = hashToken(rawToken);
     const asso = await prisma.association.findUnique({
       where: { magic_link_token_hash: tokenHash },

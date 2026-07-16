@@ -664,7 +664,9 @@ export class DonationOrchestratorService {
     });
     if (!allocation) throw new NotFoundException('Allocation introuvable');
     if (pickedUpBy !== undefined && !pickedUpBy.trim()) {
-      throw new BadRequestException('Le nom du récupérateur ne peut pas être vide');
+      throw new BadRequestException(
+        'Le nom du récupérateur ne peut pas être vide'
+      );
     }
     if (allocation.status !== 'PLANIFIEE') {
       throw new BadRequestException(

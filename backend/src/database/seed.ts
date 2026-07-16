@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+import { prisma } from './client';
 
 const DEMO_USER_EMAIL = 'demo@cosmorisk.fr';
 const DEMO_USER_PASSWORD = 'demo1234';
@@ -684,7 +683,7 @@ async function seedAssociations() {
   }
 }
 
-async function main() {
+export async function runSeed() {
   console.log('🌱 Démarrage du seed...\n');
 
   await seedAdmin();
@@ -852,9 +851,14 @@ async function main() {
   console.log('─────────────────────────────────────────────\n');
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Erreur seed :', e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+// Exécution CLI (`pnpm -F backend prisma:seed`) uniquement : importé depuis
+// l'API (module `dev`), le seed ne doit ni fermer la connexion partagée ni
+// tuer le process.
+if (require.main === module) {
+  runSeed()
+    .catch((e) => {
+      console.error('❌ Erreur seed :', e);
+      process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());
+}

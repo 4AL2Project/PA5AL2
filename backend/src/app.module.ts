@@ -14,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { CategoryModule } from './modules/category/category.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { DevModule } from './modules/dev/dev.module';
 import { DonationsModule } from './modules/donations/donations.module';
 import { IngestionModule } from './modules/ingestion/ingestion.module';
 import { InvitationModule } from './modules/invitation/invitation.module';
@@ -63,6 +64,8 @@ import { SchedulingModule } from './modules/scheduling/scheduling.module';
     OrderModule,
     CategoryModule,
     SchedulingModule,
+    // Outils destructifs (reset/seed de la base) : opt-in via DEV_TOOLS_ENABLED.
+    ...(config.devToolsEnabled ? [DevModule] : []),
   ],
   controllers: [HealthController],
   providers: [],

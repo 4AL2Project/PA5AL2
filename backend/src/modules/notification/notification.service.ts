@@ -9,7 +9,6 @@ import { prisma } from '../../database/client';
  */
 @Injectable()
 export class NotificationService {
-
   async listForCustomer(customerId: string) {
     return this.list({ customer_id: customerId });
   }

@@ -32,7 +32,11 @@ export class NotificationDispatchService implements INotificationService {
       body: `Votre commande chez ${p.pharmacy_name} est confirmée : ${lines}.`,
     });
     await this.safeEmail(() =>
-      this.email.sendOrderConfirmedEmail(p.customer_email, p.pharmacy_name, lines)
+      this.email.sendOrderConfirmedEmail(
+        p.customer_email,
+        p.pharmacy_name,
+        lines
+      )
     );
   }
 

@@ -89,7 +89,7 @@ export function CreneauxDonModal({
 
   useEffect(() => {
     if (!open) return;
-    fetch('/api/be/api/pharmacies/me')
+    fetch('/api/be/api/pharmacies/me', { cache: 'no-cache' })
       .then((r) => r.json())
       .then(
         (payload: {

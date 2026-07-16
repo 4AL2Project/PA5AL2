@@ -603,7 +603,9 @@ export class DonationOrchestratorService {
           payload:
             donation.allocations.length > 0
               ? {
-                  notified_assos: donation.allocations.map((a) => a.association.name),
+                  notified_assos: donation.allocations.map(
+                    (a) => a.association.name
+                  ),
                 }
               : undefined,
         },
@@ -649,7 +651,9 @@ export class DonationOrchestratorService {
         donation: { pharmacy_id: pharmacyId },
       },
       include: {
-        donation: { include: { pharmacy: { select: { name: true, email: true } } } },
+        donation: {
+          include: { pharmacy: { select: { name: true, email: true } } },
+        },
         association: true,
       },
     });

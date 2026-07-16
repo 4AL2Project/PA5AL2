@@ -184,16 +184,17 @@ export class DonationsController {
     summary: 'Télécharger le reçu Cerfa PDF (allocation RETIREE requise)',
   })
   @ApiProduces('application/pdf')
-  @Header('Content-Type', 'application/pdf')
   async downloadCerfa(
     @Param('id') id: string,
     @TenantPharmacyId() pharmacyId: string,
     @Res() res: Response
   ) {
     const pdf = await this.cerfaService.generateCerfa(id, pharmacyId);
+    // @Header() decorator n'est pas appliqué avec @Res() sans passthrough
+    res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="cerfa-16216-${id}.pdf"`
+      `inline; filename="cerfa-16216-${id}.pdf"`
     );
     res.setHeader('Content-Length', pdf.length);
     res.end(pdf);

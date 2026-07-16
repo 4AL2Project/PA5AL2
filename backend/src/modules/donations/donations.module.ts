@@ -4,6 +4,7 @@ import { StorageModule } from '../../core/storage/storage.module';
 import { AssociationsModule } from '../associations/associations.module';
 import { AuthModule } from '../auth/auth.module';
 import { EmailModule } from '../email/email.module';
+import { AdminDonationsController } from './admin-donations.controller';
 import { CerfaService } from './cerfa.service';
 import { DonationCron } from './donation.cron';
 import { DonationMatchingService } from './donation-matching.service';
@@ -14,7 +15,11 @@ import { DonationsService } from './donations.service';
 
 @Module({
   imports: [AuthModule, EmailModule, AssociationsModule, StorageModule],
-  controllers: [DonationsController, DonationPublicController],
+  controllers: [
+    DonationsController,
+    DonationPublicController,
+    AdminDonationsController,
+  ],
   providers: [
     DonationsService,
     DonationMatchingService,

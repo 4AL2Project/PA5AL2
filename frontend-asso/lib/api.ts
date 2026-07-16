@@ -86,6 +86,11 @@ export async function updateProfile(
 
 // ── Offres ───────────────────────────────────────────────────────────────────
 
+export interface PickupSlot {
+  start: string;
+  end: string;
+}
+
 export interface Offre {
   proposal_id: string;
   status: string;
@@ -94,6 +99,9 @@ export interface Offre {
   proposed_lines: Array<{ name: string; quantity: number; unit_value: number }>;
   donation: {
     donation_id: string;
+    // Créneaux spécifiques fixés par le titulaire au lancement du don.
+    // Null → l'asso choisit librement dans la plage disponible.
+    pickup_windows?: PickupSlot[] | null;
     pharmacy: {
       name: string;
       address: string | null;

@@ -3,7 +3,13 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import Shell from '@/components/shell';
-import { accepterOffre, fetchOffre, type Offre, refuserOffre } from '@/lib/api';
+import {
+  accepterOffre,
+  fetchOffre,
+  type Offre,
+  type PickupSlot,
+  refuserOffre,
+} from '@/lib/api';
 
 const REFUSAL_REASONS = [
   'Capacité insuffisante actuellement',
@@ -18,6 +24,25 @@ function fmt(iso: string) {
   });
 }
 
+function fmtSlot(slot: PickupSlot) {
+  const start = new Date(slot.start);
+  const end = new Date(slot.end);
+  const date = start.toLocaleDateString('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  const heureDebut = start.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  const heureFin = end.toLocaleTimeString('fr-FR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+  return { date, heure: `${heureDebut} – ${heureFin}` };
+}
+
 export default function OffrePage() {
   const router = useRouter();
   const params = useParams();
@@ -28,9 +53,13 @@ export default function OffrePage() {
   const [view, setView] = useState<
     'detail' | 'accept_done' | 'refuse_form' | 'refuse_done'
   >('detail');
+
+  // Slot selection — titulaire-provided slots vs free inputs
+  const [selectedSlot, setSelectedSlot] = useState<PickupSlot | null>(null);
   const [slotStart, setSlotStart] = useState('');
   const [slotEnd, setSlotEnd] = useState('');
   const [pickedUpBy, setPickedUpBy] = useState('');
+
   const [refusalReason, setRefusalReason] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -47,18 +76,39 @@ export default function OffrePage() {
       .finally(() => setLoading(false));
   }, [id, router]);
 
+  const titulaireSLots: PickupSlot[] =
+    offre?.donation?.pickup_windows?.filter(
+      (s) => new Date(s.start) > new Date()
+    ) ?? [];
+  const hasTitulaireSlots = titulaireSLots.length > 0;
+
   const handleAccept = async () => {
-    if (!slotStart || !slotEnd || !pickedUpBy) {
-      setError('Veuillez remplir tous les champs');
+    const effectiveStart = hasTitulaireSlots
+      ? selectedSlot?.start
+      : slotStart
+        ? new Date(slotStart).toISOString()
+        : undefined;
+    const effectiveEnd = hasTitulaireSlots
+      ? selectedSlot?.end
+      : slotEnd
+        ? new Date(slotEnd).toISOString()
+        : undefined;
+
+    if (!effectiveStart || !effectiveEnd) {
+      setError('Veuillez sélectionner un créneau de récupération');
+      return;
+    }
+    if (!pickedUpBy.trim()) {
+      setError('Veuillez indiquer le nom du récupérateur');
       return;
     }
     setSubmitting(true);
     setError('');
     try {
       await accepterOffre(id, {
-        pickup_slot_start: slotStart,
-        pickup_slot_end: slotEnd,
-        picked_up_by: pickedUpBy,
+        pickup_slot_start: effectiveStart,
+        pickup_slot_end: effectiveEnd,
+        picked_up_by: pickedUpBy.trim(),
       });
       setView('accept_done');
     } catch (e) {
@@ -114,11 +164,11 @@ export default function OffrePage() {
           </div>
           <h2 className="text-xl font-bold text-gray-900">Don accepté !</h2>
           <p className="text-gray-600">
-            Un QR code vous a été envoyé par email. Présentez-le au préparateur
-            lors de la récupération.
+            Rendez-vous à l&apos;officine au créneau convenu. Votre QR code de
+            récupération est disponible dans l&apos;onglet <strong>Dons</strong>.
           </p>
           <button
-            onClick={() => router.push('/offres')}
+            onClick={() => router.push('/dons')}
             className="mt-2 bg-savely-600 text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:bg-savely-700 transition-colors"
           >
             Voir mes dons
@@ -131,7 +181,7 @@ export default function OffrePage() {
           <div className="text-3xl">🙏</div>
           <h2 className="text-xl font-bold text-gray-900">Refus enregistré</h2>
           <p className="text-gray-500 text-sm">
-            L'officine en sera informée. Merci pour votre réponse.
+            L&apos;officine en sera informée. Merci pour votre réponse.
           </p>
           <button
             onClick={() => router.push('/offres')}
@@ -193,6 +243,7 @@ export default function OffrePage() {
 
       {view === 'detail' && (
         <div className="space-y-6 max-w-2xl">
+          {/* Fiche don */}
           <div className="bg-white border border-gray-100 rounded-2xl p-6">
             <h1 className="text-xl font-bold text-gray-900 mb-4">
               Offre de don
@@ -239,35 +290,79 @@ export default function OffrePage() {
             </p>
           </div>
 
+          {/* Formulaire d'acceptation */}
           {offre.status === 'ENVOYEE' && (
-            <div className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4">
+            <div className="bg-white border border-gray-100 rounded-2xl p-6 space-y-5">
               <h2 className="font-semibold text-gray-900">
-                Choisir un créneau de récupération
+                Créneau de récupération
               </h2>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Début *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={slotStart}
-                    onChange={(e) => setSlotStart(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 outline-none"
-                  />
+
+              {hasTitulaireSlots ? (
+                /* ── Créneaux fixés par le titulaire ────────────────── */
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600">
+                    L&apos;officine a proposé les créneaux suivants. Sélectionnez
+                    celui qui vous convient :
+                  </p>
+                  {titulaireSLots.map((slot) => {
+                    const { date, heure } = fmtSlot(slot);
+                    const isSelected =
+                      selectedSlot?.start === slot.start &&
+                      selectedSlot?.end === slot.end;
+                    return (
+                      <button
+                        key={slot.start}
+                        type="button"
+                        onClick={() => setSelectedSlot(slot)}
+                        className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                          isSelected
+                            ? 'border-savely-600 bg-savely-50'
+                            : 'border-gray-200 hover:border-savely-300 bg-white'
+                        }`}
+                      >
+                        <p className="font-medium text-gray-900 capitalize">
+                          {date}
+                        </p>
+                        <p className="text-sm text-savely-700 font-semibold mt-0.5">
+                          🕐 {heure}
+                        </p>
+                      </button>
+                    );
+                  })}
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">
-                    Fin *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={slotEnd}
-                    onChange={(e) => setSlotEnd(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 outline-none"
-                  />
+              ) : (
+                /* ── Saisie libre (pas de créneaux fixés) ───────────── */
+                <div className="space-y-3">
+                  <p className="text-sm text-gray-600">
+                    Indiquez quand vous pourrez passer récupérer le don :
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Début *
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={slotStart}
+                        onChange={(e) => setSlotStart(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 outline-none"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Fin *
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={slotEnd}
+                        onChange={(e) => setSlotEnd(e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 outline-none"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
                   Nom du récupérateur *
@@ -279,16 +374,22 @@ export default function OffrePage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 outline-none"
                 />
               </div>
+
               <p className="text-xs text-gray-500">
                 En acceptant, vous vous engagez à récupérer les produits au
                 créneau choisi. Un reçu fiscal Cerfa vous sera transmis après
                 récupération.
               </p>
+
               {error && <p className="text-sm text-red-600">{error}</p>}
+
               <div className="flex gap-3">
                 <button
                   onClick={handleAccept}
-                  disabled={submitting}
+                  disabled={
+                    submitting ||
+                    (hasTitulaireSlots ? !selectedSlot : !slotStart || !slotEnd)
+                  }
                   className="flex-1 bg-savely-600 text-white py-3 rounded-xl font-semibold hover:bg-savely-700 disabled:opacity-40 transition-colors"
                 >
                   {submitting ? 'Envoi…' : '✅ Accepter ce don'}

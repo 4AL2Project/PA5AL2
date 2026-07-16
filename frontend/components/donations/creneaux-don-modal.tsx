@@ -63,9 +63,7 @@ export function CreneauxDonModal({
   today.setHours(0, 0, 0, 0);
 
   const canAddSlot =
-    selectedDate !== undefined &&
-    startTime < endTime &&
-    slots.length < 5;
+    selectedDate !== undefined && startTime < endTime && slots.length < 5;
 
   function handleAddSlot() {
     if (!selectedDate || !canAddSlot) return;
@@ -82,7 +80,9 @@ export function CreneauxDonModal({
       end: end.toISOString(),
     };
 
-    const duplicate = slots.some((s) => s.start === newSlot.start && s.end === newSlot.end);
+    const duplicate = slots.some(
+      (s) => s.start === newSlot.start && s.end === newSlot.end
+    );
     if (duplicate) return;
 
     setSlots((prev) => [...prev, newSlot]);
@@ -138,7 +138,10 @@ export function CreneauxDonModal({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="start-time" className="text-xs text-muted-foreground">
+                <Label
+                  htmlFor="start-time"
+                  className="text-xs text-muted-foreground"
+                >
                   Début
                 </Label>
                 <div className="relative">
@@ -153,7 +156,10 @@ export function CreneauxDonModal({
                 </div>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="end-time" className="text-xs text-muted-foreground">
+                <Label
+                  htmlFor="end-time"
+                  className="text-xs text-muted-foreground"
+                >
                   Fin
                 </Label>
                 <div className="relative">
@@ -232,8 +238,8 @@ export function CreneauxDonModal({
 
             {slots.length > 0 && (
               <p className="text-xs text-muted-foreground">
-                Les associations partenaires verront ces créneaux sur leur espace
-                lors de la réception de la proposition de don.
+                Les associations partenaires verront ces créneaux sur leur
+                espace lors de la réception de la proposition de don.
               </p>
             )}
           </div>
@@ -250,7 +256,8 @@ export function CreneauxDonModal({
           >
             <CalendarIcon className="h-4 w-4" />
             Confirmer le don
-            {slots.length > 0 && ` (${slots.length} créneau${slots.length > 1 ? 'x' : ''})`}
+            {slots.length > 0 &&
+              ` (${slots.length} créneau${slots.length > 1 ? 'x' : ''})`}
           </Button>
         </DialogFooter>
       </DialogContent>

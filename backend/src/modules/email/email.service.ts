@@ -339,4 +339,73 @@ export class EmailService {
       `,
     });
   }
+
+  // ── Cycle de vie commande (click & collect) ───────────────────────────────
+
+  async sendOrderConfirmedEmail(
+    to: string,
+    pharmacyName: string,
+    linesSummary: string
+  ): Promise<void> {
+    await this.send({
+      from: config.email.from,
+      to,
+      subject: 'Savely -- Votre commande est confirmee',
+      html: `
+        <p>Bonjour,</p>
+        <p>Votre commande chez <strong>${pharmacyName}</strong> est confirmee.</p>
+        <p>Details : ${linesSummary}</p>
+        <p>Vous serez prevenu(e) des qu'elle sera prete a retirer.</p>
+      `,
+    });
+  }
+
+  async sendOrderReadyEmail(to: string, pharmacyName: string): Promise<void> {
+    await this.send({
+      from: config.email.from,
+      to,
+      subject: 'Savely -- Votre commande est prete a retirer',
+      html: `
+        <p>Bonjour,</p>
+        <p>Votre commande chez <strong>${pharmacyName}</strong> est prete.</p>
+        <p>Presentez votre QR code au comptoir pour la retirer.</p>
+      `,
+    });
+  }
+
+  async sendOrderCancelledEmail(
+    to: string,
+    pharmacyName: string,
+    reason?: string
+  ): Promise<void> {
+    await this.send({
+      from: config.email.from,
+      to,
+      subject: 'Savely -- Votre commande a ete annulee',
+      html: `
+        <p>Bonjour,</p>
+        <p>Votre commande chez <strong>${pharmacyName}</strong> a ete annulee${
+          reason ? ` : ${reason}` : ''
+        }.</p>
+      `,
+    });
+  }
+
+  async sendNewOrderForPrepEmail(
+    to: string,
+    pharmacyName: string,
+    linesSummary: string
+  ): Promise<void> {
+    await this.send({
+      from: config.email.from,
+      to,
+      subject: 'Savely -- Nouvelle commande a preparer',
+      html: `
+        <p>Bonjour,</p>
+        <p>Une nouvelle commande est a preparer pour <strong>${pharmacyName}</strong>.</p>
+        <p>Details : ${linesSummary}</p>
+        <p>Rendez-vous dans l'application preparateur pour la traiter.</p>
+      `,
+    });
+  }
 }

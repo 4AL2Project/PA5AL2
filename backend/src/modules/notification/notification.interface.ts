@@ -5,6 +5,8 @@ export interface OrderLineSummary {
 
 export interface OrderNotificationPayload {
   order_id: string;
+  customer_id: string;
+  pharmacy_id: string;
   customer_email: string;
   customer_name?: string;
   pharmacy_name: string;

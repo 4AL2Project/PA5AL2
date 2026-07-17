@@ -1,6 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+
+const titulaireUrl =
+  process.env.NEXT_PUBLIC_TITULAIRE_URL ?? 'http://localhost:3000';
+const assoUrl = process.env.NEXT_PUBLIC_ASSO_URL ?? 'http://localhost:3001';
 
 interface NavbarProps {
   onDemoClick?: () => void;
@@ -8,11 +12,23 @@ interface NavbarProps {
 
 export function Navbar({ onDemoClick }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const loginRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  useEffect(() => {
+    const onMouseDown = (e: MouseEvent) => {
+      if (loginRef.current && !loginRef.current.contains(e.target as Node)) {
+        setLoginOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
   }, []);
 
   return (
@@ -85,9 +101,97 @@ export function Navbar({ onDemoClick }: NavbarProps) {
           <a href="#tarifs" className="nav-link">
             Tarifs
           </a>
-          <a href="#" className="nav-link">
-            Se connecter
-          </a>
+
+          {/* Login dropdown */}
+          <div ref={loginRef} style={{ position: 'relative' }}>
+            <button
+              onClick={() => setLoginOpen((o) => !o)}
+              className="nav-link"
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                padding: 0,
+              }}
+            >
+              Se connecter
+              <span style={{ fontSize: 10, lineHeight: 1 }}>▾</span>
+            </button>
+
+            {loginOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  zIndex: 200,
+                  background: '#fff',
+                  boxShadow: '0 8px 32px rgba(0,0,0,.12)',
+                  borderRadius: 12,
+                  minWidth: 220,
+                  border: '1px solid rgba(74,155,142,.15)',
+                  marginTop: 8,
+                  overflow: 'hidden',
+                }}
+              >
+                <a
+                  href={titulaireUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setLoginOpen(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '12px 16px',
+                    fontSize: 14,
+                    color: '#1A1A1A',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    borderBottom: '1px solid #F3F4F6',
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = '#F0F7F6')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = 'transparent')
+                  }
+                >
+                  <span>🏥</span>
+                  <span>Espace Officine</span>
+                </a>
+                <a
+                  href={assoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setLoginOpen(false)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '12px 16px',
+                    fontSize: 14,
+                    color: '#1A1A1A',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background = '#F0F7F6')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = 'transparent')
+                  }
+                >
+                  <span>🤝</span>
+                  <span>Espace Association</span>
+                </a>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={onDemoClick}
             style={{

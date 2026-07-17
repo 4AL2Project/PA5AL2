@@ -4,21 +4,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
 
-const CATEGORIES_OPTIONS = [
-  'Cosmétiques',
-  'Soins visage',
-  'Soins corps',
-  'Dermatologie',
-  'Hygiène',
-  'Maquillage',
-  'Capillaire',
-  'Solaire',
-  'Parfumerie',
-  'Compléments alimentaires',
-  'Pédiatrie',
-  'Parapharmacie',
-  'Autre',
-];
+const isValidSiren = (siren: string) =>
+  /^\d{9}$/.test(siren.replace(/\s/g, ''));
 
 interface AssociationModalProps {
   isOpen: boolean;
@@ -34,7 +21,6 @@ type FormState = {
   postal_code: string;
   city: string;
   action_radius_km: number;
-  categories: string[];
   logo: File | null;
 };
 
@@ -47,7 +33,6 @@ const INITIAL: FormState = {
   postal_code: '',
   city: '',
   action_radius_km: 30,
-  categories: ['Cosmétiques', 'Parapharmacie'],
   logo: null,
 };
 
@@ -125,14 +110,6 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
 
-  const toggleCat = (cat: string) =>
-    set(
-      'categories',
-      form.categories.includes(cat)
-        ? form.categories.filter((c) => c !== cat)
-        : [...form.categories, cat]
-    );
-
   useEffect(() => {
     if (!isOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -172,7 +149,6 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
       fd.append('postal_code', form.postal_code);
       fd.append('city', form.city);
       fd.append('action_radius_km', String(form.action_radius_km));
-      form.categories.forEach((c) => fd.append('categories', c));
       if (form.logo) fd.append('logo', form.logo);
 
       const res = await fetch(`${API_BASE}/api/public/associations/register`, {
@@ -199,6 +175,10 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
     (e.currentTarget.style.borderColor = '#4A9B8E');
   const blur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) =>
     (e.currentTarget.style.borderColor = '#E5E7EB');
+
+  const sirenFilled = form.rna_or_siren.trim().length > 0;
+  const sirenInvalid = sirenFilled && !isValidSiren(form.rna_or_siren);
+  const submitDisabled = loading || (sirenFilled && sirenInvalid);
 
   if (!isOpen) return null;
 
@@ -357,7 +337,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
               </p>
             </div>
 
-            {/* Nom + RNA */}
+            {/* Nom + SIREN */}
             <div
               style={{
                 display: 'grid',
@@ -388,19 +368,31 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 <label
                   style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
                 >
-                  RNA ou SIREN <span style={{ color: '#4A9B8E' }}>*</span>
+                  SIREN
                 </label>
                 <input
                   type="text"
                   value={form.rna_or_siren}
                   onChange={(e) => set('rna_or_siren', e.target.value)}
-                  placeholder="W751234567"
-                  required
+                  placeholder="123 456 789"
                   maxLength={20}
-                  style={inputStyle}
+                  style={{
+                    ...inputStyle,
+                    borderColor: sirenInvalid ? '#EF4444' : '#E5E7EB',
+                  }}
                   onFocus={focus}
                   onBlur={blur}
                 />
+                {sirenInvalid ? (
+                  <p style={{ fontSize: 12, color: '#EF4444', margin: 0 }}>
+                    SIREN invalide — 9 chiffres requis
+                  </p>
+                ) : (
+                  <p style={{ fontSize: 12, color: '#9CA3AF', margin: 0 }}>
+                    Votre numéro SIREN à 9 chiffres (visible sur Kbis ou avis
+                    de situation INSEE)
+                  </p>
+                )}
               </div>
             </div>
 
@@ -601,41 +593,6 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
               </div>
             </div>
 
-            {/* Catégories */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label
-                style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
-              >
-                Catégories acceptées <span style={{ color: '#4A9B8E' }}>*</span>
-              </label>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {CATEGORIES_OPTIONS.map((cat) => {
-                  const active = form.categories.includes(cat);
-                  return (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => toggleCat(cat)}
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 600,
-                        padding: '6px 14px',
-                        borderRadius: 100,
-                        border: `1.5px solid ${active ? '#4A9B8E' : '#E5E7EB'}`,
-                        background: active ? '#F0F7F6' : '#fff',
-                        color: active ? '#4A9B8E' : '#6B7280',
-                        cursor: 'pointer',
-                        transition: 'all .15s',
-                      }}
-                    >
-                      {active && '✓ '}
-                      {cat}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
             {/* Logo */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
               <label
@@ -676,7 +633,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
 
             <button
               type="submit"
-              disabled={loading || form.categories.length === 0}
+              disabled={submitDisabled}
               style={{
                 background: '#4A9B8E',
                 color: '#fff',
@@ -684,15 +641,12 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 fontWeight: 700,
                 padding: '14px 24px',
                 borderRadius: 10,
-                cursor:
-                  loading || form.categories.length === 0
-                    ? 'not-allowed'
-                    : 'pointer',
-                opacity: loading || form.categories.length === 0 ? 0.6 : 1,
+                cursor: submitDisabled ? 'not-allowed' : 'pointer',
+                opacity: submitDisabled ? 0.6 : 1,
                 transition: 'background .2s, opacity .2s',
               }}
               onMouseEnter={(e) => {
-                if (!loading) e.currentTarget.style.background = '#2D6B62';
+                if (!submitDisabled) e.currentTarget.style.background = '#2D6B62';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = '#4A9B8E';

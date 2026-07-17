@@ -1089,7 +1089,7 @@ function Features() {
 
 // ── Groupements ───────────────────────────────────────────────────────────────
 
-function Groupements() {
+function Groupements({ onDemoClick }: { onDemoClick?: () => void }) {
   const officines = [
     {
       name: 'Pharmacie du Centre — Paris 11e',
@@ -1193,8 +1193,8 @@ function Groupements() {
                 </div>
               ))}
             </div>
-            <a
-              href="mailto:contact@savelypharma.fr"
+            <button
+              onClick={onDemoClick}
               style={{
                 background: '#fff',
                 color: '#4A9B8E',
@@ -1205,6 +1205,7 @@ function Groupements() {
                 display: 'inline-block',
                 transition: 'background .2s',
                 boxShadow: '0 4px 20px rgba(0,0,0,.15)',
+                cursor: 'pointer',
               }}
               onMouseEnter={(e) =>
                 (e.currentTarget.style.background = 'rgba(255,255,255,.92)')
@@ -1212,7 +1213,7 @@ function Groupements() {
               onMouseLeave={(e) => (e.currentTarget.style.background = '#fff')}
             >
               Contacter l'équipe Savely →
-            </a>
+            </button>
           </FadeUp>
 
           {/* Right: multi-officine panel */}
@@ -1764,10 +1765,11 @@ function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
                   </div>
                 ))}
               </div>
-              <a
-                href="mailto:contact@savelypharma.fr"
+              <button
+                onClick={onDemoClick}
                 style={{
                   display: 'block',
+                  width: '100%',
                   textAlign: 'center',
                   background: '#fff',
                   color: '#4A9B8E',
@@ -1776,6 +1778,7 @@ function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
                   padding: 14,
                   borderRadius: 12,
                   transition: 'background .2s',
+                  cursor: 'pointer',
                 }}
                 onMouseEnter={(e) =>
                   (e.currentTarget.style.background = 'rgba(255,255,255,.9)')
@@ -1785,7 +1788,7 @@ function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
                 }
               >
                 Contacter l'équipe →
-              </a>
+              </button>
             </div>
           </FadeUp>
         </div>
@@ -2120,7 +2123,7 @@ export default function LandingPage() {
       <Stats />
       <HowItWorks />
       <Features />
-      <Groupements />
+      <Groupements onDemoClick={openDemo} />
       <Associations />
       <Particuliers />
       <SocialProof />

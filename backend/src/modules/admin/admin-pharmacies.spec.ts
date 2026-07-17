@@ -252,12 +252,12 @@ describe('AdminService.listPharmacies', () => {
   });
 
   it('leve ForbiddenException si le role acteur nest pas ADMIN_SAVELY', async () => {
-    await expect(
-      service.listPharmacies(UserRole.TITULAIRE, 'any-id')
-    ).rejects.toThrow(ForbiddenException);
+    await expect(service.listPharmacies(UserRole.TITULAIRE)).rejects.toThrow(
+      ForbiddenException
+    );
   });
 
-  it('exclut la pharmacie de l acteur et inclut le premier titulaire', async () => {
+  it('exclut la pharmacie interne admin et inclut le premier titulaire', async () => {
     prisma.pharmacy.findMany.mockResolvedValue([
       {
         pharmacy_id: 'p1',
@@ -285,14 +285,11 @@ describe('AdminService.listPharmacies', () => {
       },
     ]);
 
-    const result = await service.listPharmacies(
-      UserRole.ADMIN_SAVELY,
-      'admin-pharmacy-id'
-    );
+    const result = await service.listPharmacies(UserRole.ADMIN_SAVELY);
 
     expect(prisma.pharmacy.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { NOT: { pharmacy_id: 'admin-pharmacy-id' } },
+        where: { subscription_tier: { not: 'admin' } },
         orderBy: { created_at: 'desc' },
       })
     );

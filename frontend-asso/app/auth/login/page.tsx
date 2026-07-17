@@ -1,14 +1,15 @@
 'use client';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 
-import { requestAssoMagicLink } from '@/lib/api';
 import { SavelyLogo } from '@/components/savely-logo';
+import { requestAssoMagicLink } from '@/lib/api';
 
 type State = 'idle' | 'loading' | 'sent' | 'error';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [state, setState] = useState<State>('idle');
 
@@ -20,6 +21,8 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setState('loading');
+    const redirect = searchParams.get('redirect');
+    if (redirect) sessionStorage.setItem('savely_asso_redirect', redirect);
     try {
       await requestAssoMagicLink(email);
       setState('sent');
@@ -136,5 +139,19 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }

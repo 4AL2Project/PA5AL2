@@ -44,12 +44,12 @@ export default function DonsPage() {
 
   useEffect(() => {
     if (!localStorage.getItem('savely_asso_token')) {
-      router.replace('/auth/verify');
+      router.replace('/auth/login');
       return;
     }
     fetchDons()
       .then(setDons)
-      .catch(() => router.replace('/auth/verify'))
+      .catch(() => router.replace('/auth/login'))
       .finally(() => setLoading(false));
   }, [router]);
 

@@ -25,7 +25,7 @@ export default function DonPage() {
 
   useEffect(() => {
     if (!localStorage.getItem('savely_asso_token')) {
-      router.replace('/auth/verify');
+      router.replace('/auth/login');
       return;
     }
     fetchDon(id)

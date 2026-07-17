@@ -101,7 +101,7 @@ export interface CreateAssoDto {
   postal_code?: string;
   agrement_numero?: string;
   agrement_valide?: boolean;
-  categories: string[];
+  categories?: string[];
   pickup_windows?: AssoPickupWindow[];
   send_invitation?: boolean;
 }

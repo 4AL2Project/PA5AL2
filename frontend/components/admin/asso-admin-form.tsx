@@ -8,7 +8,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
-  ASSO_CATEGORY_OPTIONS,
   AssociationAdminRow,
   CreateAssoDto,
 } from '@/lib/admin-associations';
@@ -23,7 +22,6 @@ export interface AssoFormValues {
   postal_code: string;
   agrement_numero: string;
   agrement_valide: boolean;
-  categories: string[];
   send_invitation: boolean;
 }
 
@@ -37,7 +35,6 @@ export function emptyAssoForm(): AssoFormValues {
     postal_code: '',
     agrement_numero: '',
     agrement_valide: false,
-    categories: [],
     send_invitation: true,
   };
 }
@@ -52,7 +49,6 @@ export function assoFormFrom(a: AssociationAdminRow): AssoFormValues {
     postal_code: a.postal_code ?? '',
     agrement_numero: a.agrement_numero ?? '',
     agrement_valide: a.agrement_valide,
-    categories: a.categories,
     send_invitation: false,
   };
 }
@@ -67,7 +63,6 @@ export function formToDto(v: AssoFormValues): CreateAssoDto {
     postal_code: v.postal_code.trim() || undefined,
     agrement_numero: v.agrement_numero.trim() || undefined,
     agrement_valide: v.agrement_valide,
-    categories: v.categories,
     send_invitation: v.send_invitation,
   };
 }
@@ -95,21 +90,12 @@ export function AssoAdminForm({
     value: AssoFormValues[K]
   ) => setForm((f) => ({ ...f, [key]: value }));
 
-  const toggleCategory = (cat: string) =>
-    setForm((f) => ({
-      ...f,
-      categories: f.categories.includes(cat)
-        ? f.categories.filter((c) => c !== cat)
-        : [...f.categories, cat],
-    }));
-
   const emailOk = isValidEmail(form.email.trim());
   const canSubmit =
     form.name.trim() !== '' &&
     emailOk &&
     form.address.trim() !== '' &&
-    form.city.trim() !== '' &&
-    form.categories.length > 0;
+    form.city.trim() !== '';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -205,34 +191,6 @@ export function AssoAdminForm({
           Génération de Cerfa impossible sans agrément.
         </div>
       )}
-
-      <div className="space-y-2">
-        <Label className="text-xs">Catégories acceptées *</Label>
-        <div className="flex flex-wrap gap-2">
-          {ASSO_CATEGORY_OPTIONS.map((cat) => {
-            const selected = form.categories.includes(cat.value);
-            return (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => toggleCategory(cat.value)}
-                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                  selected
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border text-muted-foreground hover:border-primary/50'
-                }`}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
-        </div>
-        {form.categories.length === 0 && (
-          <p className="text-[11px] text-destructive">
-            Sélectionnez au moins une catégorie.
-          </p>
-        )}
-      </div>
 
       {!isEdit && (
         <label className="flex cursor-pointer items-center gap-2 text-xs">

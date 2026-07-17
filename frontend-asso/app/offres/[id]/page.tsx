@@ -70,7 +70,7 @@ export default function OffrePage() {
 
   useEffect(() => {
     if (!localStorage.getItem('savely_asso_token')) {
-      router.replace(`/auth/verify?redirect=/offres/${id}`);
+      router.replace(`/auth/login?redirect=/offres/${id}`);
       return;
     }
     fetchOffre(id)

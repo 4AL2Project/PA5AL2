@@ -1,9 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { Navbar } from '@/components/navbar';
 import { Associations } from '@/components/associations';
 import { Particuliers } from '@/components/particuliers';
 import { FadeUp } from '@/components/fade-up';
+import { DemoModal } from '@/components/demo-modal';
 
 // ── SVG helpers ──────────────────────────────────────────────────────────────
 
@@ -83,7 +85,7 @@ function ArrowRight() {
 
 // ── Hero ─────────────────────────────────────────────────────────────────────
 
-function Hero() {
+function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
   return (
     <section style={{ padding: '96px 0 80px' }}>
       <div className="lp-container">
@@ -170,8 +172,8 @@ function Hero() {
                   marginBottom: 32,
                 }}
               >
-                <a
-                  href="#demo"
+                <button
+                  onClick={onDemoClick}
                   style={{
                     background: '#4A9B8E',
                     color: '#fff',
@@ -182,6 +184,7 @@ function Hero() {
                     display: 'inline-block',
                     transition: 'background .2s',
                     boxShadow: '0 4px 16px rgba(74,155,142,.35)',
+                    cursor: 'pointer',
                   }}
                   onMouseEnter={(e) =>
                     (e.currentTarget.style.background = '#2D6B62')
@@ -191,7 +194,7 @@ function Hero() {
                   }
                 >
                   Demander une démo →
-                </a>
+                </button>
                 <a
                   href="#particuliers"
                   style={{
@@ -1518,7 +1521,7 @@ function SocialProof() {
 
 // ── Pricing ───────────────────────────────────────────────────────────────────
 
-function Pricing() {
+function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
   const essentialFeatures = [
     '1 officine',
     'Import CSV illimité',
@@ -1640,10 +1643,11 @@ function Pricing() {
                   </div>
                 ))}
               </div>
-              <a
-                href="#demo"
+              <button
+                onClick={onDemoClick}
                 style={{
                   display: 'block',
+                  width: '100%',
                   textAlign: 'center',
                   background: '#F0F7F6',
                   color: '#4A9B8E',
@@ -1653,6 +1657,7 @@ function Pricing() {
                   borderRadius: 12,
                   border: '1.5px solid #4A9B8E',
                   transition: 'background .2s, color .2s',
+                  cursor: 'pointer',
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = '#4A9B8E';
@@ -1664,7 +1669,7 @@ function Pricing() {
                 }}
               >
                 Commencer gratuitement
-              </a>
+              </button>
             </div>
           </FadeUp>
 
@@ -1791,7 +1796,7 @@ function Pricing() {
 
 // ── CTA Final ─────────────────────────────────────────────────────────────────
 
-function CtaFinal() {
+function CtaFinal({ onDemoClick }: { onDemoClick?: () => void }) {
   return (
     <section id="demo" style={{ background: '#4A9B8E', padding: '96px 0' }}>
       <div className="lp-container">
@@ -1820,8 +1825,8 @@ function CtaFinal() {
           >
             14 jours gratuits. Sans carte bancaire. Sans engagement.
           </p>
-          <a
-            href="mailto:demo@savelypharma.fr"
+          <button
+            onClick={onDemoClick}
             style={{
               display: 'inline-block',
               background: '#fff',
@@ -1832,6 +1837,7 @@ function CtaFinal() {
               borderRadius: 14,
               transition: 'background .2s, transform .15s',
               boxShadow: '0 8px 32px rgba(0,0,0,.2)',
+              cursor: 'pointer',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.background = 'rgba(255,255,255,.93)';
@@ -1843,7 +1849,7 @@ function CtaFinal() {
             }}
           >
             Demander une démo gratuite →
-          </a>
+          </button>
           <p
             style={{
               fontSize: 13,
@@ -1886,9 +1892,27 @@ function Footer() {
                 marginBottom: 16,
               }}
             >
-              <svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="48" rx="11" fill="#fff" fillOpacity=".1" />
-                <path d="M8 13L16 35L24 13" stroke="white" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 48 48"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect
+                  width="48"
+                  height="48"
+                  rx="11"
+                  fill="#fff"
+                  fillOpacity=".1"
+                />
+                <path
+                  d="M8 13L16 35L24 13"
+                  stroke="white"
+                  strokeWidth="4.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
                 <path d="M28 13H42V35H34L28 29V13Z" fill="white" />
               </svg>
               <span
@@ -2085,11 +2109,14 @@ function Footer() {
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
+  const [demoOpen, setDemoOpen] = useState(false);
+  const openDemo = () => setDemoOpen(true);
+
   return (
     <>
-      <Navbar />
+      <Navbar onDemoClick={openDemo} />
       <div style={{ height: 68 }} />
-      <Hero />
+      <Hero onDemoClick={openDemo} />
       <Stats />
       <HowItWorks />
       <Features />
@@ -2097,9 +2124,10 @@ export default function LandingPage() {
       <Associations />
       <Particuliers />
       <SocialProof />
-      <Pricing />
-      <CtaFinal />
+      <Pricing onDemoClick={openDemo} />
+      <CtaFinal onDemoClick={openDemo} />
       <Footer />
+      <DemoModal isOpen={demoOpen} onClose={() => setDemoOpen(false)} />
     </>
   );
 }

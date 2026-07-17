@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from 'react';
 
-export function Navbar() {
+interface NavbarProps {
+  onDemoClick?: () => void;
+}
+
+export function Navbar({ onDemoClick }: NavbarProps) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -38,9 +42,21 @@ export function Navbar() {
       >
         {/* Logo */}
         <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg
+            width="34"
+            height="34"
+            viewBox="0 0 48 48"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
             <rect width="48" height="48" rx="11" fill="#0F0F0F" />
-            <path d="M8 13L16 35L24 13" stroke="white" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M8 13L16 35L24 13"
+              stroke="white"
+              strokeWidth="4.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
             <path d="M28 13H42V35H34L28 29V13Z" fill="white" />
           </svg>
           <span
@@ -72,8 +88,8 @@ export function Navbar() {
           <a href="#" className="nav-link">
             Se connecter
           </a>
-          <a
-            href="#demo"
+          <button
+            onClick={onDemoClick}
             style={{
               background: '#4A9B8E',
               color: '#fff',
@@ -82,17 +98,18 @@ export function Navbar() {
               padding: '10px 22px',
               borderRadius: 10,
               transition: 'background .2s',
+              cursor: 'pointer',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = '#2D6B62')}
             onMouseLeave={(e) => (e.currentTarget.style.background = '#4A9B8E')}
           >
             Demander une démo
-          </a>
+          </button>
         </div>
 
         {/* Mobile CTA */}
-        <a
-          href="#demo"
+        <button
+          onClick={onDemoClick}
           className="mobile-cta"
           style={{
             display: 'none',
@@ -102,10 +119,11 @@ export function Navbar() {
             fontWeight: 700,
             padding: '9px 18px',
             borderRadius: 9,
+            cursor: 'pointer',
           }}
         >
           Démo
-        </a>
+        </button>
       </div>
     </nav>
   );

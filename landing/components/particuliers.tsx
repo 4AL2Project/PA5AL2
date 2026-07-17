@@ -3,19 +3,37 @@
 import { useState } from 'react';
 import { FadeUp } from './fade-up';
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
+
 export function Particuliers() {
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    try {
+      await fetch(`${API_BASE}/api/public/waitlist`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+    } finally {
+      setLoading(false);
+      setSubmitted(true);
+    }
   };
 
   return (
-    <section id="particuliers" style={{ background: '#F0F7F6', paddingTop: 72, paddingBottom: 72 }}>
+    <section
+      id="particuliers"
+      style={{ background: '#F0F7F6', paddingTop: 72, paddingBottom: 72 }}
+    >
       <div className="lp-container">
-        <FadeUp style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
+        <FadeUp
+          style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center' }}
+        >
           <div
             style={{
               display: 'inline-block',
@@ -26,7 +44,9 @@ export function Particuliers() {
               border: '1px solid #EAF4F3',
             }}
           >
-            <span style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>Bientôt disponible</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>
+              Bientôt disponible
+            </span>
           </div>
           <h2
             style={{
@@ -39,9 +59,16 @@ export function Particuliers() {
           >
             Vous cherchez des produits à prix réduit&nbsp;?
           </h2>
-          <p style={{ fontSize: 16, color: '#6B7280', lineHeight: 1.65, marginBottom: 28 }}>
-            Savely propose bientôt des offres exclusives sur les produits cosmétiques des pharmacies
-            partenaires près de chez vous.
+          <p
+            style={{
+              fontSize: 16,
+              color: '#6B7280',
+              lineHeight: 1.65,
+              marginBottom: 28,
+            }}
+          >
+            Savely propose bientôt des offres exclusives sur les produits
+            cosmétiques des pharmacies partenaires près de chez vous.
           </p>
 
           {submitted ? (
@@ -91,6 +118,7 @@ export function Particuliers() {
               />
               <button
                 type="submit"
+                disabled={loading}
                 style={{
                   background: '#4A9B8E',
                   color: '#fff',
@@ -99,18 +127,32 @@ export function Particuliers() {
                   padding: '13px 22px',
                   borderRadius: 10,
                   whiteSpace: 'nowrap',
-                  transition: 'background .2s',
+                  transition: 'background .2s, opacity .2s',
+                  opacity: loading ? 0.7 : 1,
+                  cursor: loading ? 'not-allowed' : 'pointer',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#2D6B62')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = '#4A9B8E')}
+                onMouseEnter={(e) => {
+                  if (!loading) e.currentTarget.style.background = '#2D6B62';
+                }}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.background = '#4A9B8E')
+                }
               >
-                Je veux être prévenu(e)
+                {loading ? 'Envoi…' : 'Je veux être prévenu(e)'}
               </button>
             </form>
           )}
 
           {/* App store badges */}
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap', marginTop: 16 }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 12,
+              flexWrap: 'wrap',
+              marginTop: 16,
+            }}
+          >
             {[
               { label: 'App Store · Prochainement' },
               { label: 'Google Play · Prochainement' },
@@ -135,7 +177,11 @@ export function Particuliers() {
                     borderRadius: 4,
                   }}
                 />
-                <span style={{ fontSize: 13, fontWeight: 500, color: '#9CA3AF' }}>{label}</span>
+                <span
+                  style={{ fontSize: 13, fontWeight: 500, color: '#9CA3AF' }}
+                >
+                  {label}
+                </span>
               </div>
             ))}
           </div>

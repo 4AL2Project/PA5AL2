@@ -154,8 +154,8 @@ export default function OffrePage() {
           </div>
           <h2 className="text-xl font-bold text-foreground">Don accepté !</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Rendez-vous à l&apos;officine au créneau convenu. Votre QR code de
-            récupération est disponible dans l&apos;onglet{' '}
+            Rendez-vous à l&apos;officine au créneau convenu. Votre code de
+            récupération (SAV-XXXX) est disponible dans l&apos;onglet{' '}
             <strong>Mes dons</strong>.
           </p>
           <button
@@ -248,6 +248,28 @@ export default function OffrePage() {
               {offre.donation?.pharmacy?.address && (
                 <p className="text-sm text-muted-foreground">
                   {offre.donation.pharmacy.address}
+                </p>
+              )}
+              {offre.donation?.pharmacy?.contact_phone && (
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  📞{' '}
+                  <a
+                    href={`tel:${offre.donation.pharmacy.contact_phone}`}
+                    className="hover:underline"
+                  >
+                    {offre.donation.pharmacy.contact_phone}
+                  </a>
+                </p>
+              )}
+              {offre.donation?.pharmacy?.email && (
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  ✉️{' '}
+                  <a
+                    href={`mailto:${offre.donation.pharmacy.email}`}
+                    className="hover:underline"
+                  >
+                    {offre.donation.pharmacy.email}
+                  </a>
                 </p>
               )}
             </div>

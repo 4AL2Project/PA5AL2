@@ -116,6 +116,7 @@ export interface Offre {
       name: string;
       address: string | null;
       contact_phone?: string | null;
+      email?: string | null;
     } | null;
   } | null;
 }

@@ -389,8 +389,8 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                   </p>
                 ) : (
                   <p style={{ fontSize: 12, color: '#9CA3AF', margin: 0 }}>
-                    Votre numéro SIREN à 9 chiffres (visible sur Kbis ou avis
-                    de situation INSEE)
+                    Votre numéro SIREN à 9 chiffres (visible sur Kbis ou avis de
+                    situation INSEE)
                   </p>
                 )}
               </div>
@@ -646,7 +646,8 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 transition: 'background .2s, opacity .2s',
               }}
               onMouseEnter={(e) => {
-                if (!submitDisabled) e.currentTarget.style.background = '#2D6B62';
+                if (!submitDisabled)
+                  e.currentTarget.style.background = '#2D6B62';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = '#4A9B8E';

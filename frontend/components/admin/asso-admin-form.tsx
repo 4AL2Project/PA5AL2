@@ -7,10 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  AssociationAdminRow,
-  CreateAssoDto,
-} from '@/lib/admin-associations';
+import { AssociationAdminRow, CreateAssoDto } from '@/lib/admin-associations';
 import { isValidEmail } from '@/lib/validation';
 
 export interface AssoFormValues {

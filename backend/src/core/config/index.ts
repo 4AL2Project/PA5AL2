@@ -10,6 +10,13 @@ export const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
   role: (process.env.ROLE || 'all') as AppRole,
+  // Outils de dev destructifs (reset/seed de la base via `/api/dev/*`). Flag
+  // explicite plutôt que `NODE_ENV`, car la stack locale (docker-compose.services.yml)
+  // tourne en `NODE_ENV=production` sur une image prod-like. Opt-in strict : la
+  // prod ne définit jamais la variable → `DevModule` non chargé, routes en 404.
+  devToolsEnabled: process.env.DEV_TOOLS_ENABLED
+    ? process.env.DEV_TOOLS_ENABLED === 'true'
+    : (process.env.NODE_ENV || 'development') !== 'production',
   database: {
     url: process.env.DATABASE_URL || '',
   },
@@ -47,13 +54,14 @@ export const config = {
     // 'resend' (prod) ou 'smtp' (dev/test via MailHog)
     transport: (process.env.EMAIL_TRANSPORT || 'resend') as 'resend' | 'smtp',
     apiKey: process.env.RESEND_API_KEY || '',
-    from: process.env.EMAIL_FROM || 'noreply@savely.fr',
+    from: process.env.EMAIL_FROM || 'noreply@savelypharma.fr',
     smtp: {
       host: process.env.SMTP_HOST || 'localhost',
       port: parseInt(process.env.SMTP_PORT || '1025', 10),
     },
   },
   frontUrl: process.env.FRONT_URL || 'http://localhost:3000',
+  assoAppUrl: process.env.ASSO_APP_URL ?? 'http://localhost:3001',
   // Secret partageant l'accès à l'endpoint de déclenchement des tâches planifiées
   // (`POST /internal/scheduler/*`). En prod, un scheduler tiers (Cloud Scheduler…)
   // envoie ce secret dans l'en-tête `X-Scheduler-Key` pour enfiler une tâche.

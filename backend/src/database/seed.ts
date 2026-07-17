@@ -1,7 +1,6 @@
-import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
-const prisma = new PrismaClient();
+import { prisma } from './client';
 
 const DEMO_USER_EMAIL = 'demo@cosmorisk.fr';
 const DEMO_USER_PASSWORD = 'demo1234';
@@ -560,7 +559,28 @@ async function seedAdmin() {
 // retraits manqués) pour illustrer le score de fiabilité du matching.
 // Position : autour de la pharmacie démo (Place de la République, Paris 11e).
 
-const DEMO_ASSOCIATIONS = [
+const DEMO_ASSOCIATIONS: {
+  name: string;
+  address: string;
+  city: string;
+  postal_code: string;
+  lat?: number;
+  lng?: number;
+  action_radius_km?: number;
+  categories: string[];
+  pickup_sla_days?: number;
+  pickup_windows?: { day: string; start: string; end: string }[];
+  contact_email?: string;
+  contact_phone?: string;
+  rna_or_siren?: string;
+  // Champs admin
+  status?: string;
+  agrement_numero?: string;
+  agrement_valide?: boolean;
+  is_onboarded?: boolean;
+  description?: string;
+}[] = [
+  // ── Active + agrément validé + onboardée (cas nominal)
   {
     name: 'Solidarité Quartier République',
     address: '8 rue du Faubourg du Temple',
@@ -568,8 +588,8 @@ const DEMO_ASSOCIATIONS = [
     postal_code: '75011',
     lat: 48.868,
     lng: 2.366,
-    action_radius_km: 5, // asso de quartier
-    categories: ['Cosmétique', 'Dermatologie', 'Capillaire'],
+    action_radius_km: 5,
+    categories: ['cosmetiques', 'hygiene'],
     pickup_sla_days: 5,
     pickup_windows: [
       { day: 'MON', start: '09:00', end: '17:00' },
@@ -581,16 +601,22 @@ const DEMO_ASSOCIATIONS = [
     contact_email: 'contact@solidarite-republique.org',
     contact_phone: '0140000001',
     rna_or_siren: 'W751000001',
+    agrement_numero: 'W751000001',
+    agrement_valide: true,
+    is_onboarded: true,
+    description:
+      'Association de quartier spécialisée dans le soin aux personnes vulnérables.',
   },
+  // ── Active + agrément validé + onboardée + bonne fiabilité (IDF large)
   {
     name: 'Entraide Île-de-France',
-    address: '3 avenue de la Résistance, Créteil',
+    address: '3 avenue de la Résistance',
     city: 'Créteil',
     postal_code: '94000',
     lat: 48.7904,
     lng: 2.4556,
-    action_radius_km: 60, // domiciliée à Créteil, intervient sur toute l'IDF
-    categories: ['Cosmétique', 'Solaire', 'Pédiatrie', 'Compléments'],
+    action_radius_km: 60,
+    categories: ['cosmetiques', 'parapharmacie', 'hygiene'],
     pickup_sla_days: 7,
     pickup_windows: [
       { day: 'TUE', start: '10:00', end: '16:00' },
@@ -599,42 +625,170 @@ const DEMO_ASSOCIATIONS = [
     contact_email: 'dons@entraide-idf.org',
     contact_phone: '0140000002',
     rna_or_siren: 'W941000002',
+    agrement_numero: 'W941000002',
+    agrement_valide: true,
+    is_onboarded: true,
+    description: "Réseau d'entraide couvrant toute l'Île-de-France.",
   },
+  // ── Active + pas d'agrément + onboardée (fiabilité faible — rate ses créneaux)
   {
-    name: 'Les Oubliés du Retrait', // non fiable : rate ses créneaux
+    name: 'Les Oubliés du Retrait',
     address: '21 boulevard Voltaire',
     city: 'Paris',
     postal_code: '75011',
     lat: 48.863,
     lng: 2.37,
     action_radius_km: 30,
-    categories: ['Cosmétique', 'Maquillage', 'Parfumerie'],
+    categories: ['cosmetiques', 'autre'],
     pickup_sla_days: 10,
     contact_email: 'contact@oublies-retrait.org',
     contact_phone: '0140000003',
     rna_or_siren: 'W751000003',
+    agrement_valide: false,
+    is_onboarded: true,
+  },
+  // ── Active + agrément manquant + jamais invitée
+  {
+    name: 'Maison des Aidants 93',
+    address: '45 avenue Henri Barbusse',
+    city: 'Saint-Denis',
+    postal_code: '93200',
+    lat: 48.9362,
+    lng: 2.3547,
+    action_radius_km: 20,
+    categories: ['hygiene', 'parapharmacie'],
+    contact_email: 'contact@mda93.fr',
+    contact_phone: '0148000004',
+    agrement_valide: false,
+    is_onboarded: false,
+  },
+  // ── En attente de validation (inscrite via landing page)
+  {
+    name: 'Partage et Dignité Banlieue',
+    address: '12 rue Aristide Briand',
+    city: 'Montreuil',
+    postal_code: '93100',
+    lat: 48.8637,
+    lng: 2.4427,
+    action_radius_km: 15,
+    categories: ['cosmetiques', 'hygiene'],
+    contact_email: 'asso@partage-dignite.org',
+    contact_phone: '0148000005',
+    rna_or_siren: 'W931000005',
+    agrement_numero: 'W931000005',
+    agrement_valide: false,
+    is_onboarded: false,
+    status: 'EN_ATTENTE_VALIDATION',
+  },
+  // ── Active + agrément validé + invitation envoyée mais pas encore onboardée
+  {
+    name: 'Centre Social Belleville',
+    address: '4 rue Rampal',
+    city: 'Paris',
+    postal_code: '75019',
+    lat: 48.8726,
+    lng: 2.3765,
+    action_radius_km: 10,
+    categories: ['cosmetiques', 'parapharmacie', 'hygiene', 'autre'],
+    contact_email: 'dons@cs-belleville.fr',
+    contact_phone: '0140000006',
+    rna_or_siren: 'W751000006',
+    agrement_numero: 'W751000006',
+    agrement_valide: true,
+    is_onboarded: false,
+    description: 'Centre social multi-services du 19e arrondissement.',
+  },
+  // ── Suspendue (2 pickups ratés)
+  {
+    name: 'Aide & Partage 75',
+    address: '88 rue de la Roquette',
+    city: 'Paris',
+    postal_code: '75011',
+    lat: 48.855,
+    lng: 2.378,
+    action_radius_km: 8,
+    categories: ['hygiene', 'autre'],
+    contact_email: 'contact@aide-partage75.fr',
+    contact_phone: '0140000007',
+    agrement_numero: 'W751000007',
+    agrement_valide: true,
+    is_onboarded: true,
+    status: 'SUSPENDUE',
+  },
+  // ── Active + agrément validé + onboardée (associée à Versailles — rayon large)
+  {
+    name: 'Croix Verte Versailles',
+    address: '15 rue Carnot',
+    city: 'Versailles',
+    postal_code: '78000',
+    lat: 48.8053,
+    lng: 2.1346,
+    action_radius_km: 40,
+    categories: ['cosmetiques', 'parapharmacie'],
+    pickup_sla_days: 5,
+    pickup_windows: [
+      { day: 'MON', start: '09:00', end: '12:00' },
+      { day: 'WED', start: '09:00', end: '12:00' },
+      { day: 'FRI', start: '09:00', end: '12:00' },
+    ],
+    contact_email: 'dons@croix-verte-versailles.fr',
+    contact_phone: '0139000008',
+    rna_or_siren: 'W780000008',
+    agrement_numero: 'W780000008',
+    agrement_valide: true,
+    is_onboarded: true,
+    description: "Distribution de produits de soin et d'hygiène en Yvelines.",
   },
 ];
 
 async function seedAssociations() {
   let created = 0;
+  let updated = 0;
   const byName = new Map<string, string>();
   for (const a of DEMO_ASSOCIATIONS) {
+    const {
+      status,
+      agrement_numero,
+      agrement_valide,
+      is_onboarded,
+      description,
+      ...rest
+    } = a;
     const existing = await prisma.association.findFirst({
       where: { name: a.name },
     });
     if (existing) {
+      // Mise à jour idempotente des nouveaux champs admin
+      await prisma.association.update({
+        where: { association_id: existing.association_id },
+        data: {
+          agrement_numero: agrement_numero ?? existing.agrement_numero,
+          agrement_valide: agrement_valide ?? existing.agrement_valide,
+          is_onboarded: is_onboarded ?? existing.is_onboarded,
+          description: description ?? existing.description,
+          status: status ?? existing.status,
+        },
+      });
       byName.set(a.name, existing.association_id);
+      updated++;
       continue;
     }
     const asso = await prisma.association.create({
-      data: { ...a, status: 'ACTIVE', email_verified_at: new Date() },
+      data: {
+        ...rest,
+        status: status ?? 'ACTIVE',
+        email_verified_at: new Date(),
+        agrement_numero: agrement_numero ?? null,
+        agrement_valide: agrement_valide ?? false,
+        is_onboarded: is_onboarded ?? false,
+        description: description ?? null,
+      },
     });
     byName.set(a.name, asso.association_id);
     created++;
   }
   console.log(
-    `✅ Associations : ${created} créée(s), ${DEMO_ASSOCIATIONS.length - created} déjà présente(s)`
+    `✅ Associations : ${created} créée(s), ${updated} mise(s) à jour`
   );
 
   // Historique de non-fiabilité : 3 retraits manqués pour la 3e asso.
@@ -684,7 +838,7 @@ async function seedAssociations() {
   }
 }
 
-async function main() {
+export async function runSeed() {
   console.log('🌱 Démarrage du seed...\n');
 
   await seedAdmin();
@@ -852,9 +1006,14 @@ async function main() {
   console.log('─────────────────────────────────────────────\n');
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Erreur seed :', e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+// Exécution CLI (`pnpm -F backend prisma:seed`) uniquement : importé depuis
+// l'API (module `dev`), le seed ne doit ni fermer la connexion partagée ni
+// tuer le process.
+if (require.main === module) {
+  runSeed()
+    .catch((e) => {
+      console.error('❌ Erreur seed :', e);
+      process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());
+}

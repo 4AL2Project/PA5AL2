@@ -7,7 +7,11 @@ import { DeactivateOfficineButton } from '@/components/admin/deactivate-officine
 import { DeleteOfficineButton } from '@/components/admin/delete-officine-button';
 import { OfficineDetail } from '@/components/admin/officine-detail';
 import { Button } from '@/components/ui/button';
-import { fetchPharmacy } from '@/lib/admin';
+import {
+  fetchAdminDonations,
+  fetchAdminDonParametres,
+  fetchPharmacy,
+} from '@/lib/admin';
 import { getSession } from '@/lib/session';
 
 export default async function OfficineDetailPage({
@@ -21,7 +25,15 @@ export default async function OfficineDetailPage({
   }
 
   const { id } = await params;
-  const pharmacy = await fetchPharmacy(session.access_token, id);
+  const [pharmacy, recentDons, donParams] = await Promise.all([
+    fetchPharmacy(session.access_token, id),
+    fetchAdminDonations(session.access_token, {
+      pharmacy_id: id,
+      page: 1,
+      limit: 5,
+    }),
+    fetchAdminDonParametres(session.access_token, id),
+  ]);
 
   if (!pharmacy) {
     return (
@@ -76,7 +88,11 @@ export default async function OfficineDetailPage({
           Savely.
         </div>
       )}
-      <OfficineDetail pharmacy={pharmacy} />
+      <OfficineDetail
+        pharmacy={pharmacy}
+        recentDons={recentDons}
+        donParams={donParams}
+      />
     </AdminShell>
   );
 }

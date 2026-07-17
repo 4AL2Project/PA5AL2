@@ -11,6 +11,7 @@ import {
   X,
   XCircle,
 } from 'lucide-react';
+import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -534,11 +535,17 @@ function Step3({
               </p>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap justify-center gap-2">
             <Button variant="outline" onClick={onReset}>
               <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
               Importer d&apos;autres fichiers
             </Button>
+            <Link href={`/imports/${record.import_id}`}>
+              <Button variant="outline">
+                <FileText className="h-3.5 w-3.5 mr-1.5" />
+                Voir les détails de l&apos;import
+              </Button>
+            </Link>
             {onSuccess && (
               <Button onClick={onSuccess}>Voir l&apos;analyse</Button>
             )}
@@ -583,10 +590,18 @@ function Step3({
           <p className="text-xs text-muted-foreground">
             Corrigez les fichiers puis relancez l&apos;import.
           </p>
-          <Button variant="outline" onClick={onReset}>
-            <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-            Relancer avec de nouveaux fichiers
-          </Button>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Button variant="outline" onClick={onReset}>
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+              Relancer avec de nouveaux fichiers
+            </Button>
+            <Link href={`/imports/${record.import_id}`}>
+              <Button variant="outline">
+                <FileText className="h-3.5 w-3.5 mr-1.5" />
+                Voir les détails de l&apos;import
+              </Button>
+            </Link>
+          </div>
         </>
       )}
     </div>

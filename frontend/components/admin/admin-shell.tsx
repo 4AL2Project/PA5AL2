@@ -5,6 +5,7 @@ import {
   Heart,
   Home,
   LogOut,
+  Terminal,
   UserCircle,
   Users,
 } from 'lucide-react';
@@ -14,6 +15,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { SavelyLogo } from '@/components/savely-logo';
 import { Button } from '@/components/ui/button';
 import { endSession } from '@/lib/auth';
+import { devToolsEnabled } from '@/lib/dev-tools';
 import { cn } from '@/lib/utils';
 
 interface AdminShellProps {
@@ -30,6 +32,10 @@ const NAV = [
   { href: '/admin/utilisateurs', label: 'Utilisateurs', icon: Users },
   { href: '/admin/associations', label: 'Associations', icon: Heart },
   { href: '/admin/compte', label: 'Compte', icon: UserCircle },
+  // Outils destructifs : le lien disparaît quand les outils sont désactivés.
+  ...(devToolsEnabled
+    ? [{ href: '/admin/dev', label: 'Développeur', icon: Terminal }]
+    : []),
 ];
 
 export function AdminShell({

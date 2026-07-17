@@ -1,7 +1,7 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { EmptyActions, RoiSummary } from '@/components/actions/action-row';
@@ -12,6 +12,10 @@ import {
   ValidateActionPayload,
 } from '@/components/actions/validate-action-dialog';
 import { DashboardLayout } from '@/components/dashboard-layout';
+import {
+  CreneauxDonModal,
+  PickupSlot,
+} from '@/components/donations/creneaux-don-modal';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Select,
@@ -50,6 +54,12 @@ export default function ActionsPage() {
   const [ignoreTarget, setIgnoreTarget] = useState<DormantAction | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkIgnoreOpen, setBulkIgnoreOpen] = useState(false);
+  const [creneauxOpen, setCreneauxOpen] = useState(false);
+  const pendingDonPayloadRef = useRef<{
+    id: string;
+    payload: ValidateActionPayload;
+    action: DormantAction;
+  } | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -168,28 +178,23 @@ export default function ActionsPage() {
 
   const handleConfirmValidate = useCallback(
     async (id: string, payload: ValidateActionPayload) => {
+      const action = actions.find((a) => a.id === id) ?? null;
+
+      if (payload.type === 'DON' && action && payload.donQuantity) {
+        // Open créneaux modal before finalising the donation
+        pendingDonPayloadRef.current = { id, payload, action };
+        setPendingAction(null);
+        setCreneauxOpen(true);
+        return;
+      }
+
+      // B2C path — direct validation
       setMutating(true);
       try {
-        const action = actions.find((a) => a.id === id) ?? null;
         await validateAction(id, payload.type);
         removeAction(id);
         setPendingAction(null);
-        if (payload.type === 'DON' && action && payload.donQuantity) {
-          await createDonation({
-            action_id: id,
-            lines: [
-              { product_id: action.productId, quantity: payload.donQuantity },
-            ],
-            preferred_association_id: payload.preferredAssociationId,
-          });
-          toast.success(
-            'Don validé — Savely propose le lot aux associations de la zone'
-          );
-        } else if (
-          action &&
-          payload.discountedPrice &&
-          payload.quantityOffered
-        ) {
+        if (action && payload.discountedPrice && payload.quantityOffered) {
           await createOffer({
             product_id: action.productId,
             action_id: id,
@@ -207,6 +212,37 @@ export default function ActionsPage() {
       }
     },
     [removeAction, actions]
+  );
+
+  const handleCreneauxConfirm = useCallback(
+    async (slots: PickupSlot[] | undefined) => {
+      const pending = pendingDonPayloadRef.current;
+      if (!pending) return;
+      const { id, payload, action } = pending;
+      pendingDonPayloadRef.current = null;
+      setCreneauxOpen(false);
+      setMutating(true);
+      try {
+        await validateAction(id, payload.type);
+        removeAction(id);
+        await createDonation({
+          action_id: id,
+          lines: [
+            { product_id: action.productId, quantity: payload.donQuantity! },
+          ],
+          preferred_association_id: payload.preferredAssociationId,
+          ...(slots ? { pickup_windows: slots } : {}),
+        });
+        toast.success(
+          'Don validé — Savely propose le lot aux associations de la zone'
+        );
+      } catch {
+        toast.error('Impossible de valider cette action');
+      } finally {
+        setMutating(false);
+      }
+    },
+    [removeAction]
   );
 
   const handleIgnore = useCallback(
@@ -344,6 +380,19 @@ export default function ActionsPage() {
           setBulkIgnoreOpen(false);
           handleBulkIgnore();
         }}
+      />
+
+      <CreneauxDonModal
+        open={creneauxOpen}
+        onOpenChange={(open) => {
+          if (!open) pendingDonPayloadRef.current = null;
+          setCreneauxOpen(open);
+        }}
+        productName={
+          pendingDonPayloadRef.current?.action.productName ?? 'ce produit'
+        }
+        onConfirm={handleCreneauxConfirm}
+        loading={mutating}
       />
     </DashboardLayout>
   );

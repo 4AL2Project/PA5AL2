@@ -56,7 +56,9 @@ export class CerfaService {
     );
 
     return generateCerfaPdf({
-      cerfa_number: allocation.cerfa_number!,
+      cerfa_number:
+        allocation.cerfa_number ??
+        `CERFA-DON-${allocation.allocation_id.slice(0, 8).toUpperCase()}`,
       pharmacy_name: allocation.donation.pharmacy.name,
       pharmacy_address: allocation.donation.pharmacy.address ?? '',
       pharmacy_siret: allocation.donation.pharmacy.siret,
@@ -70,7 +72,7 @@ export class CerfaService {
         quantity: l.quantity,
         unit_value: l.unit_value,
       })),
-      withdrawn_at: allocation.picked_up_at!,
+      withdrawn_at: allocation.picked_up_at ?? new Date(),
     });
   }
 }

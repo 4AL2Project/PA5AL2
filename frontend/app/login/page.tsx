@@ -38,9 +38,13 @@ export default function LoginPage() {
     try {
       await requestMagicLink(email);
       setStatus('sent');
-    } catch {
+    } catch (err) {
+      const e = err as { status?: number; message?: string };
       setServerError(
-        "Impossible d'envoyer le lien pour le moment. Réessayez dans un instant."
+        e.status === 403
+          ? (e.message ??
+              'Votre officine a été désactivée. Contactez le support Savely.')
+          : "Impossible d'envoyer le lien pour le moment. Réessayez dans un instant."
       );
       setStatus('idle');
     }
@@ -54,9 +58,13 @@ export default function LoginPage() {
       await requestMagicLink(email);
       setResendStatus('sent');
       setResendCooldown(30);
-    } catch {
+    } catch (err) {
+      const e = err as { status?: number; message?: string };
       setServerError(
-        'Impossible de renvoyer le lien pour le moment. Réessayez dans un instant.'
+        e.status === 403
+          ? (e.message ??
+              'Votre officine a été désactivée. Contactez le support Savely.')
+          : 'Impossible de renvoyer le lien pour le moment. Réessayez dans un instant.'
       );
       setResendStatus('idle');
     }

@@ -131,8 +131,8 @@ export async function fetchOffre(id: string): Promise<Offre> {
 export async function accepterOffre(
   id: string,
   data: {
-    pickup_slot_start: string;
-    pickup_slot_end: string;
+    pickup_slot_start?: string;
+    pickup_slot_end?: string;
     picked_up_by?: string;
   }
 ): Promise<unknown> {

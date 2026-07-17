@@ -1,7 +1,6 @@
 'use client';
 
 import { CheckCircle2, Loader2 } from 'lucide-react';
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import { AuthShell } from '@/components/auth/auth-shell';
@@ -78,14 +77,6 @@ export default function LoginPage() {
         split={{ title: 'Connexion', subtitle: 'Espace\nTitulaire' }}
         title="Vérifiez votre boîte mail"
         description={`Si un compte existe pour ${email}, un lien de connexion vient d'être envoyé. Il est valable 15 minutes.`}
-        footer={
-          <>
-            Vous êtes admin ?{' '}
-            <Link href="/admin/login" className="font-bold text-[#0F766E]">
-              Connectez-vous ici
-            </Link>
-          </>
-        }
       >
         <div className="rounded-lg border bg-muted/30 p-4 flex items-start gap-3">
           <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
@@ -156,14 +147,6 @@ export default function LoginPage() {
       split={{ title: 'Connexion', subtitle: 'Espace\nTitulaire' }}
       title="Connexion"
       description="Recevez un lien de connexion pour accéder à votre espace."
-      footer={
-        <>
-          Vous êtes admin ?{' '}
-          <Link href="/admin/login" className="font-bold text-[#0F766E]">
-            Connectez-vous ici
-          </Link>
-        </>
-      }
     >
       <form onSubmit={onSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1.5">

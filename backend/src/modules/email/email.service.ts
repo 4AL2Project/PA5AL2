@@ -9,48 +9,38 @@ import { Resend } from 'resend';
 
 import { config } from '../../core/config';
 
-// ── Template HTML branded Savely ─────────────────────────────────────────────
+// ── HTML helpers ──────────────────────────────────────────────────────────────
 
-function emailLayout(body: string): string {
+/** Wraps content in the shared Savely email shell (max-width 560px, centered). */
+function emailLayout(content: string): string {
   return `<!DOCTYPE html>
 <html lang="fr">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Savely</title>
-</head>
-<body style="margin:0;padding:0;background:#f4f4f5;font-family:ui-sans-serif,system-ui,-apple-system,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:32px 16px;">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background-color:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f3f4f6;padding:32px 16px;">
     <tr><td align="center">
-      <table width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%;">
-
-        <!-- Logo -->
-        <tr><td style="padding-bottom:24px;" align="center">
-          <table cellpadding="0" cellspacing="0"><tr>
-            <td style="background:#16a34a;border-radius:10px;width:36px;height:36px;text-align:center;vertical-align:middle;">
-              <span style="color:#fff;font-size:20px;font-weight:700;line-height:36px;display:block;">S</span>
-            </td>
-            <td style="padding-left:10px;vertical-align:middle;">
-              <span style="font-size:18px;font-weight:700;color:#111827;letter-spacing:-0.3px;">Savely</span>
-            </td>
-          </tr></table>
-        </td></tr>
-
-        <!-- Card -->
-        <tr><td style="background:#fff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,.08);">
-          ${body}
-        </td></tr>
-
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+        <!-- Header -->
+        <tr>
+          <td style="background-color:#16a34a;padding:20px 32px;">
+            <span style="font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">Savely</span>
+          </td>
+        </tr>
+        <!-- Body -->
+        <tr>
+          <td style="padding:32px;">
+            ${content}
+          </td>
+        </tr>
         <!-- Footer -->
-        <tr><td style="padding-top:20px;text-align:center;">
-          <p style="margin:0;font-size:12px;color:#9ca3af;">
-            L'équipe Savely · <a href="https://savely.fr" style="color:#16a34a;text-decoration:none;">savely.fr</a>
-          </p>
-          <p style="margin:4px 0 0;font-size:11px;color:#d1d5db;">
-            Vous recevez cet email car votre association est partenaire Savely.
-          </p>
-        </td></tr>
-
+        <tr>
+          <td style="padding:16px 32px;border-top:1px solid #e5e7eb;background-color:#f9fafb;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;text-align:center;">
+              Savely — La plateforme de valorisation des stocks dormants pour officines<br>
+              <a href="https://savely.fr" style="color:#16a34a;text-decoration:none;">savely.fr</a>
+            </p>
+          </td>
+        </tr>
       </table>
     </td></tr>
   </table>
@@ -58,32 +48,99 @@ function emailLayout(body: string): string {
 </html>`;
 }
 
+/** Primary call-to-action button. */
 function btn(label: string, href: string): string {
-  return `<table cellpadding="0" cellspacing="0" style="margin-top:20px;">
-    <tr><td style="background:#16a34a;border-radius:8px;">
-      <a href="${href}" style="display:inline-block;color:#fff;font-size:14px;font-weight:600;padding:12px 24px;text-decoration:none;border-radius:8px;">${label}</a>
-    </td></tr>
-  </table>`;
+  return `<table cellpadding="0" cellspacing="0" style="margin:24px 0;">
+  <tr>
+    <td style="background-color:#16a34a;border-radius:6px;">
+      <a href="${href}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">${label}</a>
+    </td>
+  </tr>
+</table>`;
 }
 
+/** Section heading. */
 function h1(text: string): string {
-  return `<h1 style="margin:0 0 8px;font-size:20px;font-weight:700;color:#111827;">${text}</h1>`;
+  return `<h1 style="margin:0 0 16px 0;font-size:22px;font-weight:700;color:#111827;line-height:1.3;">${text}</h1>`;
 }
 
+/** Body paragraph. */
 function p(text: string): string {
-  return `<p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#374151;">${text}</p>`;
+  return `<p style="margin:0 0 12px 0;font-size:15px;color:#374151;line-height:1.6;">${text}</p>`;
 }
 
+/** Small muted text. */
 function small(text: string): string {
-  return `<p style="margin:16px 0 0;font-size:12px;color:#9ca3af;">${text}</p>`;
+  return `<p style="margin:0 0 8px 0;font-size:13px;color:#6b7280;line-height:1.5;">${text}</p>`;
 }
 
+/** Horizontal divider. */
+function divider(): string {
+  return `<hr style="border:none;border-top:1px solid #e5e7eb;margin:20px 0;">`;
+}
+
+/** Highlighted info box (green tint) for key messages. */
+function highlightBox(text: string): string {
+  return `<div style="background-color:#f0fdf4;border-left:4px solid #16a34a;border-radius:4px;padding:12px 16px;margin:16px 0;">
+  <p style="margin:0;font-size:14px;color:#15803d;line-height:1.5;">${text}</p>
+</div>`;
+}
+
+/** Green info box (legacy — used in existing templates). */
 function infoBox(content: string): string {
   return `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:16px 0;">${content}</div>`;
 }
 
+/** Amber warning box (legacy — used in existing templates). */
 function warnBox(content: string): string {
   return `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0;">${content}</div>`;
+}
+
+/** Footer legal/info mention in small muted style. */
+function footerMention(text: string): string {
+  return `<p style="margin:16px 0 0 0;font-size:12px;color:#9ca3af;line-height:1.5;">${text}</p>`;
+}
+
+export interface DonationProductLine {
+  name: string;
+  quantity: number;
+  unitPriceHt: number;
+}
+
+/** HTML table listing donation product lines with totals. */
+function productTable(products: DonationProductLine[]): string {
+  const totalHt = products.reduce(
+    (sum, item) => sum + item.quantity * item.unitPriceHt,
+    0
+  );
+
+  const rows = products
+    .map(
+      (item) =>
+        `<tr>
+          <td style="padding:8px 12px;font-size:14px;color:#374151;border-bottom:1px solid #f3f4f6;">${item.name}</td>
+          <td style="padding:8px 12px;font-size:14px;color:#374151;border-bottom:1px solid #f3f4f6;text-align:center;">${item.quantity}</td>
+          <td style="padding:8px 12px;font-size:14px;color:#374151;border-bottom:1px solid #f3f4f6;text-align:right;">${(item.quantity * item.unitPriceHt).toFixed(2)} €</td>
+        </tr>`
+    )
+    .join('');
+
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;margin:16px 0;">
+  <thead>
+    <tr style="background-color:#f9fafb;">
+      <th style="padding:10px 12px;font-size:13px;font-weight:600;color:#6b7280;text-align:left;border-bottom:1px solid #e5e7eb;">Produit</th>
+      <th style="padding:10px 12px;font-size:13px;font-weight:600;color:#6b7280;text-align:center;border-bottom:1px solid #e5e7eb;">Qté</th>
+      <th style="padding:10px 12px;font-size:13px;font-weight:600;color:#6b7280;text-align:right;border-bottom:1px solid #e5e7eb;">Valeur HT</th>
+    </tr>
+  </thead>
+  <tbody>${rows}</tbody>
+  <tfoot>
+    <tr style="background-color:#f0fdf4;">
+      <td colspan="2" style="padding:10px 12px;font-size:14px;font-weight:700;color:#111827;">Total HT</td>
+      <td style="padding:10px 12px;font-size:14px;font-weight:700;color:#111827;text-align:right;">${totalHt.toFixed(2)} €</td>
+    </tr>
+  </tfoot>
+</table>`;
 }
 
 // ── Service ───────────────────────────────────────────────────────────────────
@@ -203,21 +260,32 @@ export class EmailService {
 
   // ── Cycle de vie association ───────────────────────────────────────────────
 
+  /**
+   * Template 3 — Magic link invitation pour une association
+   * Invite une association à créer son espace sur Savely.
+   */
   async sendAssociationVerificationEmail(
     to: string,
     name: string,
     link: string
   ): Promise<void> {
+    const html = emailLayout(`
+      ${h1('Bienvenue sur Savely — Activez votre espace association')}
+      ${p(`Bonjour ${name},`)}
+      ${p('Savely est la plateforme qui connecte les officines avec des associations comme la vôtre pour donner une seconde vie aux produits de parapharmacie invendus. Aucun compte ni mot de passe requis : tout se passe via les liens que nous vous envoyons.')}
+      ${divider()}
+      ${p('Cliquez sur le bouton ci-dessous pour activer votre espace et commencer à recevoir des propositions de dons.')}
+      ${btn('Activer mon espace', link)}
+      ${highlightBox('Ce lien est valable 7 jours. Après cette date, contactez-nous pour recevoir un nouveau lien.')}
+      ${divider()}
+      ${footerMention('Si vous n\'êtes pas concerné(e) par cette invitation, ignorez simplement cet email — aucune action n\'est nécessaire.')}
+    `);
+
     await this.send({
       from: config.email.from,
       to,
       subject: 'Savely — Confirmez votre adresse email',
-      html: emailLayout(`
-        ${h1(`Bonjour ${name},`)}
-        ${p('Merci pour votre inscription sur Savely. Confirmez votre adresse email pour que nous puissions examiner votre demande :')}
-        ${btn('Confirmer mon email', link)}
-        ${small('Ce lien expire dans 48 heures.')}
-      `),
+      html,
     });
   }
 
@@ -264,43 +332,86 @@ export class EmailService {
 
   // ── Cycle de vie don ───────────────────────────────────────────────────────
 
+  /**
+   * Template 1 — Offre de don à une association (proposition)
+   * Envoyé à l'asso quand une pharmacie propose un don.
+   */
   async sendDonationProposalEmail(
     to: string,
     assoName: string,
     pharmacyName: string,
     link: string,
-    expiresAt: Date
+    expiresAt: Date,
+    pharmacyAddress?: string,
+    products?: DonationProductLine[]
   ) {
+    const totalHt =
+      products && products.length > 0
+        ? products
+            .reduce((sum, item) => sum + item.quantity * item.unitPriceHt, 0)
+            .toFixed(2)
+        : null;
+
+    const productsSection =
+      products && products.length > 0
+        ? `${divider()}
+           <p style="margin:0 0 8px 0;font-size:14px;font-weight:600;color:#111827;">Détail des produits proposés</p>
+           ${productTable(products)}
+           ${totalHt ? highlightBox(`Valeur totale HT du don : <strong>${totalHt} €</strong>`) : ''}`
+        : '';
+
+    const pharmacyInfo = pharmacyAddress
+      ? `${pharmacyName} — ${pharmacyAddress}`
+      : pharmacyName;
+
+    const html = emailLayout(`
+      ${h1('Une officine vous propose un don associatif')}
+      ${p(`Bonjour ${assoName},`)}
+      ${p(`La pharmacie <strong>${pharmacyInfo}</strong> souhaite vous faire don d'un lot de produits de parapharmacie / cosmétique.`)}
+      ${productsSection}
+      ${divider()}
+      ${p('Consultez le détail de l\'offre et acceptez ou refusez en cliquant sur le bouton ci-dessous.')}
+      ${btn('Voir l\'offre', link)}
+      ${highlightBox(`Sans réponse de votre part avant le <strong>${expiresAt.toLocaleString('fr-FR')}</strong>, la proposition sera transmise à une autre association.`)}
+      ${divider()}
+      ${p('Après récupération du lot, Savely vous transmettra automatiquement le reçu fiscal Cerfa 16216 vous permettant de justifier ce don auprès de vos donateurs et partenaires.')}
+      ${footerMention('Cet email vous a été envoyé car votre association est référencée sur Savely. Pour toute question : contact@savely.fr')}
+    `);
+
     await this.send({
       from: config.email.from,
       to,
-      subject: `${pharmacyName} vous propose un don de produits`,
-      html: emailLayout(`
-        ${h1(`Bonjour ${assoName},`)}
-        ${p(`La pharmacie <strong>${pharmacyName}</strong> souhaite vous donner un lot de produits (parapharmacie / cosmétique).`)}
-        ${btn('Voir la proposition de don', link)}
-        ${warnBox(`<p style="margin:0;font-size:13px;color:#92400e;">⏰ Sans réponse de votre part avant le ${expiresAt.toLocaleString('fr-FR')}, la proposition sera transmise à une autre association.</p>`)}
-        ${small('Cliquez sur le bouton ci-dessus ou copiez ce lien dans votre navigateur : ' + link)}
-      `),
+      subject: `Savely — ${pharmacyName} vous propose un don de produits`,
+      html,
     });
   }
 
+  /**
+   * Template 4 — Rappel offre non répondue (J-3 ou J-1 avant expiration)
+   * Ton urgent mais courtois.
+   */
   async sendDonationReminderEmail(
     to: string,
     assoName: string,
     link: string,
     expiresAt: Date
   ) {
+    const html = emailLayout(`
+      ${h1('Rappel : une offre de don expire bientôt')}
+      ${p(`Bonjour ${assoName},`)}
+      ${p('Vous avez reçu une proposition de don de produits de parapharmacie et n\'y avez pas encore répondu.')}
+      ${highlightBox(`Cette offre expire le <strong>${expiresAt.toLocaleString('fr-FR')}</strong>. Passé ce délai, elle sera automatiquement transmise à une autre association.`)}
+      ${p('Si vous souhaitez accepter ce don, consultez l\'offre dès maintenant :')}
+      ${btn('Voir l\'offre', link)}
+      ${divider()}
+      ${footerMention('Si vous avez déjà répondu à cette offre, ignorez ce message. Pour toute question : contact@savely.fr')}
+    `);
+
     await this.send({
       from: config.email.from,
       to,
-      subject: 'Rappel — une proposition de don vous attend',
-      html: emailLayout(`
-        ${h1(`Bonjour ${assoName},`)}
-        ${p("Vous n'avez pas encore répondu à la proposition de don en cours.")}
-        ${btn('Répondre maintenant', link)}
-        ${warnBox(`<p style="margin:0;font-size:13px;color:#92400e;">⏰ Cette proposition expire le ${expiresAt.toLocaleString('fr-FR')}.</p>`)}
-      `),
+      subject: 'Savely — Rappel : une proposition de don vous attend',
+      html,
     });
   }
 
@@ -347,21 +458,42 @@ export class EmailService {
     });
   }
 
+  /**
+   * Template 2 — Confirmation retrait (Cerfa)
+   * Envoyé après confirmation de retrait, avec le Cerfa en pièce jointe.
+   */
   async sendPickupConfirmedEmail(
     to: string,
     assoName: string,
-    cerfaPdf: Buffer
+    cerfaPdf: Buffer,
+    donationInfo?: { pharmacyName?: string; donationDate?: Date; totalHt?: number }
   ) {
+    const donationDetails =
+      donationInfo && (donationInfo.pharmacyName || donationInfo.donationDate || donationInfo.totalHt)
+        ? `${divider()}
+           <p style="margin:0 0 8px 0;font-size:14px;font-weight:600;color:#111827;">Récapitulatif du don</p>
+           ${donationInfo.pharmacyName ? p(`Pharmacie donateur : <strong>${donationInfo.pharmacyName}</strong>`) : ''}
+           ${donationInfo.donationDate ? p(`Date du retrait : <strong>${donationInfo.donationDate.toLocaleDateString('fr-FR')}</strong>`) : ''}
+           ${donationInfo.totalHt ? highlightBox(`Valeur déclarée HT du don : <strong>${donationInfo.totalHt.toFixed(2)} €</strong>`) : ''}`
+        : '';
+
+    const html = emailLayout(`
+      ${h1('Votre reçu fiscal Cerfa est disponible')}
+      ${p(`Bonjour ${assoName},`)}
+      ${p('Le retrait de votre lot de produits est bien confirmé. Merci pour votre engagement associatif.')}
+      ${donationDetails}
+      ${divider()}
+      ${p('Le reçu fiscal <strong>Cerfa n° 16216</strong> est joint à cet email en pièce jointe PDF. Conservez-le précieusement.')}
+      ${highlightBox('Ce reçu vous permet de bénéficier d\'une <strong>réduction fiscale de 60 %</strong> sur la valeur du don (art. 238 bis CGI). Il constitue la pièce justificative officielle à conserver pour votre comptabilité et vos obligations déclaratives.')}
+      ${divider()}
+      ${footerMention('Ce reçu a été généré automatiquement par Savely. Pour toute question relative au Cerfa : contact@savely.fr')}
+    `);
+
     await this.send({
       from: config.email.from,
       to,
-      subject: 'Retrait confirmé — votre reçu fiscal est joint',
-      html: emailLayout(`
-        ${h1(`Merci ${assoName} !`)}
-        ${p('Le retrait de votre don est confirmé. Vous trouverez le reçu fiscal Cerfa 16216 en pièce jointe.')}
-        ${infoBox(`<p style="margin:0;font-size:13px;color:#166534;">✅ Ce reçu ouvre droit à une réduction d'impôt de 60 % du montant du don (art. 238 bis CGI).</p>`)}
-        ${p('Conservez ce document 5 ans minimum.')}
-      `),
+      subject: 'Savely — Retrait confirmé, votre reçu fiscal est joint',
+      html,
       attachments: [{ filename: 'recu-cerfa-16216.pdf', content: cerfaPdf }],
     });
   }

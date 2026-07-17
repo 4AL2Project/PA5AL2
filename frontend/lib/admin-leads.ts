@@ -54,6 +54,10 @@ async function bePatch<T>(path: string): Promise<T> {
   return payload as T;
 }
 
+export async function fetchDemoRequest(id: string): Promise<DemoRequest> {
+  return beGet(`${BASE}/demo/${id}`);
+}
+
 export async function fetchDemoRequests(page = 1): Promise<DemoRequestList> {
   return beGet(`${BASE}/demo?page=${page}&limit=50`);
 }

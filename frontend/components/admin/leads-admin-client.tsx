@@ -1,6 +1,7 @@
 'use client';
 
 import { CheckCircle2, Clock, Loader2, Mail, Users } from 'lucide-react';
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -232,21 +233,26 @@ function DemoTable({
                 )}
               </TableCell>
               <TableCell>
-                {!row.contacted_at && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={markingId === row.id}
-                    onClick={() => onMarkContacted(row)}
-                    className="text-xs h-7"
-                  >
-                    {markingId === row.id ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      'Marquer contacté'
-                    )}
+                <div className="flex items-center gap-1.5">
+                  <Button size="sm" variant="ghost" asChild className="text-xs h-7">
+                    <Link href={`/admin/leads/${row.id}`}>Voir</Link>
                   </Button>
-                )}
+                  {!row.contacted_at && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={markingId === row.id}
+                      onClick={() => onMarkContacted(row)}
+                      className="text-xs h-7"
+                    >
+                      {markingId === row.id ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        'Marquer contacté'
+                      )}
+                    </Button>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ))}

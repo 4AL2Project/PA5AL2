@@ -187,6 +187,17 @@ export function AssociationsAdminClient({
     }
   };
 
+  const handleActiverInviter = async (asso: AssociationAdminRow) => {
+    try {
+      await patchAssoStatut(asso.association_id, { statut: 'ACTIVE' });
+      await inviterAsso(asso.association_id);
+      toast.success(`${asso.name} activée et invitée`);
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Activation impossible');
+    }
+  };
+
   const handleExport = async () => {
     setExporting(true);
     try {
@@ -337,6 +348,7 @@ export function AssociationsAdminClient({
                     setStatutTarget({ asso: a, action: 'BLACKLISTER' })
                   }
                   onInvite={() => handleInvite(a)}
+                  onActiverInviter={() => handleActiverInviter(a)}
                 />
               ))}
             </TableBody>
@@ -401,12 +413,14 @@ function AssoRow({
   onReactiver,
   onBlacklister,
   onInvite,
+  onActiverInviter,
 }: {
   asso: AssociationAdminRow;
   onSuspendre: () => void;
   onReactiver: () => void;
   onBlacklister: () => void;
   onInvite: () => void;
+  onActiverInviter: () => void;
 }) {
   const problematic = asso.fiabilite_score < 50 && asso.stats.total_dons >= 3;
   const blacklisted = asso.status === 'BLACKLISTEE';
@@ -522,7 +536,13 @@ function AssoRow({
                 </DropdownMenuItem>
               </>
             )}
-            {showInvite && asso.contact_email && (
+            {asso.status === 'EN_ATTENTE_VALIDATION' && (
+              <DropdownMenuItem onClick={onActiverInviter}>
+                <MailPlus className="mr-2 h-3.5 w-3.5" />
+                Activer + inviter
+              </DropdownMenuItem>
+            )}
+            {showInvite && asso.contact_email && asso.status !== 'EN_ATTENTE_VALIDATION' && (
               <DropdownMenuItem onClick={onInvite}>
                 <MailPlus className="mr-2 h-3.5 w-3.5" />
                 {asso.magic_link_token_hash

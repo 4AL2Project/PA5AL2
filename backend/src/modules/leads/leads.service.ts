@@ -31,6 +31,10 @@ export class LeadsService {
     return { data, total, page, limit };
   }
 
+  async findOneDemo(id: string) {
+    return prisma.demoRequest.findUniqueOrThrow({ where: { id } });
+  }
+
   async markContacted(id: string) {
     return prisma.demoRequest.update({
       where: { id },

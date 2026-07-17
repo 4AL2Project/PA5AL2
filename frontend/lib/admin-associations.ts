@@ -20,6 +20,7 @@ export interface AssociationAdminRow {
   address: string;
   city: string;
   postal_code: string;
+  rna_or_siren: string | null;
   categories: string[];
   contact_email: string | null;
   contact_phone: string | null;

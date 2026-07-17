@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; color: #1A1A1A; background: #fff; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    input, button, textarea { font-family: inherit; }
+    button { cursor: pointer; border: none; }
+    .container { max-width: 1160px; margin: 0 auto; padding: 0 32px; }
+    .section { padding: 100px 0; }
+    .section-sm { padding: 72px 0; }
+    .fade-up { opacity: 0; transform: translateY(28px); transition: opacity .65s cubic-bezier(.22,1,.36,1), transform .65s cubic-bezier(.22,1,.36,1); }
+    .fade-up.visible { opacity: 1; transform: none; }
+    @keyframes float { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-10px) rotate(0deg)} }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+    .steps-row { display: grid; grid-template-columns: 1fr 48px 1fr 48px 1fr; align-items: start; gap: 0; }
+    .features-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; }
+    .assoc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 72px; align-items: center; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 24px; max-width: 820px; margin: 0 auto; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 48px; }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .trust-badges { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+    .logos-row { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; align-items: center; }
+    @media(max-width:1024px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 56px; }
+      .features-grid { grid-template-columns: repeat(2,1fr); }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
+      .steps-row { grid-template-columns: 1fr; gap: 32px; }
+      .step-arrow-cell { display: none; }
+    }
+    @media(max-width:768px) {
+      .container { padding: 0 20px; }
+      .section { padding: 72px 0; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .features-grid { grid-template-columns: 1fr; }
+      .assoc-grid { grid-template-columns: 1fr; gap: 40px; }
+      .pricing-grid { grid-template-columns: 1fr; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; gap: 24px; }
+      .nav-links { display: none; }
+      .trust-badges { gap: 12px; }
+    }
+    @media(max-width:480px) {
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</helmet>
+
+<!-- NAVBAR -->
+<nav style="position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(74,155,142,.12);transition:box-shadow .3s;" style-scroll="{{ navShadow }}">
+  <div class="container" style="display:flex;align-items:center;justify-content:space-between;height:68px;">
+    <a href="#" style="display:flex;align-items:center;gap:8px;">
+      <div style="width:34px;height:34px;background:#4A9B8E;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+        <span style="color:#fff;font-size:18px;font-weight:800;letter-spacing:-.5px;">S</span>
+      </div>
+      <span style="font-size:20px;font-weight:800;color:#1A1A1A;letter-spacing:-.5px;">Savely</span>
+    </a>
+    <div class="nav-links">
+      <a href="#fonctionnalites" style="font-size:15px;font-weight:500;color:#6B7280;transition:color .2s;" style-hover="color:#1A1A1A">Fonctionnalités</a>
+      <a href="#associations" style="font-size:15px;font-weight:500;color:#6B7280;transition:color .2s;" style-hover="color:#1A1A1A">Pour les associations</a>
+      <a href="#tarifs" style="font-size:15px;font-weight:500;color:#6B7280;transition:color .2s;" style-hover="color:#1A1A1A">Tarifs</a>
+      <a href="#" style="font-size:15px;font-weight:500;color:#6B7280;transition:color .2s;" style-hover="color:#1A1A1A">Se connecter</a>
+      <a href="#demo" style="background:#4A9B8E;color:#fff;font-size:14px;font-weight:700;padding:10px 22px;border-radius:10px;transition:background .2s;" style-hover="background:#2D6B62">Demander une démo</a>
+    </div>
+    <!-- Mobile CTA -->
+    <a href="#demo" class="hide-desktop" style="background:#4A9B8E;color:#fff;font-size:13px;font-weight:700;padding:9px 18px;border-radius:9px;display:none;" id="mobile-cta">Démo</a>
+  </div>
+</nav>
+
+<!-- SPACER for fixed nav -->
+<div style="height:68px;"></div>
+
+<!-- SECTION 1 — HERO -->
+<section style="padding:96px 0 80px;">
+  <div class="container">
+    <div class="hero-grid">
+      <!-- Left: Text -->
+      <div>
+        <div class="fade-up" style="display:inline-flex;align-items:center;gap:8px;background:#F0F7F6;border:1px solid #C5E0DC;border-radius:100px;padding:6px 14px;margin-bottom:28px;">
+          <span style="width:7px;height:7px;background:#4A9B8E;border-radius:50%;display:inline-block;animation:blink 2s ease-in-out infinite;"></span>
+          <span style="font-size:13px;font-weight:600;color:#4A9B8E;">Pour les officines et groupements</span>
+        </div>
+        <h1 class="fade-up" style="font-size:clamp(36px,4.5vw,58px);font-weight:800;line-height:1.12;letter-spacing:-.03em;color:#1A1A1A;margin-bottom:24px;transition-delay:.08s;">
+          Vos produits cosmétiques dorment.<br />
+          <span style="color:#4A9B8E;">Savely les réveille.</span>
+        </h1>
+        <p class="fade-up" style="font-size:18px;line-height:1.65;color:#6B7280;max-width:480px;margin-bottom:40px;transition-delay:.16s;">
+          La plateforme qui transforme votre stock dormant en économies réelles — dons tracés, reçus fiscaux automatiques, zéro friction.
+        </p>
+        <div class="fade-up" style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:32px;transition-delay:.24s;">
+          <a href="#demo" style="background:#4A9B8E;color:#fff;font-size:15px;font-weight:700;padding:15px 28px;border-radius:12px;display:inline-block;transition:background .2s,transform .15s;box-shadow:0 4px 16px rgba(74,155,142,.35);" style-hover="background:#2D6B62">Demander une démo →</a>
+          <a href="#particuliers" style="background:transparent;color:#4A9B8E;font-size:15px;font-weight:600;padding:15px 24px;border-radius:12px;display:inline-block;border:1.5px solid #4A9B8E;transition:background .2s;" style-hover="background:#F0F7F6">Vous êtes un particulier ?</a>
+        </div>
+        <div class="fade-up trust-badges" style="transition-delay:.32s;">
+          <span style="font-size:13px;font-weight:500;color:#6B7280;display:flex;align-items:center;gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="7.5" fill="#4A9B8E" opacity=".15"/><path d="M4.5 7.5L6.5 9.5L10.5 5.5" stroke="#4A9B8E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Données hébergées en France
+          </span>
+          <span style="font-size:13px;font-weight:500;color:#6B7280;display:flex;align-items:center;gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="7.5" fill="#4A9B8E" opacity=".15"/><path d="M4.5 7.5L6.5 9.5L10.5 5.5" stroke="#4A9B8E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            RGPD
+          </span>
+          <span style="font-size:13px;font-weight:500;color:#6B7280;display:flex;align-items:center;gap:6px;">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="7.5" fill="#4A9B8E" opacity=".15"/><path d="M4.5 7.5L6.5 9.5L10.5 5.5" stroke="#4A9B8E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Cerfa 16216 automatique
+          </span>
+        </div>
+      </div>
+      <!-- Right: Dashboard Mockup -->
+      <div class="fade-up" style="transition-delay:.1s;">
+        <div style="animation:float 5s ease-in-out infinite;will-change:transform;">
+          <div style="background:#fff;border-radius:20px;box-shadow:0 24px 64px rgba(0,0,0,.12),0 4px 16px rgba(74,155,142,.15);overflow:hidden;border:1px solid rgba(74,155,142,.1);">
+            <!-- Window bar -->
+            <div style="background:#F8FFFE;border-bottom:1px solid #EAF4F3;padding:14px 20px;display:flex;align-items:center;gap:12px;">
+              <div style="display:flex;gap:6px;">
+                <div style="width:11px;height:11px;border-radius:50%;background:#FF5F57;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#FEBC2E;"></div>
+                <div style="width:11px;height:11px;border-radius:50%;background:#28C840;"></div>
+              </div>
+              <div style="flex:1;text-align:center;font-size:12px;font-weight:600;color:#6B7280;">Savely · Vue d'ensemble</div>
+            </div>
+            <!-- Dashboard content -->
+            <div style="padding:24px;background:#fff;">
+              <!-- Header -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+                <div>
+                  <div style="font-size:13px;color:#6B7280;font-weight:500;">Pharmacie du Centre — Janvier 2026</div>
+                  <div style="font-size:18px;font-weight:800;color:#1A1A1A;margin-top:2px;">Tableau de bord</div>
+                </div>
+                <div style="background:#4A9B8E;color:#fff;font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;">● En direct</div>
+              </div>
+              <!-- KPI cards -->
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+                <div style="background:linear-gradient(135deg,#4A9B8E,#3a8a7d);border-radius:12px;padding:16px;color:#fff;">
+                  <div style="font-size:10px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Économisé</div>
+                  <div style="font-size:22px;font-weight:800;">284€</div>
+                  <div style="font-size:11px;opacity:.75;margin-top:2px;">ce mois</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#3a8a7d,#2D6B62);border-radius:12px;padding:16px;color:#fff;">
+                  <div style="font-size:10px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Dons</div>
+                  <div style="font-size:22px;font-weight:800;">3</div>
+                  <div style="font-size:11px;opacity:.75;margin-top:2px;">complétés</div>
+                </div>
+                <div style="background:linear-gradient(135deg,#F5A623,#e8941a);border-radius:12px;padding:16px;color:#fff;">
+                  <div style="font-size:10px;font-weight:600;opacity:.8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Réduction</div>
+                  <div style="font-size:22px;font-weight:800;">60%</div>
+                  <div style="font-size:11px;opacity:.75;margin-top:2px;">fiscale</div>
+                </div>
+              </div>
+              <!-- Activity bar chart -->
+              <div style="background:#F8FFFE;border-radius:12px;padding:16px;">
+                <div style="font-size:12px;font-weight:600;color:#6B7280;margin-bottom:12px;">Activité — 6 derniers mois</div>
+                <div style="display:flex;gap:8px;align-items:flex-end;height:60px;">
+                  <div style="flex:1;background:#C5E0DC;border-radius:4px 4px 0 0;height:35%;"></div>
+                  <div style="flex:1;background:#4A9B8E;border-radius:4px 4px 0 0;height:55%;"></div>
+                  <div style="flex:1;background:#C5E0DC;border-radius:4px 4px 0 0;height:40%;"></div>
+                  <div style="flex:1;background:#4A9B8E;border-radius:4px 4px 0 0;height:70%;"></div>
+                  <div style="flex:1;background:#4A9B8E;border-radius:4px 4px 0 0;height:85%;"></div>
+                  <div style="flex:1;background:#F5A623;border-radius:4px 4px 0 0;height:100%;"></div>
+                </div>
+              </div>
+              <!-- Cerfa badge -->
+              <div style="margin-top:16px;display:flex;align-items:center;gap:10px;background:#F0F7F6;border-radius:10px;padding:12px 14px;">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect width="18" height="18" rx="5" fill="#4A9B8E"/><path d="M5 9l3 3 5-5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <div>
+                  <div style="font-size:12px;font-weight:700;color:#1A1A1A;">Cerfa 16216 prêt</div>
+                  <div style="font-size:11px;color:#6B7280;">Don · Croix-Rouge Paris 11e · 20 jan</div>
+                </div>
+                <div style="margin-left:auto;font-size:11px;font-weight:700;color:#4A9B8E;cursor:pointer;">Télécharger</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 2 — PROBLÈME -->
+<section style="background:#F0F7F6;padding:96px 0;">
+  <div class="container">
+    <div class="fade-up" style="text-align:center;margin-bottom:56px;">
+      <h2 style="font-size:clamp(28px,3.5vw,42px);font-weight:800;letter-spacing:-.03em;color:#1A1A1A;margin-bottom:16px;">Ce que coûte vraiment un stock mal géré</h2>
+      <p style="font-size:17px;color:#6B7280;max-width:520px;margin:0 auto;line-height:1.6;">Chaque mois sans action, c'est de l'argent qui dort — et des avantages fiscaux que vous laissez passer.</p>
+    </div>
+    <div class="stats-grid">
+      <div class="fade-up" style="background:#fff;border-radius:20px;padding:40px 32px;border:1px solid #EAF4F3;box-shadow:0 4px 24px rgba(74,155,142,.08);transition-delay:.0s;">
+        <div style="font-size:48px;font-weight:800;color:#4A9B8E;letter-spacing:-.03em;line-height:1;margin-bottom:12px;">650€–3 750€</div>
+        <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin-bottom:8px;">perdus par mois</div>
+        <div style="font-size:14px;color:#6B7280;line-height:1.55;">par officine sur les produits dormants non valorisés</div>
+      </div>
+      <div class="fade-up" style="background:#fff;border-radius:20px;padding:40px 32px;border:1px solid #EAF4F3;box-shadow:0 4px 24px rgba(74,155,142,.08);transition-delay:.1s;">
+        <div style="font-size:48px;font-weight:800;color:#4A9B8E;letter-spacing:-.03em;line-height:1;margin-bottom:12px;">47 jours</div>
+        <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin-bottom:8px;">d'immobilisation moyenne</div>
+        <div style="font-size:14px;color:#6B7280;line-height:1.55;">avant qu'une action soit prise sur un cosmétique à rotation lente</div>
+      </div>
+      <div class="fade-up" style="background:#fff;border-radius:20px;padding:40px 32px;border:1px solid #EAF4F3;box-shadow:0 4px 24px rgba(74,155,142,.08);transition-delay:.2s;">
+        <div style="font-size:48px;font-weight:800;color:#F5A623;letter-spacing:-.03em;line-height:1;margin-bottom:12px;">60%</div>
+        <div style="font-size:15px;font-weight:600;color:#1A1A1A;margin-bottom:8px;">de réduction fiscale</div>
+        <div style="font-size:14px;color:#6B7280;line-height:1.55;">récupérable sur chaque don (art. 238 bis CGI) — tracé automatiquement</div>
+      </div>
+    </div>
+    <div class="fade-up" style="text-align:center;margin-top:48px;">
+      <p style="font-size:17px;font-weight:600;color:#2D6B62;">Savely transforme ces pertes en avantages fiscaux traçables.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 3 — COMMENT ÇA MARCHE -->
+<section class="section">
+  <div class="container">
+    <div class="fade-up" style="text-align:center;margin-bottom:72px;">
+      <h2 style="font-size:clamp(28px,3.5vw,42px);font-weight:800;letter-spacing:-.03em;color:#1A1A1A;margin-bottom:16px;">Simple comme un export CSV</h2>
+      <p style="font-size:17px;color:#6B7280;max-width:480px;margin:0 auto;line-height:1.6;">Trois étapes. Zéro formation. Vos équipes sont opérationnelles le jour même.</p>
+    </div>
+    <div class="steps-row">
+      <!-- Step 1 -->
+      <div class="fade-up" style="text-align:center;transition-delay:.0s;">
+        <div style="width:72px;height:72px;background:#F0F7F6;border-radius:20px;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;border:2px solid #C5E0DC;">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="8" y="4" width="16" height="20" rx="3" stroke="#4A9B8E" stroke-width="2"/><path d="M12 10h8M12 14h8M12 18h5" stroke="#4A9B8E" stroke-width="1.8" stroke-linecap="round"/><path d="M16 24v4M12 26l4 2 4-2" stroke="#4A9B8E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#4A9B8E;border-radius:50%;color:#fff;font-size:13px;font-weight:800;margin-bottom:16px;">1</div>
+        <h3 style="font-size:18px;font-weight:700;color:#1A1A1A;margin-bottom:10px;">Importez votre stock</h3>
+        <p style="font-size:15px;color:#6B7280;line-height:1.6;max-width:280px;margin:0 auto;">Exportez depuis votre LGO (Winpharma, LGPI, Smart RX) et importez en moins de 5 minutes.</p>
+      </div>
+      <!-- Arrow -->
+      <div class="step-arrow-cell" style="display:flex;justify-content:center;align-items:center;padding-top:36px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M14 7l5 5-5 5" stroke="#C5E0DC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <!-- Step 2 -->
+      <div class="fade-up" style="text-align:center;transition-delay:.12s;">
+        <div style="width:72px;height:72px;background:#F0F7F6;border-radius:20px;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;border:2px solid #C5E0DC;">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="10" stroke="#4A9B8E" stroke-width="2"/><path d="M16 11v5l3 3" stroke="#4A9B8E" stroke-width="2" stroke-linecap="round"/><path d="M10 7l2 2M22 7l-2 2" stroke="#4A9B8E" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#4A9B8E;border-radius:50%;color:#fff;font-size:13px;font-weight:800;margin-bottom:16px;">2</div>
+        <h3 style="font-size:18px;font-weight:700;color:#1A1A1A;margin-bottom:10px;">Savely identifie les produits dormants</h3>
+        <p style="font-size:15px;color:#6B7280;line-height:1.6;max-width:280px;margin:0 auto;">Notre moteur analyse la vélocité de vos ventes et vous propose les meilleures actions.</p>
+      </div>
+      <!-- Arrow -->
+      <div class="step-arrow-cell" style="display:flex;justify-content:center;align-items:center;padding-top:36px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M5 12h14M14 7l5 5-5 5" stroke="#C5E0DC" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <!-- Step 3 -->
+      <div class="fade-up" style="text-align:center;transition-delay:.24s;">
+        <div style="width:72px;height:72px;background:#F0F7F6;border-radius:20px;margin:0 auto 24px;display:flex;align-items:center;justify-content:center;border:2px solid #C5E0DC;">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><rect x="6" y="8" width="20" height="16" rx="4" stroke="#4A9B8E" stroke-width="2"/><path d="M11 16l3 3 7-6" stroke="#4A9B8E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 4v4" stroke="#4A9B8E" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <div style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;background:#4A9B8E;border-radius:50%;color:#fff;font-size:13px;font-weight:800;margin-bottom:16px;">3</div>
+        <h3 style="font-size:18px;font-weight:700;color:#1A1A1A;margin-bottom:10px;">Donnez, économisez, recevez votre Cerfa</h3>
+        <p style="font-size:15px;color:#6B7280;line-height:1.6;max-width:280px;margin:0 auto;">Matchez avec une association proche, confirmez le pickup, téléchargez votre reçu fiscal 16216 automatiquement.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 4 — FONCTIONNALITÉS -->
+<section id="fonctionnalites" style="background:#F0F7F6;padding:96px 0;">
+  <div class="container">
+    <div class="fade-up" style="text-align:center;margin-bottom:56px;">
+      <h2 style="font-size:clamp(28px,3.5vw,42px);font-weight:800;letter-spacing:-.03em;color:#1A1A1A;margin-bottom:16px;">Tout ce dont votre officine a besoin</h2>
+      <p style="font-size:17px;color:#6B7280;max-width:460px;margin:0 auto;line-height:1.6;">Un outil pensé par des professionnels de santé, pour des professionnels de santé.</p>
+    </div>
+    <div class="features-grid">
+      <div class="fade-up" style="background:#fff;border-radius:16px;padding:28px;border:1px solid #EAF4F3;box-shadow:0 2px 12px rgba(74,155,142,.07);transition:box-shadow .2s,transform .2s;transition-delay:.0s;" style-hover="box-shadow:0 8px 32px rgba(74,155,142,.14);transform:translateY(-3px)">
+        <div style="width:48px;height:48px;background:#F0F7F6;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="2" fill="#4A9B8E"/><rect x="3" y="14" width="7" height="7" rx="2" fill="#4A9B8E" opacity=".4"/><rect x="14" y="3" width="7" height="7" rx="2" fill="#4A9B8E" opacity=".4"/><rect x="14" y="14" width="7" height="7" rx="2" fill="#4A9B8E" opacity=".7"/></svg>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#1A1A1A;margin-bottom:8px;">Dashboard en temps réel</h3>
+        <p style="font-size:14px;color:#6B7280;line-height:1.6;">KPIs, actions prioritaires, ROI de vos dons — tout en un coup d'œil.</p>
+      </div>
+      <div class="fade-up" style="background:#fff;border-radius:16px;padding:28px;border:1px solid #EAF4F3;box-shadow:0 2px 12px rgba(74,155,142,.07);transition:box-shadow .2s,transform .2s;transition-delay:.06s;" style-hover="box-shadow:0 8px 32px rgba(74,155,142,.14);transform:translateY(-3px)">
+        <div style="width:48px;height:48px;background:#F0F7F6;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="9" cy="12" r="5" stroke="#4A9B8E" stroke-width="2"/><circle cx="15" cy="12" r="5" stroke="#4A9B8E" stroke-width="2" stroke-dasharray="2 1"/></svg>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#1A1A1A;margin-bottom:8px;">Réseau d'associations partenaires</h3>
+        <p style="font-size:14px;color:#6B7280;line-height:1.6;">Matching automatique à moins de 50 km avec des associations agréées.</p>
+      </div>
+      <div class="fade-up" style="background:#fff;border-radius:16px;padding:28px;border:1px solid #EAF4F3;box-shadow:0 2px 12px rgba(74,155,142,.07);transition:box-shadow .2s,transform .2s;transition-delay:.12s;" style-hover="box-shadow:0 8px 32px rgba(74,155,142,.14);transform:translateY(-3px)">
+        <div style="width:48px;height:48px;background:#FFF8EE;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="3" width="16" height="18" rx="3" stroke="#F5A623" stroke-width="2"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#F5A623" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#1A1A1A;margin-bottom:8px;">Cerfa 16216 automatique</h3>
+        <p style="font-size:14px;color:#6B7280;line-height:1.6;">Reçu fiscal généré et signé dès que le pickup est confirmé. 60% de réduction fiscale tracée.</p>
+      </div>
+      <div class="fade-up" style="background:#fff;border-radius:16px;padding:28px;border:1px solid #EAF4F3;box-shadow:0 2px 12px rgba(74,155,142,.07);transition:box-shadow .2s,transform .2s;transition-delay:.18s;" style-hover="box-shadow:0 8px 32px rgba(74,155,142,.14);transform:translateY(-3px)">
+        <div style="width:48px;height:48px;background:#F0F7F6;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="3" stroke="#4A9B8E" stroke-width="2"/><path d="M9 7h6M9 11h6M9 15h3" stroke="#4A9B8E" stroke-width="1.5" stroke-linecap="round"/><rect x="9" y="13" width="6" height="5" rx="1" fill="#4A9B8E" opacity=".2"/></svg>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#1A1A1A;margin-bottom:8px;">App préparateur QR Code</h3>
+        <p style="font-size:14px;color:#6B7280;line-height:1.6;">Vos équipes terrain confirment les pickups en scannant un QR code. Simple et rapide.</p>
+      </div>
+      <div class="fade-up" style="background:#fff;border-radius:16px;padding:28px;border:1px solid #EAF4F3;box-shadow:0 2px 12px rgba(74,155,142,.07);transition:box-shadow .2s,transform .2s;transition-delay:.24s;" style-hover="box-shadow:0 8px 32px rgba(74,155,142,.14);transform:translateY(-3px)">
+        <div style="width:48px;height:48px;background:#F0F7F6;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 3L4 7v5c0 4.4 3.4 8.5 8 9.5 4.6-1 8-5.1 8-9.5V7l-8-4z" stroke="#4A9B8E" stroke-width="2" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" stroke="#4A9B8E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#1A1A1A;margin-bottom:8px;">100% conforme RGPD</h3>
+        <p style="font-size:14px;color:#6B7280;line-height:1.6;">Données hébergées en France. Aucune donnée patient collectée. Audit disponible.</p>
+      </div>
+      <div class="fade-up" style="background:#fff;border-radius:16px;padding:28px;border:1px solid #EAF4F3;box-shadow:0 2px 12px rgba(74,155,142,.07);transition:box-shadow .2s,transform .2s;transition-delay:.3s;" style-hover="box-shadow:0 8px 32px rgba(74,155,142,.14);transform:translateY(-3px)">
+        <div style="width:48px;height:48px;background:#F0F7F6;border-radius:12px;margin-bottom:20px;display:flex;align-items:center;justify-content:center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 17l4-8 4 5 3-3 4 6" stroke="#4A9B8E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 21h18" stroke="#4A9B8E" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <h3 style="font-size:16px;font-weight:700;color:#1A1A1A;margin-bottom:8px;">Suivi RSE intégré</h3>
+        <p style="font-size:14px;color:#6B7280;line-height:1.6;">Rapport mensuel de vos dons pour vos déclarations et communication RSE.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 5 — GROUPEMENTS (full teal) -->
+<section id="groupements" style="background:#4A9B8E;padding:96px 0;">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;">
+      <div class="fade-up">
+        <div style="display:inline-block;background:rgba(255,255,255,.15);border-radius:100px;padding:6px 16px;margin-bottom:28px;">
+          <span style="font-size:13px;font-weight:600;color:#fff;">Pour les groupements</span>
+        </div>
+        <h2 style="font-size:clamp(28px,3.5vw,44px);font-weight:800;letter-spacing:-.03em;color:#fff;line-height:1.2;margin-bottom:24px;">Vous pilotez un groupement ?</h2>
+        <p style="font-size:17px;color:rgba(255,255,255,.85);line-height:1.65;margin-bottom:32px;">Savely s'adapte aux réseaux de pharmacies. Pilotez l'activité de toutes vos officines membres depuis un tableau de bord centralisé, mesurez l'impact RSE de votre réseau et négociez des partenariats associatifs à l'échelle.</p>
+        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:36px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="rgba(255,255,255,.2)"/><path d="M6 10l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span style="font-size:15px;font-weight:500;color:#fff;">Vue consolidée toutes officines</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="rgba(255,255,255,.2)"/><path d="M6 10l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span style="font-size:15px;font-weight:500;color:#fff;">Rapport RSE réseau téléchargeable</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="rgba(255,255,255,.2)"/><path d="M6 10l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span style="font-size:15px;font-weight:500;color:#fff;">Tarification groupement sur mesure</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="10" fill="rgba(255,255,255,.2)"/><path d="M6 10l3 3 5-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span style="font-size:15px;font-weight:500;color:#fff;">Onboarding accompagné</span>
+          </div>
+        </div>
+        <a href="mailto:contact@savelypharma.fr" style="background:#fff;color:#4A9B8E;font-size:15px;font-weight:700;padding:15px 28px;border-radius:12px;display:inline-block;transition:background .2s,transform .15s;box-shadow:0 4px 20px rgba(0,0,0,.15);" style-hover="background:rgba(255,255,255,.92)">Contacter l'équipe Savely →</a>
+      </div>
+      <!-- Right: Multi-officine visual -->
+      <div class="fade-up" style="transition-delay:.12s;">
+        <div style="background:rgba(255,255,255,.1);border-radius:20px;padding:28px;border:1px solid rgba(255,255,255,.2);">
+          <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,.7);margin-bottom:16px;text-transform:uppercase;letter-spacing:.06em;">Réseau · 12 officines</div>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border:1px solid rgba(255,255,255,.1);">
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#fff;">Pharmacie du Centre — Paris 11e</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px;">3 dons ce mois · 284€ économisés</div>
+              </div>
+              <div style="background:#4A9B8E;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.3);">+60%</div>
+            </div>
+            <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border:1px solid rgba(255,255,255,.1);">
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#fff;">Pharmacie Belleville — Paris 20e</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px;">1 don ce mois · 96€ économisés</div>
+              </div>
+              <div style="background:#4A9B8E;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.3);">+60%</div>
+            </div>
+            <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;border:1px solid rgba(255,255,255,.1);">
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#fff;">Pharmacie Lafayette — Lyon 6e</div>
+                <div style="font-size:12px;color:rgba(255,255,255,.65);margin-top:2px;">5 dons ce mois · 612€ économisés</div>
+              </div>
+              <div style="background:#F5A623;color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;">Top</div>
+            </div>
+          </div>
+          <div style="margin-top:20px;background:rgba(255,255,255,.08);border-radius:12px;padding:16px;border:1px solid rgba(255,255,255,.1);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+              <span style="font-size:13px;font-weight:600;color:rgba(255,255,255,.8);">Impact RSE réseau</span>
+              <span style="font-size:12px;color:rgba(255,255,255,.6);">Janvier 2026</span>
+            </div>
+            <div style="font-size:28px;font-weight:800;color:#fff;margin-bottom:4px;">4 820€</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.65);">économisés sur 12 officines · 31 dons · Cerfa générés</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 6 — ASSOCIATIONS -->
+<section id="associations" class="section">
+  <div class="container">
+    <div class="assoc-grid">
+      <div class="fade-up">
+        <div style="display:inline-block;background:#F0F7F6;border-radius:100px;padding:6px 16px;margin-bottom:24px;">
+          <span style="font-size:13px;font-weight:600;color:#4A9B8E;">Pour les associations</span>
+        </div>
+        <h2 style="font-size:clamp(26px,3vw,38px);font-weight:800;letter-spacing:-.03em;color:#1A1A1A;margin-bottom:20px;">Vous êtes une association ?</h2>
+        <p style="font-size:16px;color:#6B7280;line-height:1.7;margin-bottom:32px;">Recevez des produits cosmétiques de qualité, directement des pharmacies proches de chez vous. Inscription gratuite. Notifications automatiques. Pickup confirmé en un scan.</p>
+        <sc-if value="{{ assoSubmitted }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#F0F7F6;border-radius:16px;padding:28px;border:2px solid #4A9B8E;">
+            <div style="font-size:20px;font-weight:800;color:#4A9B8E;margin-bottom:8px;">Inscription reçue !</div>
+            <p style="font-size:15px;color:#6B7280;line-height:1.6;">Nous vous contacterons sous 48h pour finaliser votre inscription au réseau Savely.</p>
+          </div>
+        </sc-if>
+        <sc-if value="{{ assoNotSubmitted }}" hint-placeholder-val="{{ true }}">
+          <form onSubmit="{{ onAssoSubmit }}" style="display:flex;flex-direction:column;gap:12px;max-width:380px;">
+            <input type="text" placeholder="Nom de l'association" value="{{ assoNom }}" onInput="{{ onAssoNom }}" required style="padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;outline:none;transition:border-color .2s;color:#1A1A1A;" />
+            <input type="email" placeholder="Email de contact" value="{{ assoEmail }}" onInput="{{ onAssoEmail }}" required style="padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;outline:none;transition:border-color .2s;color:#1A1A1A;" />
+            <input type="text" placeholder="Ville" value="{{ assoVille }}" onInput="{{ onAssoVille }}" required style="padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;outline:none;transition:border-color .2s;color:#1A1A1A;" />
+            <button type="submit" style="background:#4A9B8E;color:#fff;font-size:15px;font-weight:700;padding:14px 24px;border-radius:10px;transition:background .2s;margin-top:4px;" style-hover="background:#2D6B62">Inscrire mon association →</button>
+          </form>
+        </sc-if>
+      </div>
+      <!-- Right: Notification card mockup -->
+      <div class="fade-up" style="transition-delay:.12s;display:flex;justify-content:center;align-items:center;">
+        <div style="max-width:340px;width:100%;">
+          <div style="background:#fff;border-radius:20px;box-shadow:0 16px 48px rgba(0,0,0,.1);border:1px solid #EAF4F3;overflow:hidden;">
+            <div style="background:#4A9B8E;padding:16px 20px;display:flex;align-items:center;gap:10px;">
+              <div style="width:36px;height:36px;background:rgba(255,255,255,.2);border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2L11 7H16L12 10.5L13.5 16L9 13L4.5 16L6 10.5L2 7H7L9 2Z" fill="#fff"/></svg>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#fff;">Nouvelle offre de don</div>
+                <div style="font-size:11px;color:rgba(255,255,255,.75);">Il y a 5 minutes</div>
+              </div>
+            </div>
+            <div style="padding:20px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                <div style="width:40px;height:40px;background:#F0F7F6;border-radius:10px;display:flex;align-items:center;justify-content:center;">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M10 2C6.7 2 4 4.7 4 8c0 4 6 10 6 10s6-6 6-10c0-3.3-2.7-6-6-6z" fill="#4A9B8E" opacity=".3"/><circle cx="10" cy="8" r="2.5" fill="#4A9B8E"/></svg>
+                </div>
+                <div>
+                  <div style="font-size:14px;font-weight:700;color:#1A1A1A;">Pharmacie du Centre</div>
+                  <div style="font-size:12px;color:#6B7280;">Paris 11e · 2 km de vous</div>
+                </div>
+              </div>
+              <div style="background:#F8FFFE;border-radius:12px;padding:14px;margin-bottom:16px;border:1px solid #EAF4F3;">
+                <div style="font-size:13px;font-weight:600;color:#1A1A1A;margin-bottom:8px;">Produits proposés</div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#6B7280;">
+                    <span>Crème solaire SPF50</span><span style="font-weight:600;color:#1A1A1A;">×3</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#6B7280;">
+                    <span>Sérum vitamine C</span><span style="font-weight:600;color:#1A1A1A;">×2</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:#6B7280;">
+                    <span>Hydratant visage</span><span style="font-weight:600;color:#1A1A1A;">×1</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;background:#FFF8EE;border-radius:10px;padding:10px 12px;margin-bottom:16px;">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="#F5A623" stroke-width="1.5"/><path d="M8 5v3l2 2" stroke="#F5A623" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <span style="font-size:13px;color:#6B7280;">Créneau pickup : <strong style="color:#1A1A1A;">Lun 20 jan, 10h–12h</strong></span>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <button style="background:#4A9B8E;color:#fff;font-size:13px;font-weight:700;padding:11px;border-radius:10px;transition:background .2s;" style-hover="background:#2D6B62">✓ Accepter</button>
+                <button style="background:#F5F5F5;color:#6B7280;font-size:13px;font-weight:600;padding:11px;border-radius:10px;transition:background .2s;" style-hover="background:#EBEBEB">✕ Refuser</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 7 — PARTICULIERS -->
+<section id="particuliers" style="background:#F0F7F6;padding:72px 0;">
+  <div class="container">
+    <div class="fade-up" style="max-width:600px;margin:0 auto;text-align:center;">
+      <div style="display:inline-block;background:#fff;border-radius:100px;padding:6px 16px;margin-bottom:20px;border:1px solid #EAF4F3;">
+        <span style="font-size:13px;font-weight:600;color:#6B7280;">Bientôt disponible</span>
+      </div>
+      <h2 style="font-size:clamp(22px,2.8vw,32px);font-weight:800;letter-spacing:-.03em;color:#1A1A1A;margin-bottom:14px;">Vous cherchez des produits à prix réduit ?</h2>
+      <p style="font-size:16px;color:#6B7280;line-height:1.65;margin-bottom:28px;">Savely propose bientôt des offres exclusives sur les produits cosmétiques des pharmacies partenaires près de chez vous.</p>
+      <sc-if value="{{ earlySubmitted }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border-radius:14px;padding:20px 28px;border:2px solid #4A9B8E;display:inline-block;">
+          <span style="font-size:16px;font-weight:700;color:#4A9B8E;">Vous serez parmi les premiers prévenus !</span>
+        </div>
+      </sc-if>
+      <sc-if value="{{ earlyNotSubmitted }}" hint-placeholder-val="{{ true }}">
+        <form onSubmit="{{ onEarlySubmit }}" style="display:flex;gap:10px;max-width:460px;margin:0 auto 20px;flex-wrap:wrap;">
+          <input type="email" placeholder="Votre email" value="{{ earlyEmail }}" onInput="{{ onEarlyEmail }}" required style="flex:1;min-width:200px;padding:13px 16px;border:1.5px solid #E5E7EB;border-radius:10px;font-size:15px;outline:none;background:#fff;color:#1A1A1A;" />
+          <button type="submit" style="background:#4A9B8E;color:#fff;font-size:14px;font-weight:700;padding:13px 22px;border-radius:10px;white-space:nowrap;transition:background .2s;" style-hover="background:#2D6B62">Je veux être prévenu(e)</button>
+        </form>
+      </sc-if>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:16px;">
+        <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:9px 16px;">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect width="18" height="18" rx="4" fill="#C7C7CC"/><path d="M9 3C5.7 3 3 5.7 3 9s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6zm-1.5 8.8V6.2l4.5 2.8-4.5 2.8z" fill="#fff"/></svg>
+          <span style="font-size:13px;font-weight:500;color:#9CA3AF;">App Store · Prochainement</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #E5E7EB;border-radius:10px;padding:9px 16px;">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect width="18" height="18" rx="4" fill="#C7C7CC"/><path d="M3 9L9 3l6 6-6 6-6-6z" fill="#fff" opacity=".5"/><circle cx="9" cy="9" r="3" fill="#fff"/></svg>
+          <span style="font-size:13px;font-weight:500;color:#9CA3AF;">Google Play · Prochainement</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 8 — SOCIAL PROOF -->
+<section class="section">
+  <div class="container">
+    <div class="fade-up" style="text-align:center;margin-bottom:56px;">
+      <h2 style="font-size:clamp(26px,3vw,38px);font-weight:800;letter-spacing:-.03em;color:#1A1A1A;margin-bottom:14px;">Ils font confiance à Savely</h2>
+      <p style="font-size:16px;color:#6B7280;">Des officines et groupements qui ont transformé leur gestion de stock.</p>
+    </div>
+    <div class="testimonials-grid" style="margin-bottom:64px;">
+      <div class="fade-up" style="background:#fff;border-radius:20px;padding:32px;border:1px solid #EAF4F3;box-shadow:0 4px 20px rgba(0,0,0,.06);transition-delay:0s;">
+        <div style="color:#F5A623;font-size:20px;margin-bottom:16px;">★★★★★</div>
+        <p style="font-size:15px;color:#374151;line-height:1.7;margin-bottom:20px;font-style:italic;">"En 3 mois, nous avons économisé 1 200€ en avantages fiscaux sur des produits qu'on aurait jetés. Et le Cerfa arrive tout seul — c'est magique."</p>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;background:#F0F7F6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#4A9B8E;font-size:14px;">SM</div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#1A1A1A;">Dr. Sophie M.</div>
+            <div style="font-size:13px;color:#6B7280;">Titulaire, Paris 11e</div>
+          </div>
+        </div>
+      </div>
+      <div class="fade-up" style="background:#fff;border-radius:20px;padding:32px;border:1px solid #EAF4F3;box-shadow:0 4px 20px rgba(0,0,0,.06);transition-delay:.1s;">
+        <div style="color:#F5A623;font-size:20px;margin-bottom:16px;">★★★★★</div>
+        <p style="font-size:15px;color:#374151;line-height:1.7;margin-bottom:20px;font-style:italic;">"Déployé sur 8 pharmacies de notre réseau en une semaine. L'onboarding est vraiment accompagné, et le tableau de bord consolidé est bluffant."</p>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;background:#F0F7F6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#4A9B8E;font-size:14px;">PL</div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#1A1A1A;">Pierre L.</div>
+            <div style="font-size:13px;color:#6B7280;">Directeur, Groupement PharmAlliance Sud</div>
+          </div>
+        </div>
+      </div>
+      <div class="fade-up" style="background:#fff;border-radius:20px;padding:32px;border:1px solid #EAF4F3;box-shadow:0 4px 20px rgba(0,0,0,.06);transition-delay:.2s;">
+        <div style="color:#F5A623;font-size:20px;margin-bottom:16px;">★★★★★</div>
+        <p style="font-size:15px;color:#374151;line-height:1.7;margin-bottom:20px;font-style:italic;">"On avait peur que ça soit complexe avec le LGO. En réalité, 5 minutes d'import et c'est parti. Nos préparateurs adorent le QR code."</p>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div style="width:40px;height:40px;background:#F0F7F6;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#4A9B8E;font-size:14px;">MC</div>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#1A1A1A;">Marie-Claire D.</div>
+            <div style="font-size:13px;color:#6B7280;">Titulaire, Lyon 3e</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Partner logos (fictifs) -->
+    <div class="fade-up" style="text-align:center;margin-bottom:24px;">
+      <p style="font-size:13px;font-weight:500;color:#9CA3AF;text-transform:uppercase;letter-spacing:.1em;margin-bottom:28px;">Groupements partenaires</p>
+    </div>
+    <div class="logos-row">
+      <div style="background:#F5F5F5;border-radius:10px;padding:12px 28px;border:1px solid #E5E7EB;">
+        <span style="font-size:14px;font-weight:700;color:#9CA3AF;letter-spacing:.05em;">PHARMALLIANCE</span>
+      </div>
+      <div style="background:#F5F5F5;border-radius:10px;padding:12px 28px;border:1px solid #E5E7EB;">
+        <span style="font-size:14px;font-weight:700;color:#9CA3AF;letter-spacing:.05em;">RÉSEAU SANTÉ+</span>
+      </div>
+      <div style="background:#F5F5F5;border-radius:10px;padding:12px 28px;border:1px solid #E5E7EB;">
+        <span style="font-size:14px;font-weight:700;color:#9CA3AF;letter-spacing:.05em;">GROUPEMENT OFFICIN'AL</span>
+      </div>
+      <div style="background:#F5F5F5;border-radius:10px;padding:12px 28px;border:1px solid #E5E7EB;">
+        <span style="font-size:14px;font-weight:700;color:#9CA3AF;letter-spacing:.05em;">PHARMARÉSEAUX</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 9 — TARIFS -->
+<section id="tarifs" style="background:#F0F7F6;padding:96px 0;">
+  <div class="container">
+    <div class="fade-up" style="text-align:center;margin-bottom:56px;">
+      <h2 style="font-size:clamp(28px,3.5vw,42px);font-weight:800;letter-spacing:-.03em;color:#1A1A1A;margin-bottom:14px;">Transparent, sans surprise</h2>
+      <p style="font-size:17px;color:#6B7280;">Commencez gratuitement. Scalez quand vous êtes prêt.</p>
+    </div>
+    <div class="pricing-grid">
+      <!-- Plan Essentiel -->
+      <div class="fade-up" style="background:#fff;border-radius:24px;padding:40px 36px;border:1px solid #EAF4F3;box-shadow:0 4px 24px rgba(0,0,0,.06);transition-delay:0s;">
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#4A9B8E;margin-bottom:20px;">Essentiel</div>
+        <div style="margin-bottom:8px;">
+          <span style="font-size:42px;font-weight:800;color:#1A1A1A;letter-spacing:-.03em;">49€</span>
+          <span style="font-size:16px;color:#6B7280;margin-left:4px;">/mois</span>
+        </div>
+        <div style="font-size:14px;color:#4A9B8E;font-weight:600;margin-bottom:28px;">14 jours gratuits, sans carte bancaire</div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:36px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:#374151;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="#F0F7F6"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="#4A9B8E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            1 officine
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:#374151;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="#F0F7F6"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="#4A9B8E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Import CSV illimité
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:#374151;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="#F0F7F6"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="#4A9B8E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Module don complet
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:#374151;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="#F0F7F6"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="#4A9B8E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Cerfa 16216 automatique
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:#374151;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="#F0F7F6"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="#4A9B8E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Support email
+          </div>
+        </div>
+        <a href="#demo" style="display:block;text-align:center;background:#F0F7F6;color:#4A9B8E;font-size:15px;font-weight:700;padding:14px;border-radius:12px;border:1.5px solid #4A9B8E;transition:background .2s;" style-hover="background:#4A9B8E;color:#fff">Commencer gratuitement</a>
+      </div>
+      <!-- Plan Groupement -->
+      <div class="fade-up" style="background:#4A9B8E;border-radius:24px;padding:40px 36px;box-shadow:0 16px 48px rgba(74,155,142,.35);position:relative;overflow:hidden;transition-delay:.1s;">
+        <div style="position:absolute;top:20px;right:20px;background:#F5A623;color:#fff;font-size:11px;font-weight:800;padding:5px 12px;border-radius:100px;text-transform:uppercase;letter-spacing:.06em;">Populaire</div>
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.75);margin-bottom:20px;">Groupement</div>
+        <div style="margin-bottom:8px;">
+          <span style="font-size:42px;font-weight:800;color:#fff;letter-spacing:-.03em;">Sur devis</span>
+        </div>
+        <div style="font-size:14px;color:rgba(255,255,255,.75);font-weight:600;margin-bottom:28px;">Adapté à la taille de votre réseau</div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:36px;">
+          <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:rgba(255,255,255,.9);">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="rgba(255,255,255,.2)"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Officines illimitées
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:rgba(255,255,255,.9);">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="rgba(255,255,255,.2)"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Dashboard consolidé réseau
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:rgba(255,255,255,.9);">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="rgba(255,255,255,.2)"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Rapport RSE réseau
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:rgba(255,255,255,.9);">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="rgba(255,255,255,.2)"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Onboarding accompagné
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;font-size:15px;color:rgba(255,255,255,.9);">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="9" fill="rgba(255,255,255,.2)"/><path d="M5.5 9l2.5 2.5 4.5-4.5" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Support dédié prioritaire
+          </div>
+        </div>
+        <a href="mailto:contact@savelypharma.fr" style="display:block;text-align:center;background:#fff;color:#4A9B8E;font-size:15px;font-weight:700;padding:14px;border-radius:12px;transition:background .2s,transform .15s;" style-hover="background:rgba(255,255,255,.9)">Contacter l'équipe →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECTION 10 — CTA FINAL -->
+<section id="demo" style="background:#4A9B8E;padding:96px 0;">
+  <div class="container">
+    <div class="fade-up" style="text-align:center;max-width:640px;margin:0 auto;">
+      <h2 style="font-size:clamp(30px,4vw,52px);font-weight:800;letter-spacing:-.03em;color:#fff;line-height:1.15;margin-bottom:20px;">Prêt à transformer votre stock en impact ?</h2>
+      <p style="font-size:18px;color:rgba(255,255,255,.82);margin-bottom:40px;line-height:1.6;">14 jours gratuits. Sans carte bancaire. Sans engagement.</p>
+      <a href="mailto:demo@savelypharma.fr" style="display:inline-block;background:#fff;color:#4A9B8E;font-size:17px;font-weight:800;padding:18px 40px;border-radius:14px;transition:background .2s,transform .15s;box-shadow:0 8px 32px rgba(0,0,0,.2);" style-hover="background:rgba(255,255,255,.93);transform:translateY(-2px)">Demander une démo gratuite →</a>
+      <p style="font-size:13px;color:rgba(255,255,255,.55);margin-top:20px;">Réponse sous 24h · Cerfa 16216 · 60% de réduction fiscale</p>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="background:#1A1A1A;padding:64px 0 40px;">
+  <div class="container">
+    <div class="footer-grid" style="margin-bottom:48px;">
+      <!-- Col 1: Brand -->
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <div style="width:32px;height:32px;background:#4A9B8E;border-radius:9px;display:flex;align-items:center;justify-content:center;">
+            <span style="color:#fff;font-size:17px;font-weight:800;">S</span>
+          </div>
+          <span style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-.5px;">Savely</span>
+        </div>
+        <p style="font-size:14px;color:#6B7280;line-height:1.65;margin-bottom:20px;max-width:220px;">Valorisez votre stock dormant. Maximisez vos avantages fiscaux.</p>
+        <a href="https://linkedin.com" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;background:#2A2A2A;border-radius:8px;transition:background .2s;" style-hover="background:#4A9B8E">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 5.5h2V13H3V5.5zM4 4.5a1.25 1.25 0 110-2.5 1.25 1.25 0 010 2.5zM7 5.5h1.9v1s.6-1 2.1-1c1.8 0 2.5 1.1 2.5 3V13H11.5V9c0-1-.3-1.8-1.3-1.8-.9 0-1.2.6-1.2 1.8V13H7V5.5z" fill="#9CA3AF"/></svg>
+        </a>
+        <p style="font-size:13px;color:#4B5563;margin-top:28px;">© 2026 Savely · savelypharma.fr</p>
+      </div>
+      <!-- Col 2: Produit -->
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.08em;margin-bottom:18px;">Produit</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href="#fonctionnalites" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">Fonctionnalités</a>
+          <a href="#tarifs" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">Tarifs</a>
+          <a href="#demo" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">Demander une démo</a>
+          <a href="#" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">Se connecter</a>
+        </div>
+      </div>
+      <!-- Col 3: Pour qui -->
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.08em;margin-bottom:18px;">Pour qui</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href="#" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">Officines</a>
+          <a href="#groupements" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">Groupements</a>
+          <a href="#associations" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">Associations</a>
+          <a href="#particuliers" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">Particuliers</a>
+        </div>
+      </div>
+      <!-- Col 4: Légal -->
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.08em;margin-bottom:18px;">Légal</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href="#" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">CGU</a>
+          <a href="#" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">Politique de confidentialité</a>
+          <a href="#" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">RGPD</a>
+          <a href="#" style="font-size:14px;color:#9CA3AF;transition:color .2s;" style-hover="color:#fff">Mentions légales</a>
+        </div>
+      </div>
+    </div>
+    <div style="border-top:1px solid #2A2A2A;padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <p style="font-size:13px;color:#4B5563;">Fait avec ❤ pour les pharmaciens français</p>
+      <p style="font-size:13px;color:#4B5563;">Art. 238 bis CGI · Cerfa 16216 · RGPD conforme</p>
+    </div>
+  </div>
+</footer>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    navScrolled: false,
+    assoSubmitted: false,
+    assoNom: '',
+    assoEmail: '',
+    assoVille: '',
+    earlyEmail: '',
+    earlySubmitted: false,
+  };
+
+  componentDidMount() {
+    // Scroll-based fade-in
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+    // Nav shadow on scroll
+    const onScroll = () => {
+      this.setState({ navScrolled: window.scrollY > 40 });
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // Show mobile CTA
+    const mobileCta = document.getElementById('mobile-cta');
+    if (mobileCta && window.innerWidth <= 768) {
+      mobileCta.style.display = 'inline-block';
+    }
+  }
+
+  renderVals() {
+    const s = this.state;
+    return {
+      navShadow: s.navScrolled ? '0 2px 24px rgba(0,0,0,.1)' : 'none',
+      assoNom: s.assoNom,
+      assoEmail: s.assoEmail,
+      assoVille: s.assoVille,
+      assoSubmitted: s.assoSubmitted,
+      assoNotSubmitted: !s.assoSubmitted,
+      onAssoNom: e => this.setState({ assoNom: e.target.value }),
+      onAssoEmail: e => this.setState({ assoEmail: e.target.value }),
+      onAssoVille: e => this.setState({ assoVille: e.target.value }),
+      onAssoSubmit: e => { e.preventDefault(); this.setState({ assoSubmitted: true }); },
+      earlyEmail: s.earlyEmail,
+      earlySubmitted: s.earlySubmitted,
+      earlyNotSubmitted: !s.earlySubmitted,
+      onEarlyEmail: e => this.setState({ earlyEmail: e.target.value }),
+      onEarlySubmit: e => { e.preventDefault(); this.setState({ earlySubmitted: true }); },
+    };
+  }
+}
+</script>
+</body>
+</html>

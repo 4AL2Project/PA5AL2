@@ -524,20 +524,20 @@ describe('Retrait, non-récupération, épuisement', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('confirme le retrait par scan du QR (app préparateur), scopé officine', async () => {
+  it('confirme le retrait par code de récupération (app préparateur), scopé officine', async () => {
     const { pharmacy, allocation } = await setupAccepted();
 
     await expect(
-      orchestrator.confirmPickupByQr(
-        allocation.qr_code,
+      orchestrator.confirmPickupByCode(
+        allocation.recovery_code,
         'autre-officine',
         'Marie',
         'PREPARATEUR:user-2'
       )
-    ).rejects.toThrow(/QR inconnu/);
+    ).rejects.toThrow(/Code de récupération inconnu/);
 
-    const result = await orchestrator.confirmPickupByQr(
-      allocation.qr_code,
+    const result = await orchestrator.confirmPickupByCode(
+      allocation.recovery_code,
       pharmacy.pharmacy_id,
       'Marie Bénévole',
       'PREPARATEUR:user-2'

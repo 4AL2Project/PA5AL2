@@ -18,6 +18,7 @@ import { CerfaService } from './cerfa.service';
 import {
   computePickupSlots,
   DonationLineSnapshot,
+  generateRecoveryCode,
   intersectWindows,
   MAX_DONATION_AGE_DAYS,
   MAX_PROPOSALS_PER_DONATION,
@@ -481,6 +482,7 @@ export class DonationOrchestratorService {
             lines: accepted as unknown as object[],
             pickup_slot_start: slotStart,
             pickup_slot_end: slotEnd,
+            recovery_code: generateRecoveryCode(),
           },
         });
         await tx.donationEvent.create({
@@ -822,10 +824,36 @@ export class DonationOrchestratorService {
   }
 
   /**
-   * Confirmation par scan du QR de l'allocation (app Flutter préparateur).
-   * Résout l'allocation dans le périmètre de l'officine puis délègue au flux
-   * de confirmation standard.
+   * Confirmation par saisie du code de récupération de l'allocation
+   * (app préparateur ou interface web). Résout l'allocation dans le périmètre
+   * de l'officine puis délègue au flux de confirmation standard.
    */
+  async confirmPickupByCode(
+    recoveryCode: string,
+    pharmacyId: string,
+    pickedUpBy: string,
+    actor: string
+  ) {
+    const allocation = await prisma.donationAllocation.findFirst({
+      where: {
+        recovery_code: recoveryCode,
+        donation: { pharmacy_id: pharmacyId },
+      },
+    });
+    if (!allocation) {
+      throw new NotFoundException(
+        'Code de récupération inconnu pour cette officine'
+      );
+    }
+    return this.confirmPickup(
+      allocation.allocation_id,
+      pharmacyId,
+      pickedUpBy,
+      actor
+    );
+  }
+
+  /** @deprecated Utiliser confirmPickupByCode */
   async confirmPickupByQr(
     qrCode: string,
     pharmacyId: string,
@@ -1155,6 +1183,7 @@ export class DonationOrchestratorService {
       pickup_slot_end: Date;
       cerfa_number: string | null;
       qr_code: string;
+      recovery_code: string;
     } | null;
   }) {
     const base = {
@@ -1211,11 +1240,11 @@ export class DonationOrchestratorService {
               pickup_slot_start: proposal.allocation.pickup_slot_start,
               pickup_slot_end: proposal.allocation.pickup_slot_end,
               cerfa_available: proposal.allocation.cerfa_number != null,
-              // QR à présenter au retrait : scanné par le préparateur pour
-              // confirmer le pickup (uniquement tant que le retrait est dû)
-              qr_code:
+              // Code de récupération à présenter au retrait : saisi par le
+              // préparateur pour confirmer le pickup (uniquement si PLANIFIEE)
+              recovery_code:
                 proposal.allocation.status === 'PLANIFIEE'
-                  ? proposal.allocation.qr_code
+                  ? proposal.allocation.recovery_code
                   : null,
             }
           : null,

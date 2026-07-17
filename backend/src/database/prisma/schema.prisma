@@ -364,9 +364,10 @@ model DonationAllocation {
   // [{product_id, name, quantity, unit_value}]
   lines             Json
   status            String    @default("PLANIFIEE") // PLANIFIEE|RETIREE|NON_RECUPEREE
-  // QR présenté par l'asso au retrait, scanné par le préparateur (app
-  // Flutter) pour confirmer le pickup — le web reste un fallback titulaire
+  // Code présenté par l'asso au retrait, saisi par le préparateur pour
+  // confirmer le pickup — le web reste un fallback titulaire
   qr_code           String    @unique @default(uuid())
+  recovery_code     String    @unique @default("")
   pickup_slot_start DateTime
   pickup_slot_end   DateTime
   picked_up_by      String?

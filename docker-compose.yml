@@ -21,6 +21,7 @@ services:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3005}
     environment:
       API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:3005}
+      NEXT_PUBLIC_DEV_TOOLS_ENABLED: true
     restart: unless-stopped
     ports:
       - '3000:3000'

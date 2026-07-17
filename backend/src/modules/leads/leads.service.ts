@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 
 import { prisma } from '../../database/client';
 import { CreateDemoRequestDto, CreateWaitlistEntryDto } from './dto/lead.dto';
@@ -6,11 +6,15 @@ import { CreateDemoRequestDto, CreateWaitlistEntryDto } from './dto/lead.dto';
 @Injectable()
 export class LeadsService {
   async createDemoRequest(dto: CreateDemoRequestDto) {
-    return prisma.demoRequest.create({ data: { ...dto, pharmacy_count: dto.pharmacy_count ?? 1 } });
+    return prisma.demoRequest.create({
+      data: { ...dto, pharmacy_count: dto.pharmacy_count ?? 1 },
+    });
   }
 
   async createWaitlistEntry(dto: CreateWaitlistEntryDto) {
-    const existing = await prisma.waitlistEntry.findUnique({ where: { email: dto.email } });
+    const existing = await prisma.waitlistEntry.findUnique({
+      where: { email: dto.email },
+    });
     if (existing) return existing; // idempotent — pas d'erreur si l'email existe déjà
     return prisma.waitlistEntry.create({ data: dto });
   }

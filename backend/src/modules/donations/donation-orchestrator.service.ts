@@ -351,6 +351,9 @@ export class DonationOrchestratorService {
       proposed_lines: unknown;
       donation: {
         version: number;
+        // Créneaux spécifiques fixés par le titulaire à la création du don.
+        // Prioritaires sur les fenêtres hebdo de la pharmacie.
+        pickup_windows?: unknown;
         pharmacy: {
           name: string;
           address: string | null;
@@ -401,23 +404,50 @@ export class DonationOrchestratorService {
     }
     const slotStart = new Date(input.slot_start);
     const slotEnd = new Date(input.slot_end);
-    const windows = intersectWindows(
-      parsePickupWindows(proposal.donation.pharmacy.donation_pickup_windows),
-      proposal.association.pickup_windows
-    );
-    if (
-      isNaN(slotStart.getTime()) ||
-      isNaN(slotEnd.getTime()) ||
-      !isValidPickupSlot(
-        windows,
-        proposal.association.pickup_sla_days,
-        slotStart,
-        slotEnd
-      )
-    ) {
+
+    if (isNaN(slotStart.getTime()) || isNaN(slotEnd.getTime())) {
       throw new BadRequestException(
         "Ce créneau n'est plus disponible — rechargez la page"
       );
+    }
+
+    // Si le titulaire a fixé des créneaux spécifiques pour ce don, on valide
+    // que le slot choisi correspond exactement à l'un d'eux (match ISO exact).
+    // Sinon on valide via les fenêtres hebdo de la pharmacie ∩ asso.
+    const donationSlots = proposal.donation.pickup_windows as
+      | { start: string; end: string }[]
+      | null
+      | undefined;
+
+    if (donationSlots?.length) {
+      const now = new Date();
+      const matches = donationSlots.some(
+        (s) =>
+          new Date(s.start).getTime() === slotStart.getTime() &&
+          new Date(s.end).getTime() === slotEnd.getTime()
+      );
+      if (!matches || slotStart <= now) {
+        throw new BadRequestException(
+          "Ce créneau n'est plus disponible — rechargez la page"
+        );
+      }
+    } else {
+      const windows = intersectWindows(
+        parsePickupWindows(proposal.donation.pharmacy.donation_pickup_windows),
+        proposal.association.pickup_windows
+      );
+      if (
+        !isValidPickupSlot(
+          windows,
+          proposal.association.pickup_sla_days,
+          slotStart,
+          slotEnd
+        )
+      ) {
+        throw new BadRequestException(
+          "Ce créneau n'est plus disponible — rechargez la page"
+        );
+      }
     }
 
     const newStatus = isPartial ? 'ACCEPTEE_PARTIELLEMENT' : 'ACCEPTEE';

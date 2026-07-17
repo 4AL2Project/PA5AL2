@@ -131,7 +131,7 @@ function LoginContent() {
         <p className="text-xs text-muted-foreground">
           Pas encore inscrit ?{' '}
           <a
-            href="https://savelypharma.fr/#associations"
+            href={`${process.env.NEXT_PUBLIC_LANDING_URL ?? 'http://localhost:3002'}/#associations`}
             className="text-primary hover:underline"
           >
             Inscrire mon association

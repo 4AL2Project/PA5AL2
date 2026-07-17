@@ -54,7 +54,7 @@ export const config = {
     // 'resend' (prod) ou 'smtp' (dev/test via MailHog)
     transport: (process.env.EMAIL_TRANSPORT || 'resend') as 'resend' | 'smtp',
     apiKey: process.env.RESEND_API_KEY || '',
-    from: process.env.EMAIL_FROM || 'noreply@savely.fr',
+    from: process.env.EMAIL_FROM || 'noreply@savelypharma.fr',
     smtp: {
       host: process.env.SMTP_HOST || 'localhost',
       port: parseInt(process.env.SMTP_PORT || '1025', 10),

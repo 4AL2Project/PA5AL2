@@ -2,9 +2,8 @@ import 'server-only';
 
 import { NextResponse } from 'next/server';
 
+import { SERVER_API_BASE } from '@/lib/api-base';
 import { getSession } from '@/lib/session';
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
 
 /**
  * Proxy une mutation admin vers le backend : vérifie la session ADMIN_SAVELY,
@@ -21,7 +20,7 @@ export async function proxyAdmin(
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const upstream = await fetch(`${API_BASE}${backendPath}`, {
+  const upstream = await fetch(`${SERVER_API_BASE}${backendPath}`, {
     method,
     headers: {
       'Content-Type': 'application/json',

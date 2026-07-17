@@ -2,19 +2,31 @@
 # - frontend       (application pharmacie)  → http://localhost:3000
 # - frontend-asso  (application association) → http://localhost:3001
 #
+#   docker compose -f backend/docker-compose.services.yml up -d   # requis d'abord
 #   docker compose up --build
 #
-# NEXT_PUBLIC_API_URL doit pointer vers le backend joignable depuis le
-# navigateur (par défaut http://localhost:3005).
+# Le backend est joint par DEUX chemins distincts, à ne pas confondre :
+#
+#   NEXT_PUBLIC_API_URL  → depuis le NAVIGATEUR, via le port publié
+#                          (http://localhost:3005). Inliné dans le bundle au build.
+#   API_INTERNAL_URL     → depuis le SERVEUR Next (Server Components, route
+#                          handlers), via le réseau Docker (http://api:3005).
+#                          Lu au runtime : `localhost` y désigne le conteneur
+#                          frontend lui-même, pas l'API.
 services:
   frontend:
     build:
       context: ./frontend
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3005}
+    environment:
+      API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:3005}
     restart: unless-stopped
     ports:
       - '3000:3000'
+    networks:
+      - default
+      - backend
 
   frontend-asso:
     build:
@@ -25,3 +37,12 @@ services:
     restart: unless-stopped
     ports:
       - '3001:3001'
+    networks:
+      - default
+      - backend
+
+# Réseau créé par backend/docker-compose.services.yml (projet `backend`).
+networks:
+  backend:
+    name: backend_default
+    external: true

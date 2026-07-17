@@ -1,15 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
 
 const CATEGORIES_OPTIONS = [
   'Cosmétiques',
-  'Parapharmacie',
+  'Soins visage',
+  'Soins corps',
+  'Dermatologie',
   'Hygiène',
-  'Alimentation',
-  'Habillement',
+  'Maquillage',
+  'Capillaire',
+  'Solaire',
+  'Parfumerie',
+  'Compléments alimentaires',
+  'Pédiatrie',
+  'Parapharmacie',
   'Autre',
 ];
 
@@ -56,11 +63,64 @@ const inputStyle: React.CSSProperties = {
   background: '#fff',
 };
 
+interface AdresseSuggestion {
+  label: string;
+  name: string;
+  postcode: string;
+  city: string;
+}
+
 export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState<FormState>(INITIAL);
+  const [addrSuggestions, setAddrSuggestions] = useState<AdresseSuggestion[]>(
+    []
+  );
+  const [addrOpen, setAddrOpen] = useState(false);
+  const addrTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const searchAddress = useCallback((q: string) => {
+    if (q.length < 3) {
+      setAddrSuggestions([]);
+      return;
+    }
+    fetch(
+      `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=5`
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        const hits: AdresseSuggestion[] = (data.features ?? []).map(
+          (f: { properties: Record<string, string> }) => ({
+            label: f.properties.label,
+            name: f.properties.name,
+            postcode: f.properties.postcode,
+            city: f.properties.city,
+          })
+        );
+        setAddrSuggestions(hits);
+        setAddrOpen(hits.length > 0);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleAddressChange = (v: string) => {
+    set('address', v);
+    if (addrTimer.current) clearTimeout(addrTimer.current);
+    addrTimer.current = setTimeout(() => searchAddress(v), 350);
+  };
+
+  const pickAddress = (s: AdresseSuggestion) => {
+    setForm((f) => ({
+      ...f,
+      address: s.name,
+      postal_code: s.postcode,
+      city: s.city,
+    }));
+    setAddrSuggestions([]);
+    setAddrOpen(false);
+  };
 
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -84,7 +144,9 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   // Reset form when closed
@@ -124,7 +186,9 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
       setSubmitted(true);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : 'Une erreur est survenue. Réessayez.'
+        err instanceof Error
+          ? err.message
+          : 'Une erreur est survenue. Réessayez.'
       );
     } finally {
       setLoading(false);
@@ -236,7 +300,8 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
             <p style={{ fontSize: 15, color: '#6B7280', lineHeight: 1.6 }}>
               Votre inscription a bien été reçue. Notre équipe validera votre
               dossier sous 48&nbsp;h et vous contactera à l'adresse{' '}
-              <strong style={{ color: '#1A1A1A' }}>{form.contact_email}</strong>.
+              <strong style={{ color: '#1A1A1A' }}>{form.contact_email}</strong>
+              .
             </p>
             <button
               onClick={onClose}
@@ -269,7 +334,9 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                   marginBottom: 10,
                 }}
               >
-                <span style={{ fontSize: 12, fontWeight: 600, color: '#4A9B8E' }}>
+                <span
+                  style={{ fontSize: 12, fontWeight: 600, color: '#4A9B8E' }}
+                >
                   Inscription gratuite
                 </span>
               </div>
@@ -285,15 +352,25 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 Inscrire mon association
               </h2>
               <p style={{ fontSize: 14, color: '#6B7280' }}>
-                Tous les champs marqués <span style={{ color: '#4A9B8E' }}>*</span> sont obligatoires.
+                Tous les champs marqués{' '}
+                <span style={{ color: '#4A9B8E' }}>*</span> sont obligatoires.
               </p>
             </div>
 
             {/* Nom + RNA */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 10,
+              }}
+            >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
-                  Nom de l'association <span style={{ color: '#4A9B8E' }}>*</span>
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
+                  Nom de l'association{' '}
+                  <span style={{ color: '#4A9B8E' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -308,7 +385,9 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
                   RNA ou SIREN <span style={{ color: '#4A9B8E' }}>*</span>
                 </label>
                 <input
@@ -326,9 +405,17 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
             </div>
 
             {/* Email + Téléphone */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 10,
+              }}
+            >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
                   Email de contact <span style={{ color: '#4A9B8E' }}>*</span>
                 </label>
                 <input
@@ -343,7 +430,9 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
                   Téléphone <span style={{ color: '#4A9B8E' }}>*</span>
                 </label>
                 <input
@@ -362,26 +451,91 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
 
             {/* Adresse */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+              <label
+                style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+              >
                 Adresse <span style={{ color: '#4A9B8E' }}>*</span>
               </label>
-              <input
-                type="text"
-                value={form.address}
-                onChange={(e) => set('address', e.target.value)}
-                placeholder="12 rue de la Paix"
-                required
-                maxLength={300}
-                style={inputStyle}
-                onFocus={focus}
-                onBlur={blur}
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  value={form.address}
+                  onChange={(e) => handleAddressChange(e.target.value)}
+                  onBlur={(e) => {
+                    blur(e);
+                    setTimeout(() => setAddrOpen(false), 150);
+                  }}
+                  onFocus={(e) => {
+                    focus(e);
+                    if (addrSuggestions.length > 0) setAddrOpen(true);
+                  }}
+                  placeholder="12 rue de la Paix"
+                  required
+                  maxLength={300}
+                  style={inputStyle}
+                />
+                {addrOpen && addrSuggestions.length > 0 && (
+                  <ul
+                    style={{
+                      position: 'absolute',
+                      zIndex: 100,
+                      left: 0,
+                      right: 0,
+                      top: '100%',
+                      marginTop: 4,
+                      background: '#fff',
+                      border: '1.5px solid #E5E7EB',
+                      borderRadius: 10,
+                      boxShadow: '0 8px 24px rgba(0,0,0,.1)',
+                      listStyle: 'none',
+                      padding: 0,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {addrSuggestions.map((s) => (
+                      <li key={s.label}>
+                        <button
+                          type="button"
+                          onMouseDown={() => pickAddress(s)}
+                          style={{
+                            width: '100%',
+                            textAlign: 'left',
+                            padding: '10px 14px',
+                            fontSize: 13,
+                            color: '#374151',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            borderBottom: '1px solid #F3F4F6',
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background = '#F0F7F6')
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.background = 'none')
+                          }
+                        >
+                          {s.label}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
 
             {/* CP + Ville */}
-            <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 10 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '120px 1fr',
+                gap: 10,
+              }}
+            >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
                   Code postal <span style={{ color: '#4A9B8E' }}>*</span>
                 </label>
                 <input
@@ -397,7 +551,9 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
                   Ville <span style={{ color: '#4A9B8E' }}>*</span>
                 </label>
                 <input
@@ -416,27 +572,40 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
 
             {/* Rayon */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
-                Rayon d'action : <strong style={{ color: '#4A9B8E' }}>{form.action_radius_km} km</strong>
+              <label
+                style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+              >
+                Rayon d'action :{' '}
+                <strong style={{ color: '#4A9B8E' }}>
+                  {form.action_radius_km} km
+                </strong>
               </label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 12, color: '#9CA3AF', minWidth: 24 }}>5</span>
+                <span style={{ fontSize: 12, color: '#9CA3AF', minWidth: 24 }}>
+                  5
+                </span>
                 <input
                   type="range"
                   min={5}
                   max={100}
                   step={5}
                   value={form.action_radius_km}
-                  onChange={(e) => set('action_radius_km', Number(e.target.value))}
+                  onChange={(e) =>
+                    set('action_radius_km', Number(e.target.value))
+                  }
                   style={{ flex: 1, accentColor: '#4A9B8E' }}
                 />
-                <span style={{ fontSize: 12, color: '#9CA3AF', minWidth: 32 }}>100 km</span>
+                <span style={{ fontSize: 12, color: '#9CA3AF', minWidth: 32 }}>
+                  100 km
+                </span>
               </div>
             </div>
 
             {/* Catégories */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+              <label
+                style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+              >
                 Catégories acceptées <span style={{ color: '#4A9B8E' }}>*</span>
               </label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -469,7 +638,9 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
 
             {/* Logo */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+              <label
+                style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+              >
                 Logo (optionnel — JPG, PNG, WebP, max 5 Mo)
               </label>
               <input
@@ -496,7 +667,12 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
             )}
 
             {/* Honeypot */}
-            <input type="text" name="website" style={{ display: 'none' }} tabIndex={-1} />
+            <input
+              type="text"
+              name="website"
+              style={{ display: 'none' }}
+              tabIndex={-1}
+            />
 
             <button
               type="submit"
@@ -508,7 +684,10 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 fontWeight: 700,
                 padding: '14px 24px',
                 borderRadius: 10,
-                cursor: loading || form.categories.length === 0 ? 'not-allowed' : 'pointer',
+                cursor:
+                  loading || form.categories.length === 0
+                    ? 'not-allowed'
+                    : 'pointer',
                 opacity: loading || form.categories.length === 0 ? 0.6 : 1,
                 transition: 'background .2s, opacity .2s',
               }}

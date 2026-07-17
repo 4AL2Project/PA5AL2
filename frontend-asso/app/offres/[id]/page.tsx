@@ -291,8 +291,8 @@ export default function OffrePage() {
 
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  L&apos;officine a fixé les créneaux suivants. Choisissez
-                  celui qui vous convient :
+                  L&apos;officine a fixé les créneaux suivants. Choisissez celui
+                  qui vous convient :
                 </p>
                 {titulaireSlots.map((slot) => {
                   const { date, heure } = fmtSlot(slot);

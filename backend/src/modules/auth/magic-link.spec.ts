@@ -3,7 +3,7 @@
  * POST /api/auth/magic-link
  * POST /api/auth/magic-link/verify
  */
-import { GoneException } from '@nestjs/common';
+import { ForbiddenException, GoneException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { EmailService } from '../email/email.service';
@@ -142,6 +142,19 @@ describe('MagicLinkService.send', () => {
     const createCall = prisma.authToken.create.mock.calls[0][0];
     expect(createCall.data.type).toBe('MAGIC_LINK');
   });
+
+  it('leve 403 Forbidden et n envoie pas de lien quand l officine est desactivee', async () => {
+    prisma.user.findUnique.mockResolvedValue({
+      user_id: 'user-uuid',
+      email: 'marie@pharma.fr',
+      status: 'ACTIVE',
+      pharmacy: { status: 'INACTIVE' },
+    });
+    await expect(service.send('marie@pharma.fr')).rejects.toThrow(
+      ForbiddenException
+    );
+    expect(emailMock.sendMagicLinkEmail).not.toHaveBeenCalled();
+  });
 });
 
 // --- POST /api/auth/magic-link/verify ----------------------------------------
@@ -225,5 +238,24 @@ describe('MagicLinkService.verify', () => {
     const query = prisma.authToken.findFirst.mock.calls[0][0];
     expect(JSON.stringify(query)).not.toContain('my-raw-magic-token');
     expect(query.where.token_hash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  it('leve 403 Forbidden sans consommer le token quand l officine est desactivee', async () => {
+    prisma.authToken.findFirst.mockResolvedValue({
+      ...makeValidMagicToken(),
+      user: {
+        user_id: 'user-uuid',
+        email: 'marie@pharma.fr',
+        pharmacy_id: 'pharma-uuid',
+        role: 'TITULAIRE',
+        status: 'ACTIVE',
+        pharmacy: { status: 'INACTIVE' },
+      },
+    });
+    await expect(service.verify('valid-raw-token')).rejects.toThrow(
+      ForbiddenException
+    );
+    // Le token n'est pas consommé (réactivation possible ultérieurement).
+    expect(prisma.authToken.update).not.toHaveBeenCalled();
   });
 });

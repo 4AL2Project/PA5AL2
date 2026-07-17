@@ -18,7 +18,6 @@ import {
   computePickupSlots,
   DonationLineSnapshot,
   intersectWindows,
-  isValidPickupSlot,
   MAX_DONATION_AGE_DAYS,
   MAX_PROPOSALS_PER_DONATION,
   MISSED_PICKUP_GRACE_HOURS,
@@ -404,76 +403,31 @@ export class DonationOrchestratorService {
       | null
       | undefined;
 
-    let slotStart: Date;
-    let slotEnd: Date;
-
-    if (donationSlots?.length) {
-      // Créneaux spécifiques fixés par le titulaire : l'asso DOIT en choisir un.
-      if (!input.slot_start || !input.slot_end) {
-        throw new BadRequestException('Choisissez un créneau de récupération');
-      }
-      slotStart = new Date(input.slot_start);
-      slotEnd = new Date(input.slot_end);
-      if (isNaN(slotStart.getTime()) || isNaN(slotEnd.getTime())) {
-        throw new BadRequestException(
-          "Ce créneau n'est plus disponible — rechargez la page"
-        );
-      }
-      const now = new Date();
-      const matches = donationSlots.some(
-        (s) =>
-          new Date(s.start).getTime() === slotStart.getTime() &&
-          new Date(s.end).getTime() === slotEnd.getTime()
+    if (!donationSlots?.length) {
+      throw new BadRequestException(
+        'Aucun créneau disponible — contactez la pharmacie'
       );
-      if (!matches || slotStart <= now) {
-        throw new BadRequestException(
-          "Ce créneau n'est plus disponible — rechargez la page"
-        );
-      }
-    } else if (input.slot_start && input.slot_end) {
-      // Aucun créneau titulaire mais l'asso a quand même fourni un slot
-      // (rétro-compatibilité) : on valide via les fenêtres hebdo.
-      slotStart = new Date(input.slot_start);
-      slotEnd = new Date(input.slot_end);
-      if (isNaN(slotStart.getTime()) || isNaN(slotEnd.getTime())) {
-        throw new BadRequestException(
-          "Ce créneau n'est plus disponible — rechargez la page"
-        );
-      }
-      const windows = intersectWindows(
-        parsePickupWindows(proposal.donation.pharmacy.donation_pickup_windows),
-        proposal.association.pickup_windows
+    }
+    if (!input.slot_start || !input.slot_end) {
+      throw new BadRequestException('Choisissez un créneau de récupération');
+    }
+    const slotStart = new Date(input.slot_start);
+    const slotEnd = new Date(input.slot_end);
+    if (isNaN(slotStart.getTime()) || isNaN(slotEnd.getTime())) {
+      throw new BadRequestException(
+        "Ce créneau n'est plus disponible — rechargez la page"
       );
-      if (
-        !isValidPickupSlot(
-          windows,
-          proposal.association.pickup_sla_days,
-          slotStart,
-          slotEnd
-        )
-      ) {
-        throw new BadRequestException(
-          "Ce créneau n'est plus disponible — rechargez la page"
-        );
-      }
-    } else {
-      // Pas de créneaux titulaire, pas de slot fourni → auto-assigne le
-      // premier créneau disponible dans la fenêtre SLA de la pharmacie.
-      const windows = intersectWindows(
-        parsePickupWindows(proposal.donation.pharmacy.donation_pickup_windows),
-        proposal.association.pickup_windows
+    }
+    const now = new Date();
+    const matches = donationSlots.some(
+      (s) =>
+        new Date(s.start).getTime() === slotStart.getTime() &&
+        new Date(s.end).getTime() === slotEnd.getTime()
+    );
+    if (!matches || slotStart <= now) {
+      throw new BadRequestException(
+        "Ce créneau n'est plus disponible — rechargez la page"
       );
-      const available = computePickupSlots(
-        windows,
-        proposal.association.pickup_sla_days
-      );
-      if (!available.length) {
-        throw new BadRequestException(
-          'Aucun créneau disponible — contactez la pharmacie'
-        );
-      }
-      slotStart = new Date(available[0].start);
-      slotEnd = new Date(available[0].end);
     }
 
     const newStatus = isPartial ? 'ACCEPTEE_PARTIELLEMENT' : 'ACCEPTEE';

@@ -83,10 +83,9 @@ export default function OffrePage() {
     offre?.donation?.pickup_windows?.filter(
       (s) => new Date(s.end) > new Date()
     ) ?? [];
-  const hasTitulaireSlots = titulaireSlots.length > 0;
 
   const handleAccept = async () => {
-    if (hasTitulaireSlots && !selectedSlot) {
+    if (!selectedSlot) {
       setError('Veuillez sélectionner un créneau de récupération');
       return;
     }
@@ -290,47 +289,37 @@ export default function OffrePage() {
                 Créneau de récupération
               </h2>
 
-              {hasTitulaireSlots ? (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    L&apos;officine a fixé les créneaux suivants. Choisissez
-                    celui qui vous convient :
-                  </p>
-                  {titulaireSlots.map((slot) => {
-                    const { date, heure } = fmtSlot(slot);
-                    const isSelected =
-                      selectedSlot?.start === slot.start &&
-                      selectedSlot?.end === slot.end;
-                    return (
-                      <button
-                        key={slot.start}
-                        type="button"
-                        onClick={() => setSelectedSlot(slot)}
-                        className={`w-full rounded-xl border-2 p-4 text-left transition-all ${
-                          isSelected
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border bg-card hover:border-primary/50'
-                        }`}
-                      >
-                        <p className="font-medium capitalize text-foreground">
-                          {date}
-                        </p>
-                        <p className="mt-0.5 text-sm font-semibold text-primary">
-                          🕐 {heure}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="rounded-lg border border-border bg-muted/30 px-4 py-3">
-                  <p className="text-sm text-muted-foreground">
-                    En acceptant, vous confirmez votre disponibilité pour
-                    récupérer ce don dans les prochains jours aux horaires
-                    d&apos;ouverture de l&apos;officine.
-                  </p>
-                </div>
-              )}
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  L&apos;officine a fixé les créneaux suivants. Choisissez
+                  celui qui vous convient :
+                </p>
+                {titulaireSlots.map((slot) => {
+                  const { date, heure } = fmtSlot(slot);
+                  const isSelected =
+                    selectedSlot?.start === slot.start &&
+                    selectedSlot?.end === slot.end;
+                  return (
+                    <button
+                      key={slot.start}
+                      type="button"
+                      onClick={() => setSelectedSlot(slot)}
+                      className={`w-full rounded-xl border-2 p-4 text-left transition-all ${
+                        isSelected
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border bg-card hover:border-primary/50'
+                      }`}
+                    >
+                      <p className="font-medium capitalize text-foreground">
+                        {date}
+                      </p>
+                      <p className="mt-0.5 text-sm font-semibold text-primary">
+                        🕐 {heure}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
@@ -358,7 +347,7 @@ export default function OffrePage() {
               <div className="flex gap-3">
                 <button
                   onClick={handleAccept}
-                  disabled={submitting || (hasTitulaireSlots && !selectedSlot)}
+                  disabled={submitting || !selectedSlot}
                   className="flex-1 rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-40"
                 >
                   {submitting ? 'Envoi…' : '✅ Accepter ce don'}

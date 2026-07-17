@@ -223,6 +223,10 @@ model Association {
   agrement_valide  Boolean   @default(false)
   // Horodatage de mise en liste noire (BLACKLISTEE, uniquement depuis SUSPENDUE)
   blacklisted_at   DateTime?
+  // Score de fiabilité (0–100, démarre à 100) :
+  // +5 retrait confirmé, -5 refus d'offre, -20 non-récupération.
+  // < 30 → statut SUSPENDUE automatiquement.
+  score_pickup    Int       @default(100)
   // Éligibilité au reçu fiscal vérifiée par l'admin (art. 200/238 bis CGI)
   fiscal_receipt_verified Boolean @default(false)
   email_verified_at DateTime?

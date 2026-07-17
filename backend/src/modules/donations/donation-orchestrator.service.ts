@@ -7,6 +7,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import * as QRCode from 'qrcode';
 
 import { config } from '../../core/config';
@@ -336,6 +337,8 @@ export class DonationOrchestratorService {
         payload: reason ? { reason } : undefined,
       },
     });
+    // Refus d'offre → -5 fiabilité
+    await this.updateAssoScore(proposal.association_id, -5);
     // Refus → cascade immédiate vers l'asso suivante
     await this.proposeNext(proposal.donation_id);
     return this.getProposalView(proposal.token);
@@ -811,6 +814,8 @@ export class DonationOrchestratorService {
     }
 
     await this.completeIfDone(allocation.donation_id);
+    // Retrait confirmé → +5 fiabilité
+    await this.updateAssoScore(allocation.association_id, +5);
     return prisma.donationAllocation.findUnique({
       where: { allocation_id: allocationId },
     });
@@ -1024,6 +1029,9 @@ export class DonationOrchestratorService {
       });
       if (!claimed) continue;
 
+      // Non-récupération → -20 fiabilité
+      await this.updateAssoScore(allocation.association_id, -20);
+
       const summary = lines.map((l) => `${l.name} ×${l.quantity}`).join(', ');
       if (allocation.association.contact_email) {
         await this.sendOnce(
@@ -1221,6 +1229,36 @@ export class DonationOrchestratorService {
       return { state: 'REMPLACEE', ...base };
     }
     return { state: 'EXPIREE', ...base };
+  }
+
+  // ── Score de fiabilité association ────────────────────────────────────────
+
+  /**
+   * Ajuste le score de fiabilité d'une association.
+   * delta positif = bon comportement (retrait confirmé)
+   * delta négatif = mauvais comportement (refus, non-récupération)
+   * Le score est borné à [0, 100]. Si le score passe sous 30, l'asso est SUSPENDUE.
+   */
+  private async updateAssoScore(
+    associationId: string,
+    delta: number,
+    tx?: Prisma.TransactionClient
+  ): Promise<void> {
+    const db = tx ?? prisma;
+    const asso = await db.association.findUnique({
+      where: { association_id: associationId },
+      select: { score_pickup: true },
+    });
+    if (!asso) return;
+
+    const newScore = Math.min(100, Math.max(0, asso.score_pickup + delta));
+    await db.association.update({
+      where: { association_id: associationId },
+      data: {
+        score_pickup: newScore,
+        ...(newScore < 30 ? { status: 'SUSPENDUE' } : {}),
+      },
+    });
   }
 
   // ── Idempotence des envois (le cron ne renvoie jamais deux fois) ──────────

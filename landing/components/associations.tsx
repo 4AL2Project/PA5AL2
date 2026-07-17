@@ -31,7 +31,9 @@ export function Associations() {
                   marginBottom: 24,
                 }}
               >
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#4A9B8E' }}>
+                <span
+                  style={{ fontSize: 13, fontWeight: 600, color: '#4A9B8E' }}
+                >
                   Pour les associations
                 </span>
               </div>
@@ -69,7 +71,7 @@ export function Associations() {
               >
                 {[
                   'Inscription gratuite, sans engagement',
-                  'Notifications automatiques dès qu\'une offre correspond',
+                  "Notifications automatiques dès qu'une offre correspond",
                   'Pickup confirmé en un scan QR — Cerfa inclus',
                   'Réseau de pharmacies partenaires en France entière',
                 ].map((item) => (
@@ -96,7 +98,12 @@ export function Associations() {
                         justifyContent: 'center',
                       }}
                     >
-                      <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                      <svg
+                        width="11"
+                        height="11"
+                        viewBox="0 0 11 11"
+                        fill="none"
+                      >
                         <path
                           d="M2 5.5l2.5 2.5 4.5-4.5"
                           stroke="#4A9B8E"
@@ -188,7 +195,12 @@ export function Associations() {
                         justifyContent: 'center',
                       }}
                     >
-                      <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 18 18"
+                        fill="none"
+                      >
                         <path
                           d="M9 2L11 7H16L12 10.5L13.5 16L9 13L4.5 16L6 10.5L2 7H7L9 2Z"
                           fill="#fff"
@@ -196,10 +208,14 @@ export function Associations() {
                       </svg>
                     </div>
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>
+                      <div
+                        style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}
+                      >
                         Nouvelle offre de don
                       </div>
-                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,.75)' }}>
+                      <div
+                        style={{ fontSize: 11, color: 'rgba(255,255,255,.75)' }}
+                      >
                         Il y a 5 minutes
                       </div>
                     </div>
@@ -226,7 +242,12 @@ export function Associations() {
                           justifyContent: 'center',
                         }}
                       >
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <svg
+                          width="20"
+                          height="20"
+                          viewBox="0 0 20 20"
+                          fill="none"
+                        >
                           <path
                             d="M10 2C6.7 2 4 4.7 4 8c0 4 6 10 6 10s6-6 6-10c0-3.3-2.7-6-6-6z"
                             fill="#4A9B8E"
@@ -236,7 +257,13 @@ export function Associations() {
                         </svg>
                       </div>
                       <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A' }}>
+                        <div
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: '#1A1A1A',
+                          }}
+                        >
                           Pharmacie du Centre
                         </div>
                         <div style={{ fontSize: 12, color: '#6B7280' }}>
@@ -280,7 +307,9 @@ export function Associations() {
                           }}
                         >
                           <span>{name}</span>
-                          <span style={{ fontWeight: 600, color: '#1A1A1A' }}>{qty}</span>
+                          <span style={{ fontWeight: 600, color: '#1A1A1A' }}>
+                            {qty}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -296,17 +325,41 @@ export function Associations() {
                         marginBottom: 16,
                       }}
                     >
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                        <circle cx="8" cy="8" r="7" stroke="#F5A623" strokeWidth="1.5" />
-                        <path d="M8 5v3l2 2" stroke="#F5A623" strokeWidth="1.5" strokeLinecap="round" />
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                      >
+                        <circle
+                          cx="8"
+                          cy="8"
+                          r="7"
+                          stroke="#F5A623"
+                          strokeWidth="1.5"
+                        />
+                        <path
+                          d="M8 5v3l2 2"
+                          stroke="#F5A623"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
                       </svg>
                       <span style={{ fontSize: 13, color: '#6B7280' }}>
                         Créneau pickup :{' '}
-                        <strong style={{ color: '#1A1A1A' }}>Lun 20 jan, 10h–12h</strong>
+                        <strong style={{ color: '#1A1A1A' }}>
+                          Lun 20 jan, 10h–12h
+                        </strong>
                       </span>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: 8,
+                      }}
+                    >
                       <button
                         style={{
                           background: '#4A9B8E',
@@ -340,7 +393,10 @@ export function Associations() {
         </div>
       </section>
 
-      <AssociationModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      <AssociationModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+      />
     </>
   );
 }

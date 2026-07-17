@@ -9,7 +9,12 @@ interface FadeUpProps {
   style?: React.CSSProperties;
 }
 
-export function FadeUp({ children, delay = 0, className = '', style }: FadeUpProps) {
+export function FadeUp({
+  children,
+  delay = 0,
+  className = '',
+  style,
+}: FadeUpProps) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -22,7 +27,7 @@ export function FadeUp({ children, delay = 0, className = '', style }: FadeUpPro
           observer.unobserve(el);
         }
       },
-      { threshold: 0.1 },
+      { threshold: 0.1 }
     );
     observer.observe(el);
     return () => observer.disconnect();

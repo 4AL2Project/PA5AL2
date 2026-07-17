@@ -52,7 +52,9 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
   // Bloquer le scroll body
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,7 +73,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
       }
       setState('success');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de l\'envoi.');
+      setError(err instanceof Error ? err.message : "Erreur lors de l'envoi.");
       setState('error');
     }
   };
@@ -179,8 +181,8 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               Demande envoyée !
             </h2>
             <p style={{ fontSize: 15, color: '#6B7280', lineHeight: 1.6 }}>
-              Merci {form.first_name}. Notre équipe vous contactera sous 24&nbsp;h
-              à l'adresse{' '}
+              Merci {form.first_name}. Notre équipe vous contactera sous
+              24&nbsp;h à l'adresse{' '}
               <strong style={{ color: '#1A1A1A' }}>{form.email}</strong>.
             </p>
             <button
@@ -200,7 +202,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: 'flex', flexDirection: 'column', gap: 14 }}
+          >
             <div style={{ marginBottom: 8 }}>
               <h2
                 style={{
@@ -214,13 +219,22 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 Demander une démo
               </h2>
               <p style={{ fontSize: 14, color: '#6B7280' }}>
-                Renseignez vos coordonnées et notre équipe vous rappelle sous 24&nbsp;h.
+                Renseignez vos coordonnées et notre équipe vous rappelle sous
+                24&nbsp;h.
               </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 10,
+              }}
+            >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
                   Prénom <span style={{ color: '#4A9B8E' }}>*</span>
                 </label>
                 <input
@@ -236,7 +250,9 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
                   Nom <span style={{ color: '#4A9B8E' }}>*</span>
                 </label>
                 <input
@@ -253,9 +269,17 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 10,
+              }}
+            >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
                   Email <span style={{ color: '#4A9B8E' }}>*</span>
                 </label>
                 <input
@@ -270,7 +294,9 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
                   Téléphone
                 </label>
                 <input
@@ -286,10 +312,20 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, alignItems: 'end' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr auto',
+                gap: 10,
+                alignItems: 'end',
+              }}
+            >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
-                  Nom de l'officine / groupement <span style={{ color: '#4A9B8E' }}>*</span>
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
+                  Nom de l'officine / groupement{' '}
+                  <span style={{ color: '#4A9B8E' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -303,8 +339,17 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                   onBlur={blur}
                 />
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 100 }}>
-                <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                  minWidth: 100,
+                }}
+              >
+                <label
+                  style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+                >
                   Nb officines
                 </label>
                 <input
@@ -312,7 +357,9 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                   min={1}
                   max={500}
                   value={form.pharmacy_count}
-                  onChange={(e) => set('pharmacy_count', Number(e.target.value))}
+                  onChange={(e) =>
+                    set('pharmacy_count', Number(e.target.value))
+                  }
                   style={inputStyle}
                   onFocus={focus}
                   onBlur={blur}
@@ -321,7 +368,9 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <label style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>
+              <label
+                style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
+              >
                 Message (optionnel)
               </label>
               <textarea
@@ -371,7 +420,8 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 marginTop: 4,
               }}
               onMouseEnter={(e) => {
-                if (state !== 'loading') e.currentTarget.style.background = '#2D6B62';
+                if (state !== 'loading')
+                  e.currentTarget.style.background = '#2D6B62';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.background = '#4A9B8E';

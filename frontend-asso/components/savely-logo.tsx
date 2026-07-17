@@ -23,15 +23,8 @@ export function SavelyLogo({ size = 32, className = '' }: SavelyLogoProps) {
         strokeLinejoin="round"
       />
       {/* Carré avec encoche bas-droite */}
-      <path
-        d="M28 13H42V35H34L28 29V13Z"
-        fill="white"
-      />
-      <path
-        d="M34 35L42 35"
-        stroke="#0F0F0F"
-        strokeWidth="1"
-      />
+      <path d="M28 13H42V35H34L28 29V13Z" fill="white" />
+      <path d="M34 35L42 35" stroke="#0F0F0F" strokeWidth="1" />
     </svg>
   );
 }

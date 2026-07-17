@@ -14,5 +14,5 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'warn',
       'react/display-name': 'off',
     },
-  },
+  }
 );

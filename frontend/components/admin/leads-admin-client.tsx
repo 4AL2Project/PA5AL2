@@ -18,10 +18,10 @@ import {
 import {
   type DemoRequest,
   type DemoRequestList,
-  type WaitlistList,
   fetchDemoRequests,
   fetchWaitlist,
   markDemoContacted,
+  type WaitlistList,
 } from '@/lib/admin-leads';
 
 type Tab = 'demo' | 'waitlist';
@@ -80,7 +80,9 @@ export function LeadsAdminClient({ adminEmail }: { adminEmail?: string }) {
         ...prev,
         data: prev.data.map((d) => (d.id === updated.id ? updated : d)),
       }));
-      toast.success(`${row.first_name} ${row.last_name} marqué(e) comme contacté(e)`);
+      toast.success(
+        `${row.first_name} ${row.last_name} marqué(e) comme contacté(e)`
+      );
     } catch {
       toast.error('Erreur lors de la mise à jour');
     } finally {
@@ -106,7 +108,10 @@ export function LeadsAdminClient({ adminEmail }: { adminEmail?: string }) {
         >
           <Mail className="h-4 w-4" />
           Demandes de démo
-          <Badge variant={tab === 'demo' ? 'default' : 'secondary'} className="ml-1">
+          <Badge
+            variant={tab === 'demo' ? 'default' : 'secondary'}
+            className="ml-1"
+          >
             {demo.total}
           </Badge>
         </button>
@@ -120,7 +125,10 @@ export function LeadsAdminClient({ adminEmail }: { adminEmail?: string }) {
         >
           <Users className="h-4 w-4" />
           Waitlist particuliers
-          <Badge variant={tab === 'waitlist' ? 'default' : 'secondary'} className="ml-1">
+          <Badge
+            variant={tab === 'waitlist' ? 'default' : 'secondary'}
+            className="ml-1"
+          >
             {waitlist.total}
           </Badge>
         </button>
@@ -177,21 +185,30 @@ function DemoTable({
         </TableHeader>
         <TableBody>
           {rows.map((row) => (
-            <TableRow key={row.id} className={row.contacted_at ? 'opacity-60' : ''}>
+            <TableRow
+              key={row.id}
+              className={row.contacted_at ? 'opacity-60' : ''}
+            >
               <TableCell>
                 <div className="font-medium text-sm">
                   {row.first_name} {row.last_name}
                 </div>
                 <div className="text-xs text-muted-foreground">{row.email}</div>
                 {row.phone && (
-                  <div className="text-xs text-muted-foreground">{row.phone}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {row.phone}
+                  </div>
                 )}
               </TableCell>
               <TableCell className="text-sm">{row.pharmacy_name}</TableCell>
-              <TableCell className="text-center text-sm">{row.pharmacy_count}</TableCell>
+              <TableCell className="text-center text-sm">
+                {row.pharmacy_count}
+              </TableCell>
               <TableCell className="max-w-[200px]">
                 {row.message ? (
-                  <p className="text-xs text-muted-foreground line-clamp-2">{row.message}</p>
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {row.message}
+                  </p>
                 ) : (
                   <span className="text-xs text-muted-foreground/50">—</span>
                 )}
@@ -206,9 +223,11 @@ function DemoTable({
                     Contacté
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="gap-1 text-amber-600 border-amber-200 bg-amber-50">
-                    <Clock className="h-3 w-3" />
-                    À contacter
+                  <Badge
+                    variant="outline"
+                    className="gap-1 text-amber-600 border-amber-200 bg-amber-50"
+                  >
+                    <Clock className="h-3 w-3" />À contacter
                   </Badge>
                 )}
               </TableCell>
@@ -237,7 +256,11 @@ function DemoTable({
   );
 }
 
-function WaitlistTable({ rows }: { rows: { id: string; email: string; created_at: string }[] }) {
+function WaitlistTable({
+  rows,
+}: {
+  rows: { id: string; email: string; created_at: string }[];
+}) {
   if (!rows.length) {
     return (
       <div className="flex flex-col items-center gap-2 py-20 text-muted-foreground">
@@ -260,7 +283,9 @@ function WaitlistTable({ rows }: { rows: { id: string; email: string; created_at
         <TableBody>
           {rows.map((row, i) => (
             <TableRow key={row.id}>
-              <TableCell className="text-muted-foreground text-sm">{i + 1}</TableCell>
+              <TableCell className="text-muted-foreground text-sm">
+                {i + 1}
+              </TableCell>
               <TableCell className="font-medium text-sm">{row.email}</TableCell>
               <TableCell className="text-xs text-muted-foreground">
                 {fmt(row.created_at)}

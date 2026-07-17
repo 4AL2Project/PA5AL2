@@ -154,7 +154,7 @@ export class DonationsController {
     return this.orchestrator.confirmPickupByCode(
       dto.recovery_code,
       pharmacyId,
-      dto.picked_up_by,
+      dto.picked_up_by ?? '',
       `${user.role}:${user.sub}`
     );
   }

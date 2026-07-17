@@ -1,6 +1,6 @@
 import 'server-only';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3005';
+import { SERVER_API_BASE as API_BASE } from './api-base';
 
 export interface MyPharmacy {
   pharmacy_id: string;

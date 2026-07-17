@@ -1,7 +1,7 @@
 // Doit rester le premier import — instrumente les modules Node.js avant NestJS
 
 import 'dotenv/config';
-import './instrument.ts';
+import './instrument';
 import 'reflect-metadata';
 
 import { Logger, ValidationPipe } from '@nestjs/common';

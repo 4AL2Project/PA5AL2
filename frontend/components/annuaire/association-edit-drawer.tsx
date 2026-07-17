@@ -30,7 +30,7 @@ import {
   updateAssociation,
 } from '@/lib/api';
 import { DONATION_CATEGORIES } from '@/lib/donation-categories';
-import { DAY_OPTIONS } from '@/lib/pickup-windows';
+import { DAY_OPTIONS, normalizeWindows } from '@/lib/pickup-windows';
 
 export function AssociationEditDrawer({
   fiche,
@@ -49,7 +49,7 @@ export function AssociationEditDrawer({
   const [email, setEmail] = useState(fiche.contact_email ?? '');
   const [categories, setCategories] = useState<string[]>(fiche.categories);
   const [windows, setWindows] = useState<AssociationWindow[]>(
-    fiche.pickup_windows ?? []
+    normalizeWindows(fiche.pickup_windows)
   );
   const [saving, setSaving] = useState(false);
 
@@ -60,7 +60,7 @@ export function AssociationEditDrawer({
       setPhone(fiche.contact_phone ?? '');
       setEmail(fiche.contact_email ?? '');
       setCategories(fiche.categories);
-      setWindows(fiche.pickup_windows ?? []);
+      setWindows(normalizeWindows(fiche.pickup_windows));
     }
   }, [open, fiche]);
 

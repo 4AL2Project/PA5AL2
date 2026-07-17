@@ -29,32 +29,49 @@ export function Navbar() {
     >
       <div
         className="lp-container"
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 68 }}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          height: 68,
+        }}
       >
         {/* Logo */}
         <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div
+          <svg width="34" height="34" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="48" height="48" rx="11" fill="#0F0F0F" />
+            <path d="M8 13L16 35L24 13" stroke="white" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M28 13H42V35H34L28 29V13Z" fill="white" />
+          </svg>
+          <span
             style={{
-              width: 34,
-              height: 34,
-              background: '#4A9B8E',
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              fontSize: 20,
+              fontWeight: 800,
+              color: '#1A1A1A',
+              letterSpacing: '-.5px',
             }}
           >
-            <span style={{ color: '#fff', fontSize: 18, fontWeight: 800, letterSpacing: '-.5px' }}>S</span>
-          </div>
-          <span style={{ fontSize: 20, fontWeight: 800, color: '#1A1A1A', letterSpacing: '-.5px' }}>Savely</span>
+            Savely
+          </span>
         </a>
 
         {/* Desktop nav */}
-        <div className="nav-links-desktop" style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
-          <a href="#fonctionnalites" className="nav-link">Fonctionnalités</a>
-          <a href="#associations" className="nav-link">Pour les associations</a>
-          <a href="#tarifs" className="nav-link">Tarifs</a>
-          <a href="#" className="nav-link">Se connecter</a>
+        <div
+          className="nav-links-desktop"
+          style={{ display: 'flex', gap: 32, alignItems: 'center' }}
+        >
+          <a href="#fonctionnalites" className="nav-link">
+            Fonctionnalités
+          </a>
+          <a href="#associations" className="nav-link">
+            Pour les associations
+          </a>
+          <a href="#tarifs" className="nav-link">
+            Tarifs
+          </a>
+          <a href="#" className="nav-link">
+            Se connecter
+          </a>
           <a
             href="#demo"
             style={{

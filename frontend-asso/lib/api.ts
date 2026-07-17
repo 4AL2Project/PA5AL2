@@ -42,6 +42,16 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 // ── Auth ────────────────────────────────────────────────────────────────────
 
+export async function requestAssoMagicLink(email: string): Promise<void> {
+  await fetch(`${API_BASE}/asso/auth/request-link`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+    cache: 'no-store',
+  });
+  // On ignore la réponse : le backend retourne toujours 200 (anti-énumération)
+}
+
 export async function verifyAssoToken(
   token: string
 ): Promise<{ access_token: string; is_onboarded: boolean }> {

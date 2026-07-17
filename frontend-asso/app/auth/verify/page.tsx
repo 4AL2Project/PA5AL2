@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { saveToken, verifyAssoToken } from '@/lib/api';
+import { SavelyLogo } from '@/components/savely-logo';
 
 type State = 'loading' | 'success' | 'expired' | 'invalid' | 'no_token';
 
@@ -40,9 +41,7 @@ function VerifyContent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm space-y-6 text-center">
         <div className="mb-8 flex items-center justify-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">S</span>
-          </div>
+          <SavelyLogo size={36} />
           <span className="text-xl font-bold text-foreground">Savely</span>
         </div>
 

@@ -49,7 +49,7 @@ export default function SetupPage() {
   useEffect(() => {
     const token = localStorage.getItem('savely_asso_token');
     if (!token) {
-      router.replace('/auth/verify');
+      router.replace('/auth/login');
       return;
     }
     fetchProfile()
@@ -61,7 +61,7 @@ export default function SetupPage() {
         setSiteWeb(p.site_web ?? '');
         if (p.categories?.length) setCategories(p.categories);
       })
-      .catch(() => router.replace('/auth/verify'));
+      .catch(() => router.replace('/auth/login'));
   }, [router]);
 
   const toggleCat = (cat: string) =>

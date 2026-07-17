@@ -30,6 +30,32 @@ export class AssoAuthService {
   ) {}
 
   /**
+   * Génère un magic link pour une association identifiée par son email.
+   * Endpoint public (self-service) : répond toujours 200 pour ne pas divulguer
+   * si l'email est connu ou si le compte est actif.
+   */
+  async sendMagicLinkByEmail(email: string): Promise<void> {
+    const asso = await prisma.association.findFirst({
+      where: { contact_email: email, status: 'ACTIVE' },
+    });
+    // Pas d'asso active → on ne fait rien mais on ne lève pas d'erreur (enumération)
+    if (!asso) return;
+
+    const rawToken = generateToken();
+    const tokenHash = hashToken(rawToken);
+    const expiresAt = new Date(Date.now() + MAGIC_LINK_TTL_MS);
+
+    await prisma.association.update({
+      where: { association_id: asso.association_id },
+      data: { magic_link_token_hash: tokenHash, magic_link_expires_at: expiresAt },
+    });
+
+    const link = `${config.assoAppUrl}/auth/verify?token=${rawToken}`;
+    await this.emailService.sendAssoMagicLinkEmail(asso.contact_email!, asso.name, link);
+    this.logger.log(`Self-service magic link sent to ${email} (asso=${asso.association_id})`);
+  }
+
+  /**
    * Génère un magic link pour l'espace association et l'envoie par email.
    * Seul un admin Savely peut déclencher cet envoi.
    */

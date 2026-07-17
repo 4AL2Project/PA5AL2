@@ -40,7 +40,9 @@ export class AdminLeadsController {
   }
 
   @Get('waitlist')
-  @ApiOperation({ summary: 'Lister les inscrits waitlist particuliers (admin)' })
+  @ApiOperation({
+    summary: 'Lister les inscrits waitlist particuliers (admin)',
+  })
   getWaitlist(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(100), ParseIntPipe) limit: number

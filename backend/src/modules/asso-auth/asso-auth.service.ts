@@ -47,12 +47,21 @@ export class AssoAuthService {
 
     await prisma.association.update({
       where: { association_id: asso.association_id },
-      data: { magic_link_token_hash: tokenHash, magic_link_expires_at: expiresAt },
+      data: {
+        magic_link_token_hash: tokenHash,
+        magic_link_expires_at: expiresAt,
+      },
     });
 
     const link = `${config.assoAppUrl}/auth/verify?token=${rawToken}`;
-    await this.emailService.sendAssoMagicLinkEmail(asso.contact_email!, asso.name, link);
-    this.logger.log(`Self-service magic link sent to ${email} (asso=${asso.association_id})`);
+    await this.emailService.sendAssoMagicLinkEmail(
+      asso.contact_email!,
+      asso.name,
+      link
+    );
+    this.logger.log(
+      `Self-service magic link sent to ${email} (asso=${asso.association_id})`
+    );
   }
 
   /**

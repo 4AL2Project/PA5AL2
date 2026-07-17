@@ -18,7 +18,9 @@ export class LeadsController {
 
   @Post('waitlist')
   @HttpCode(201)
-  @ApiOperation({ summary: 'Inscription à la waitlist particuliers (landing page)' })
+  @ApiOperation({
+    summary: 'Inscription à la waitlist particuliers (landing page)',
+  })
   joinWaitlist(@Body() dto: CreateWaitlistEntryDto) {
     return this.leads.createWaitlistEntry(dto);
   }

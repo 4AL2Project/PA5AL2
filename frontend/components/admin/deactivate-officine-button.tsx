@@ -71,8 +71,8 @@ export function DeactivateOfficineButton({
           </AlertDialogTitle>
           <AlertDialogDescription>
             {isActive
-              ? 'Les utilisateurs de l’officine ne pourront plus accéder à Savely jusqu’à réactivation.'
-              : 'L’officine et ses utilisateurs retrouveront l’accès à Savely.'}
+              ? "Les utilisateurs de l'officine ne pourront plus accéder à Savely jusqu'à réactivation."
+              : "L'officine et ses utilisateurs retrouveront l'accès à Savely."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

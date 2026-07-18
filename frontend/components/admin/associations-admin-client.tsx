@@ -542,14 +542,16 @@ function AssoRow({
                 Activer + inviter
               </DropdownMenuItem>
             )}
-            {showInvite && asso.contact_email && asso.status !== 'EN_ATTENTE_VALIDATION' && (
-              <DropdownMenuItem onClick={onInvite}>
-                <MailPlus className="mr-2 h-3.5 w-3.5" />
-                {asso.magic_link_token_hash
-                  ? 'Renvoyer invitation'
-                  : 'Envoyer invitation'}
-              </DropdownMenuItem>
-            )}
+            {showInvite &&
+              asso.contact_email &&
+              asso.status !== 'EN_ATTENTE_VALIDATION' && (
+                <DropdownMenuItem onClick={onInvite}>
+                  <MailPlus className="mr-2 h-3.5 w-3.5" />
+                  {asso.magic_link_token_hash
+                    ? 'Renvoyer invitation'
+                    : 'Envoyer invitation'}
+                </DropdownMenuItem>
+              )}
           </DropdownMenuContent>
         </DropdownMenu>
       </TableCell>

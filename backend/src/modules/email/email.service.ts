@@ -278,7 +278,7 @@ export class EmailService {
       ${btn('Activer mon espace', link)}
       ${highlightBox('Ce lien est valable 7 jours. Après cette date, contactez-nous pour recevoir un nouveau lien.')}
       ${divider()}
-      ${footerMention('Si vous n\'êtes pas concerné(e) par cette invitation, ignorez simplement cet email — aucune action n\'est nécessaire.')}
+      ${footerMention("Si vous n'êtes pas concerné(e) par cette invitation, ignorez simplement cet email — aucune action n'est nécessaire.")}
     `);
 
     await this.send({
@@ -370,8 +370,8 @@ export class EmailService {
       ${p(`La pharmacie <strong>${pharmacyInfo}</strong> souhaite vous faire don d'un lot de produits de parapharmacie / cosmétique.`)}
       ${productsSection}
       ${divider()}
-      ${p('Consultez le détail de l\'offre et acceptez ou refusez en cliquant sur le bouton ci-dessous.')}
-      ${btn('Voir l\'offre', link)}
+      ${p("Consultez le détail de l'offre et acceptez ou refusez en cliquant sur le bouton ci-dessous.")}
+      ${btn("Voir l'offre", link)}
       ${highlightBox(`Sans réponse de votre part avant le <strong>${expiresAt.toLocaleString('fr-FR')}</strong>, la proposition sera transmise à une autre association.`)}
       ${divider()}
       ${p('Après récupération du lot, Savely vous transmettra automatiquement le reçu fiscal Cerfa 16216 vous permettant de justifier ce don auprès de vos donateurs et partenaires.')}
@@ -399,10 +399,10 @@ export class EmailService {
     const html = emailLayout(`
       ${h1('Rappel : une offre de don expire bientôt')}
       ${p(`Bonjour ${assoName},`)}
-      ${p('Vous avez reçu une proposition de don de produits de parapharmacie et n\'y avez pas encore répondu.')}
+      ${p("Vous avez reçu une proposition de don de produits de parapharmacie et n'y avez pas encore répondu.")}
       ${highlightBox(`Cette offre expire le <strong>${expiresAt.toLocaleString('fr-FR')}</strong>. Passé ce délai, elle sera automatiquement transmise à une autre association.`)}
-      ${p('Si vous souhaitez accepter ce don, consultez l\'offre dès maintenant :')}
-      ${btn('Voir l\'offre', link)}
+      ${p("Si vous souhaitez accepter ce don, consultez l'offre dès maintenant :")}
+      ${btn("Voir l'offre", link)}
       ${divider()}
       ${footerMention('Si vous avez déjà répondu à cette offre, ignorez ce message. Pour toute question : contact@savely.fr')}
     `);
@@ -466,10 +466,17 @@ export class EmailService {
     to: string,
     assoName: string,
     cerfaPdf: Buffer,
-    donationInfo?: { pharmacyName?: string; donationDate?: Date; totalHt?: number }
+    donationInfo?: {
+      pharmacyName?: string;
+      donationDate?: Date;
+      totalHt?: number;
+    }
   ) {
     const donationDetails =
-      donationInfo && (donationInfo.pharmacyName || donationInfo.donationDate || donationInfo.totalHt)
+      donationInfo &&
+      (donationInfo.pharmacyName ||
+        donationInfo.donationDate ||
+        donationInfo.totalHt)
         ? `${divider()}
            <p style="margin:0 0 8px 0;font-size:14px;font-weight:600;color:#111827;">Récapitulatif du don</p>
            ${donationInfo.pharmacyName ? p(`Pharmacie donateur : <strong>${donationInfo.pharmacyName}</strong>`) : ''}
@@ -484,7 +491,7 @@ export class EmailService {
       ${donationDetails}
       ${divider()}
       ${p('Le reçu fiscal <strong>Cerfa n° 16216</strong> est joint à cet email en pièce jointe PDF. Conservez-le précieusement.')}
-      ${highlightBox('Ce reçu vous permet de bénéficier d\'une <strong>réduction fiscale de 60 %</strong> sur la valeur du don (art. 238 bis CGI). Il constitue la pièce justificative officielle à conserver pour votre comptabilité et vos obligations déclaratives.')}
+      ${highlightBox("Ce reçu vous permet de bénéficier d'une <strong>réduction fiscale de 60 %</strong> sur la valeur du don (art. 238 bis CGI). Il constitue la pièce justificative officielle à conserver pour votre comptabilité et vos obligations déclaratives.")}
       ${divider()}
       ${footerMention('Ce reçu a été généré automatiquement par Savely. Pour toute question relative au Cerfa : contact@savely.fr')}
     `);

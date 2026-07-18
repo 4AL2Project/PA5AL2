@@ -99,9 +99,9 @@ export function OfficineInfoForm({ pharmacy }: { pharmacy: PharmacyDetail }) {
         } else if (res.status === 400) {
           setError('Certains champs sont invalides. Vérifiez votre saisie.');
         } else if (res.status === 403) {
-          setError('Vous n’avez pas les droits pour cette action.');
+          setError("Vous n'avez pas les droits pour cette action.");
         } else {
-          setError('Impossible d’enregistrer les modifications.');
+          setError("Impossible d'enregistrer les modifications.");
         }
         return;
       }
@@ -123,7 +123,7 @@ export function OfficineInfoForm({ pharmacy }: { pharmacy: PharmacyDetail }) {
         { method: 'POST' }
       );
       if (!res.ok) {
-        setResendError('Impossible de renvoyer l’invitation.');
+        setResendError("Impossible de renvoyer l'invitation.");
         return;
       }
       setResent(true);
@@ -138,7 +138,7 @@ export function OfficineInfoForm({ pharmacy }: { pharmacy: PharmacyDetail }) {
         <h2 className="text-base font-semibold">Générale</h2>
 
         <div className="space-y-1.5">
-          <Label htmlFor="name">Nom de l’officine</Label>
+          <Label htmlFor="name">Nom de l'officine</Label>
           <Input
             id="name"
             value={form.name}
@@ -194,7 +194,7 @@ export function OfficineInfoForm({ pharmacy }: { pharmacy: PharmacyDetail }) {
                   ) : (
                     <Send className="h-3.5 w-3.5" />
                   )}
-                  Renvoyer l’invitation
+                  Renvoyer l'invitation
                 </Button>
               )}
             </div>

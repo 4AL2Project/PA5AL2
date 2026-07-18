@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AssociationAdminRow, CreateAssoDto } from '@/lib/admin-associations';
 import { AddressSuggestion, searchAddresses } from '@/lib/address';
+import { AssociationAdminRow, CreateAssoDto } from '@/lib/admin-associations';
 import { isValidEmail } from '@/lib/validation';
 
 export interface AssoFormValues {
@@ -108,7 +108,10 @@ export function AssoAdminForm({
       if (abortRef.current) abortRef.current.abort();
       abortRef.current = new AbortController();
       try {
-        const results = await searchAddresses(value.trim(), abortRef.current.signal);
+        const results = await searchAddresses(
+          value.trim(),
+          abortRef.current.signal
+        );
         setSuggestions(results);
         setShowSuggestions(results.length > 0);
       } catch {

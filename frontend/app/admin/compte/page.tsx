@@ -12,7 +12,7 @@ export default async function AdminComptePage() {
   return (
     <AdminShell
       title="Compte"
-      description="Vos informations d’administrateur Savely."
+      description="Vos informations d'administrateur Savely."
       adminEmail={session.claims.email}
     >
       <div className="rounded-xl border bg-card p-12 text-center text-xs text-muted-foreground">

@@ -33,7 +33,7 @@ export default async function AdminDevPage() {
           <h2 className="text-sm font-semibold">Contenu de la base</h2>
           <p className="mt-1 text-xs text-muted-foreground">
             {counts === null
-              ? 'Compteurs indisponibles : l’API est-elle démarrée ?'
+              ? "Compteurs indisponibles : l'API est-elle démarrée ?"
               : rows.length === 0
                 ? 'La base est vide.'
                 : `${total} ligne${total > 1 ? 's' : ''} sur ${rows.length} table${rows.length > 1 ? 's' : ''}.`}

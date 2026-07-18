@@ -234,7 +234,12 @@ function DemoTable({
               </TableCell>
               <TableCell>
                 <div className="flex items-center gap-1.5">
-                  <Button size="sm" variant="ghost" asChild className="text-xs h-7">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    asChild
+                    className="text-xs h-7"
+                  >
                     <Link href={`/admin/leads/${row.id}`}>Voir</Link>
                   </Button>
                   {!row.contacted_at && (

@@ -64,7 +64,7 @@ export function DevResetPanel() {
           <h2 className="text-sm font-semibold">Vider la base de données</h2>
           <p className="text-xs text-muted-foreground">
             Supprime toutes les lignes de toutes les tables : officines,
-            utilisateurs, produits, dons, commandes. L’action est immédiate et
+            utilisateurs, produits, dons, commandes. L'action est immédiate et
             irréversible.
           </p>
         </div>

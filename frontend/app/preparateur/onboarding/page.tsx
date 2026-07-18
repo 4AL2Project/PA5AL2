@@ -137,7 +137,7 @@ function PreparateurOnboardingContent() {
             Vous pouvez désormais vous connecter avec votre adresse email{' '}
             <span className="font-medium text-foreground">{successEmail}</span>.
             Un code à 6 chiffres vous sera envoyé par email à chaque connexion —
-            vous n’avez pas de mot de passe à retenir.
+            vous n'avez pas de mot de passe à retenir.
           </p>
         </div>
         <Button asChild className="w-full mt-5">
@@ -153,13 +153,13 @@ function PreparateurOnboardingContent() {
       <AuthShell
         title={
           isRoleError
-            ? 'Lien d’invitation incorrect'
-            : 'Lien d’invitation invalide'
+            ? "Lien d'invitation incorrect"
+            : "Lien d'invitation invalide"
         }
         description={
           isRoleError
             ? 'Ce lien ne correspond pas à une invitation de préparateur.'
-            : 'Ce lien n’est plus valide ou a déjà été utilisé.'
+            : "Ce lien n'est plus valide ou a déjà été utilisé."
         }
       >
         <div className="rounded-lg border bg-muted/30 p-4 flex items-start gap-3 mb-5">
@@ -273,9 +273,9 @@ function PreparateurOnboardingContent() {
             htmlFor="terms"
             className="text-xs leading-relaxed text-muted-foreground"
           >
-            J’accepte les{' '}
+            J'accepte les{' '}
             <Link href="/legal/terms" className="text-primary hover:underline">
-              conditions générales d’utilisation
+              conditions générales d'utilisation
             </Link>{' '}
             et la{' '}
             <Link

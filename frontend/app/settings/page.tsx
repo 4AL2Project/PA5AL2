@@ -1,18 +1,18 @@
-import { redirect } from ‘next/navigation’;
+import { redirect } from 'next/navigation';
 
-import { DashboardLayout } from ‘@/components/dashboard-layout’;
-import { OfficineSettingsForm } from ‘@/components/settings/officine-settings-form’;
-import { fetchMyPharmacy } from ‘@/lib/pharmacy’;
-import { getSession } from ‘@/lib/session’;
+import { DashboardLayout } from '@/components/dashboard-layout';
+import { OfficineSettingsForm } from '@/components/settings/officine-settings-form';
+import { fetchMyPharmacy } from '@/lib/pharmacy';
+import { getSession } from '@/lib/session';
 
 export default async function SettingsPage() {
   const session = await getSession();
   if (!session) {
-    redirect(‘/login’);
+    redirect('/login');
   }
-  // La gestion de l’officine est réservée au titulaire.
-  if (session.claims.role !== ‘TITULAIRE’) {
-    redirect(‘/’);
+  // La gestion de l'officine est réservée au titulaire.
+  if (session.claims.role !== 'TITULAIRE') {
+    redirect('/');
   }
 
   const pharmacy = await fetchMyPharmacy(session.access_token);
@@ -29,7 +29,7 @@ export default async function SettingsPage() {
         </div>
       ) : (
         <div className="rounded-xl border bg-card p-12 text-center text-xs text-muted-foreground">
-          Impossible de charger les informations de l’officine.
+          Impossible de charger les informations de l'officine.
         </div>
       )}
     </DashboardLayout>

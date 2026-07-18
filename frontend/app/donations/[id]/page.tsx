@@ -46,16 +46,16 @@ const EVENT_META: Record<
   },
   PROPOSITION_REFUSEE: {
     label: (p) =>
-      p?.reason ? `Refusé (« ${p.reason} »)` : 'Refusé par l’association',
+      p?.reason ? `Refusé (« ${p.reason} »)` : "Refusé par l'association",
     icon: XCircle,
   },
   PROPOSITION_ACCEPTEE: {
-    label: (p) => `Accepté par ${p?.association_name ?? 'l’association'}`,
+    label: (p) => `Accepté par ${p?.association_name ?? "l'association"}`,
     icon: CheckCircle2,
   },
   PROPOSITION_ACCEPTEE_PARTIELLEMENT: {
     label: (p) =>
-      `Accepté partiellement par ${p?.association_name ?? 'l’association'} — reliquat re-proposé`,
+      `Accepté partiellement par ${p?.association_name ?? "l'association"} — reliquat re-proposé`,
     icon: CheckCircle2,
   },
   PROPOSITION_EXPIREE: {
@@ -64,17 +64,17 @@ const EVENT_META: Record<
   },
   RETRAIT_CONFIRME: {
     label: (p) =>
-      `Retiré par ${p?.association_name ?? 'l’association'} (${p?.picked_up_by ?? '?'})`,
+      `Retiré par ${p?.association_name ?? "l'association"} (${p?.picked_up_by ?? '?'})`,
     icon: CheckCircle2,
   },
   RETRAIT_MANQUE: {
     label: (p) =>
-      `${p?.association_name ?? 'L’association'} n’est pas venue — quantités re-proposées`,
+      `${p?.association_name ?? "L'association"} n'est pas venue — quantités re-proposées`,
     icon: PackageX,
   },
   DON_COMPLETE: { label: () => 'Don complété 🎉', icon: CheckCircle2 },
   DON_ECHOUE: {
-    label: () => 'Le don n’a pas trouvé preneur',
+    label: () => "Le don n'a pas trouvé preneur",
     icon: AlertTriangle,
   },
   DON_ANNULE: { label: () => 'Don annulé par la pharmacie', icon: Ban },
@@ -110,10 +110,10 @@ export default function DonationDetailPage({
     setCancelling(true);
     try {
       await cancelDonation(id);
-      toast.success('Don annulé — le produit revient au centre d’actions');
+      toast.success("Don annulé — le produit revient au centre d'actions");
       await load();
     } catch {
-      toast.error('Impossible d’annuler ce don');
+      toast.error("Impossible d'annuler ce don");
     } finally {
       setCancelling(false);
       setConfirmCancel(false);

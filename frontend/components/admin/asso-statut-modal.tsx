@@ -38,13 +38,13 @@ const CONFIG: Record<
   SUSPENDRE: {
     title: 'Suspendre',
     description:
-      'L’association sortira du matching. Un motif est requis (tracé dans le journal).',
+      "L'association sortira du matching. Un motif est requis (tracé dans le journal).",
     reasonRequired: true,
     danger: false,
   },
   REACTIVER: {
     title: 'Réactiver',
-    description: 'L’association réintègre le matching. Motif optionnel.',
+    description: "L'association réintègre le matching. Motif optionnel.",
     reasonRequired: false,
     danger: false,
   },

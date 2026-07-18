@@ -25,7 +25,7 @@ export class AdminLeadsController {
   constructor(private readonly leads: LeadsService) {}
 
   @Get('demo/:id')
-  @ApiOperation({ summary: 'Détail d\'une demande de démo (admin)' })
+  @ApiOperation({ summary: "Détail d'une demande de démo (admin)" })
   getDemoRequest(@Param('id') id: string) {
     return this.leads.findOneDemo(id);
   }

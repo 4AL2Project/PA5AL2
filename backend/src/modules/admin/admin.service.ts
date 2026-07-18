@@ -14,6 +14,29 @@ import { generateToken, hashToken } from '../auth/token.util';
 import { EmailService } from '../email/email.service';
 import { GeocodingService } from '../geocoding/geocoding.service';
 
+/** Capital récupéré (CA sur stock dormant) par une officine. */
+export interface PharmacyCapital {
+  pharmacy_id: string;
+  name: string;
+  capital: number;
+  orders: number;
+}
+
+/** Métriques agrégées affichées sur le tableau de bord admin. */
+export interface PlatformStats {
+  officines: number;
+  clients_b2c: number;
+  preparateurs: number;
+  orders: { total: number; by_status: Record<string, number> };
+  capital_total: number;
+  capital_by_pharmacy: PharmacyCapital[];
+}
+
+/** Arrondi monétaire à 2 décimales, évite les traînes de flottant. */
+function round2(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
 export interface TitulaireSummary {
   first_name: string | null;
   last_name: string | null;
@@ -167,14 +190,106 @@ export class AdminService {
 
   // ─── Lecture ────────────────────────────────────────────────────────────────
 
-  async listPharmacies(actorRole: UserRole, actorPharmacyId: string) {
+  async listPharmacies(actorRole: UserRole) {
     this.assertAdmin(actorRole);
+    // On exclut la pharmacie interne « Savely (Admin) » (tier `admin`), pas
+    // celle de l'acteur : les admins créés par invitation ont `pharmacy_id`
+    // null et un filtre `NOT: { pharmacy_id: null }` planterait Prisma.
     const rows = await prisma.pharmacy.findMany({
-      where: { NOT: { pharmacy_id: actorPharmacyId } },
+      where: { subscription_tier: { not: 'admin' } },
       orderBy: { created_at: 'desc' },
       include: WITH_TITULAIRE,
     });
     return { pharmacies: rows.map((p) => this.toListItem(p)) };
+  }
+
+  /**
+   * Métriques agrégées de la plateforme pour le tableau de bord admin :
+   * nombre d'officines / clients B2C / préparateurs, volume de commandes et
+   * capital récupéré par officine (Σ prix remisé × quantité sur les commandes
+   * effectivement retirées — le stock dormant transformé en cash).
+   */
+  async getPlatformStats(actorRole: UserRole): Promise<PlatformStats> {
+    this.assertAdmin(actorRole);
+
+    // La pharmacie interne « Savely (Admin) » n'est pas une vraie officine.
+    const realPharmacies = { subscription_tier: { not: 'admin' } } as const;
+
+    const [
+      officines,
+      clients_b2c,
+      preparateurs,
+      ordersByStatus,
+      retirees,
+      pharmacies,
+    ] = await Promise.all([
+      prisma.pharmacy.count({ where: realPharmacies }),
+      prisma.customer.count(),
+      prisma.user.count({ where: { role: UserRole.PREPARATEUR } }),
+      prisma.order.groupBy({ by: ['status'], _count: { _all: true } }),
+      prisma.order.findMany({
+        where: { status: 'RETIREE' },
+        select: {
+          pharmacy_id: true,
+          lines: { select: { quantity: true, unit_price_snapshot: true } },
+        },
+      }),
+      prisma.pharmacy.findMany({
+        where: realPharmacies,
+        select: { pharmacy_id: true, name: true },
+      }),
+    ]);
+
+    const by_status: Record<string, number> = {};
+    let ordersTotal = 0;
+    for (const row of ordersByStatus) {
+      by_status[row.status] = row._count._all;
+      ordersTotal += row._count._all;
+    }
+
+    // Capital récupéré et nombre de commandes retirées, par officine.
+    const capitalByPharmacy = new Map<
+      string,
+      { capital: number; orders: number }
+    >();
+    for (const order of retirees) {
+      const recovered = order.lines.reduce(
+        (acc, line) => acc + line.unit_price_snapshot * line.quantity,
+        0
+      );
+      const entry = capitalByPharmacy.get(order.pharmacy_id) ?? {
+        capital: 0,
+        orders: 0,
+      };
+      entry.capital += recovered;
+      entry.orders += 1;
+      capitalByPharmacy.set(order.pharmacy_id, entry);
+    }
+
+    const capital_by_pharmacy: PharmacyCapital[] = pharmacies
+      .map((p) => {
+        const entry = capitalByPharmacy.get(p.pharmacy_id);
+        return {
+          pharmacy_id: p.pharmacy_id,
+          name: p.name,
+          capital: round2(entry?.capital ?? 0),
+          orders: entry?.orders ?? 0,
+        };
+      })
+      .sort((a, b) => b.capital - a.capital);
+
+    const capital_total = round2(
+      capital_by_pharmacy.reduce((acc, p) => acc + p.capital, 0)
+    );
+
+    return {
+      officines,
+      clients_b2c,
+      preparateurs,
+      orders: { total: ordersTotal, by_status },
+      capital_total,
+      capital_by_pharmacy,
+    };
   }
 
   async getPharmacy(

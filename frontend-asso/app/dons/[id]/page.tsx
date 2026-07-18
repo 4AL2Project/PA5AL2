@@ -25,7 +25,7 @@ export default function DonPage() {
 
   useEffect(() => {
     if (!localStorage.getItem('savely_asso_token')) {
-      router.replace('/auth/verify');
+      router.replace('/auth/login');
       return;
     }
     fetchDon(id)
@@ -136,15 +136,15 @@ export default function DonPage() {
           </div>
         </section>
 
-        {/* QR code de récupération */}
+        {/* Code de récupération (SAV-XXXX) */}
         {showQr && (
           <section className="rounded-xl border border-border bg-card p-6">
             <h2 className="mb-1 font-semibold text-foreground">
-              QR code de récupération
+              Code de récupération (SAV-XXXX)
             </h2>
             <p className="mb-5 text-sm text-muted-foreground">
-              Présentez ce QR code au préparateur lors de la récupération. Il le
-              scannera pour confirmer le retrait.
+              Présentez ce code de récupération (SAV-XXXX) au préparateur lors
+              de la récupération. Il le scannera pour confirmer le retrait.
             </p>
 
             <div className="flex flex-col items-center gap-4">
@@ -152,7 +152,7 @@ export default function DonPage() {
                 /* eslint-disable-next-line @next/next/no-img-element */
                 <img
                   src={don.qr_code_url}
-                  alt="QR Code de récupération"
+                  alt="Code de récupération"
                   className="h-48 w-48 rounded-xl border border-border"
                 />
               ) : (

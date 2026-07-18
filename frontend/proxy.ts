@@ -8,6 +8,7 @@ const PUBLIC_PATHS = [
   '/login',
   '/admin/login',
   '/onboarding',
+  '/admin/onboarding',
   '/preparateur/onboarding',
   '/auth/verify',
 ];

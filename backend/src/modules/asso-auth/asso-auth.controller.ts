@@ -1,6 +1,14 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { IsString, IsUUID } from 'class-validator';
+import { IsEmail, IsString, IsUUID } from 'class-validator';
 
 import { Roles } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -11,6 +19,11 @@ import { AssoAuthService } from './asso-auth.service';
 class SendMagicLinkDto {
   @IsUUID()
   association_id!: string;
+}
+
+class RequestMagicLinkByEmailDto {
+  @IsEmail()
+  email!: string;
 }
 
 class VerifyTokenDto {
@@ -33,6 +46,18 @@ export class AssoAuthController {
   })
   async sendMagicLink(@Body() dto: SendMagicLinkDto) {
     await this.assoAuthService.sendMagicLink(dto.association_id);
+    return { success: true };
+  }
+
+  @Post('request-link')
+  @HttpCode(200)
+  @ApiOperation({
+    summary:
+      "Demander un magic link depuis l'espace association (self-service, toujours 200)",
+  })
+  async requestLinkByEmail(@Body() dto: RequestMagicLinkByEmailDto) {
+    await this.assoAuthService.sendMagicLinkByEmail(dto.email);
+    // Réponse identique qu'on trouve ou non → pas d'énumération d'emails
     return { success: true };
   }
 

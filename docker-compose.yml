@@ -19,6 +19,10 @@ services:
       context: ./frontend
       args:
         NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3005}
+        # NEXT_PUBLIC_* est inliné au build : doit être un build arg, pas une
+        # variable runtime, sinon le bundle client garde le défaut (false) et
+        # le lien « Développeur » du nav admin n'apparaît pas.
+        NEXT_PUBLIC_DEV_TOOLS_ENABLED: ${NEXT_PUBLIC_DEV_TOOLS_ENABLED:-true}
     environment:
       API_INTERNAL_URL: ${API_INTERNAL_URL:-http://api:3005}
     restart: unless-stopped

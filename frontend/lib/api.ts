@@ -13,8 +13,11 @@ import {
 
 const IS_SERVER = typeof window === 'undefined';
 
+// Doit rester aligné sur `SERVER_API_BASE` (lib/api-base.ts) et sur la variable
+// `API_INTERNAL_URL` injectée par docker-compose. Ce module est aussi importé
+// côté client, d'où la résolution locale plutôt qu'un import `server-only`.
 const DIRECT_API_BASE =
-  process.env.INTERNAL_API_URL ??
+  process.env.API_INTERNAL_URL ??
   process.env.NEXT_PUBLIC_API_URL ??
   'http://localhost:3005';
 

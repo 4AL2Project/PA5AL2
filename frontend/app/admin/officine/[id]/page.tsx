@@ -39,7 +39,7 @@ export default async function OfficineDetailPage({
     return (
       <AdminShell
         title="Officine introuvable"
-        description="Cette officine n’existe pas ou n’est plus accessible."
+        description="Cette officine n'existe pas ou n'est plus accessible."
         adminEmail={session.claims.email}
         actions={
           <Button asChild variant="outline" size="sm" className="gap-1.5">
@@ -84,7 +84,7 @@ export default async function OfficineDetailPage({
       {isInactive && (
         <div className="mb-6 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-xs text-destructive">
           <Ban className="h-3.5 w-3.5" />
-          Cette officine est désactivée. Ses utilisateurs n’ont plus accès à
+          Cette officine est désactivée. Ses utilisateurs n'ont plus accès à
           Savely.
         </div>
       )}

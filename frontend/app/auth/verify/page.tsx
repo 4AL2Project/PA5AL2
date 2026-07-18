@@ -14,13 +14,19 @@ import {
   verifyMagicLink,
 } from '@/lib/auth';
 
-type Status = 'verifying' | 'success' | 'invalid';
+type Status = 'verifying' | 'success' | 'invalid' | 'disabled';
+
+const DEFAULT_DISABLED_MESSAGE =
+  'Votre officine a été désactivée. Contactez le support Savely pour réactiver votre accès.';
 
 function VerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
   const [status, setStatus] = useState<Status>('verifying');
+  const [disabledMessage, setDisabledMessage] = useState(
+    DEFAULT_DISABLED_MESSAGE
+  );
 
   useEffect(() => {
     if (!token) {
@@ -37,8 +43,15 @@ function VerifyContent() {
         const target = claims ? landingPathForRole(claims.role) : '/';
         setStatus('success');
         router.replace(target);
-      } catch {
-        if (!cancelled) setStatus('invalid');
+      } catch (err) {
+        if (cancelled) return;
+        const e = err as { status?: number; message?: string };
+        if (e.status === 403) {
+          setDisabledMessage(e.message ?? DEFAULT_DISABLED_MESSAGE);
+          setStatus('disabled');
+        } else {
+          setStatus('invalid');
+        }
       }
     })();
     return () => {
@@ -72,16 +85,33 @@ function VerifyContent() {
     );
   }
 
+  if (status === 'disabled') {
+    return (
+      <AuthShell
+        title="Compte désactivé"
+        description="Vous ne pouvez pas accéder à votre espace pour le moment."
+      >
+        <div className="rounded-lg border bg-muted/30 p-4 flex items-start gap-3 mb-5">
+          <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
+          <p className="text-xs text-muted-foreground">{disabledMessage}</p>
+        </div>
+        <Button asChild variant="outline" className="w-full">
+          <Link href="/login">Retour à la connexion</Link>
+        </Button>
+      </AuthShell>
+    );
+  }
+
   return (
     <AuthShell
       title="Lien expiré ou invalide"
-      description="Ce lien magique n’est plus valide. Demandez-en un nouveau pour continuer."
+      description="Ce lien magique n'est plus valide. Demandez-en un nouveau pour continuer."
     >
       <div className="rounded-lg border bg-muted/30 p-4 flex items-start gap-3 mb-5">
         <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
         <p className="text-xs text-muted-foreground">
           Les liens de connexion expirent au bout de 15 minutes et ne peuvent
-          être utilisés qu’une seule fois.
+          être utilisés qu'une seule fois.
         </p>
       </div>
       <Button asChild className="w-full">

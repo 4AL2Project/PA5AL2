@@ -144,17 +144,17 @@ export class DonationsController {
   @Post('pickup/scan')
   @ApiOperation({
     summary:
-      "Confirmer un retrait par scan du QR de l'allocation (app préparateur)",
+      'Confirmer un retrait par saisie du code de récupération (app préparateur)',
   })
   scanPickup(
     @TenantPharmacyId() pharmacyId: string,
     @CurrentUser() user: { sub: string; role: string },
     @Body() dto: ScanPickupDto
   ) {
-    return this.orchestrator.confirmPickupByQr(
-      dto.qr_code,
+    return this.orchestrator.confirmPickupByCode(
+      dto.recovery_code,
       pharmacyId,
-      dto.picked_up_by,
+      dto.picked_up_by ?? '',
       `${user.role}:${user.sub}`
     );
   }

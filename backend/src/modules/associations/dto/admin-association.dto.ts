@@ -1,7 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-  ArrayNotEmpty,
   IsArray,
   IsBoolean,
   IsEmail,
@@ -70,11 +69,11 @@ export class CreateAdminAssociationDto {
   @IsBoolean()
   agrement_valide?: boolean;
 
-  @ApiProperty({ type: [String] })
+  @ApiPropertyOptional({ type: [String] })
+  @IsOptional()
   @IsArray()
-  @ArrayNotEmpty()
   @IsString({ each: true })
-  categories!: string[];
+  categories?: string[];
 
   @ApiPropertyOptional({ type: [PickupWindowDto] })
   @IsOptional()

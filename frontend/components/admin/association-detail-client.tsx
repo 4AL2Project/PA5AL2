@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   ArrowLeft,
   Ban,
+  CheckCircle2,
   Clock,
   Loader2,
   Mail,
@@ -135,6 +136,21 @@ export function AssociationDetailClient({ id }: { id: string }) {
     }
   };
 
+  const [agrementBusy, setAgrementBusy] = useState(false);
+
+  const handleValidateAgrement = async () => {
+    setAgrementBusy(true);
+    try {
+      await updateAdminAssociation(id, { agrement_valide: true });
+      toast.success('Agrément validé');
+      load();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Validation impossible');
+    } finally {
+      setAgrementBusy(false);
+    }
+  };
+
   const handleAddNote = async () => {
     if (!noteDraft.trim()) return;
     setNoteBusy(true);
@@ -257,6 +273,7 @@ export function AssociationDetailClient({ id }: { id: string }) {
             />
             <Field label="Email" value={asso.contact_email ?? '—'} />
             <Field label="Téléphone" value={asso.contact_phone ?? '—'} />
+            <Field label="SIREN / RNA" value={asso.rna_or_siren ?? '—'} />
             <div>
               <p className="text-xs text-muted-foreground">Numéro agrément</p>
               <p className="flex items-center gap-2">
@@ -266,8 +283,26 @@ export function AssociationDetailClient({ id }: { id: string }) {
                     Validé
                   </span>
                 ) : (
-                  <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-medium text-orange-700">
-                    Manquant
+                  <span className="inline-flex items-center gap-2">
+                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-medium text-orange-700">
+                      Manquant
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleValidateAgrement}
+                      disabled={agrementBusy}
+                      className="h-6 px-2 text-[11px]"
+                    >
+                      {agrementBusy ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <>
+                          <CheckCircle2 className="mr-1 h-3 w-3" />
+                          Valider l&apos;agrément
+                        </>
+                      )}
+                    </Button>
                   </span>
                 )}
               </p>

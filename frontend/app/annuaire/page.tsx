@@ -9,7 +9,6 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -20,7 +19,6 @@ import {
 } from '@/components/ui/select';
 import { AnnuaireEntry, fetchAnnuaire } from '@/lib/api';
 import { DONATION_CATEGORIES } from '@/lib/donation-categories';
-import { formatWindows } from '@/lib/pickup-windows';
 
 type SortKey = 'distance' | 'reliability';
 
@@ -104,35 +102,32 @@ export default function AnnuairePage() {
         ) : (
           <ul className="space-y-3">
             {visible.map((entry) => (
-              <li
-                key={entry.association_id}
-                className="rounded-xl border bg-card p-4"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="flex min-w-0 items-start gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <Building2 className="h-5 w-5 text-muted-foreground" />
-                    </span>
-                    <div className="min-w-0">
-                      <p className="font-medium">{entry.name}</p>
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {entry.categories.map((c) => (
-                          <Badge
-                            key={c}
-                            variant="secondary"
-                            className="text-[10px]"
-                          >
-                            {c}
-                          </Badge>
-                        ))}
+              <li key={entry.association_id}>
+                <Link
+                  href={`/annuaire/${entry.association_id}`}
+                  className="block cursor-pointer rounded-xl border bg-card p-4 transition-colors hover:bg-muted/50"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                        <Building2 className="h-5 w-5 text-muted-foreground" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-medium">{entry.name}</p>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {entry.categories.map((c) => (
+                            <Badge
+                              key={c}
+                              variant="secondary"
+                              className="text-[10px]"
+                            >
+                              {c}
+                            </Badge>
+                          ))}
+                        </div>
                       </div>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Créneaux : {formatWindows(entry.pickup_windows)}
-                      </p>
                     </div>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <div className="flex items-center gap-3 text-sm">
+                    <div className="flex shrink-0 items-center gap-3 text-sm">
                       {entry.distance_km != null && (
                         <span className="text-muted-foreground">
                           {entry.distance_km} km
@@ -145,13 +140,8 @@ export default function AnnuairePage() {
                         </span>
                       )}
                     </div>
-                    <Button asChild size="sm" variant="outline">
-                      <Link href={`/annuaire/${entry.association_id}`}>
-                        Voir détail
-                      </Link>
-                    </Button>
                   </div>
-                </div>
+                </Link>
               </li>
             ))}
           </ul>

@@ -43,6 +43,43 @@ const DAY_LABELS: Record<string, string> = {
   SUN: 'Dimanche',
 };
 
+const DAY_OF_WEEK: Record<string, number> = {
+  MON: 1,
+  TUE: 2,
+  WED: 3,
+  THU: 4,
+  FRI: 5,
+  SAT: 6,
+  SUN: 0,
+};
+
+function expandWeeklyWindows(
+  windows: DefaultWindow[],
+  daysAhead = 30
+): PickupSlot[] {
+  const slots: PickupSlot[] = [];
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  for (const w of windows) {
+    const targetDow = DAY_OF_WEEK[w.day];
+    for (let d = 0; d <= daysAhead; d++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() + d);
+      if (date.getDay() !== targetDow) continue;
+      const [sh, sm] = w.start.split(':').map(Number);
+      const [eh, em] = w.end.split(':').map(Number);
+      const start = new Date(date);
+      start.setHours(sh, sm, 0, 0);
+      const end = new Date(date);
+      end.setHours(eh, em, 0, 0);
+      if (start > new Date()) {
+        slots.push({ start: start.toISOString(), end: end.toISOString() });
+      }
+    }
+  }
+  return slots.sort((a, b) => a.start.localeCompare(b.start));
+}
+
 interface CreneauxDonModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -140,7 +177,8 @@ export function CreneauxDonModal({
   }
 
   function handleConfirm() {
-    onConfirm(useDefault ? undefined : slots);
+    const finalSlots = useDefault ? expandWeeklyWindows(defaultWindows) : slots;
+    onConfirm(finalSlots.length > 0 ? finalSlots : undefined);
     setSlots([]);
     setSelectedDate(undefined);
     setUseDefault(false);

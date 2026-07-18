@@ -7,6 +7,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import * as QRCode from 'qrcode';
 
 import { config } from '../../core/config';
@@ -17,8 +18,8 @@ import { CerfaService } from './cerfa.service';
 import {
   computePickupSlots,
   DonationLineSnapshot,
+  generateRecoveryCode,
   intersectWindows,
-  isValidPickupSlot,
   MAX_DONATION_AGE_DAYS,
   MAX_PROPOSALS_PER_DONATION,
   MISSED_PICKUP_GRACE_HOURS,
@@ -337,6 +338,8 @@ export class DonationOrchestratorService {
         payload: reason ? { reason } : undefined,
       },
     });
+    // Refus d'offre → -5 fiabilité
+    await this.updateAssoScore(proposal.association_id, -5);
     // Refus → cascade immédiate vers l'asso suivante
     await this.proposeNext(proposal.donation_id);
     return this.getProposalView(proposal.token);
@@ -351,6 +354,9 @@ export class DonationOrchestratorService {
       proposed_lines: unknown;
       donation: {
         version: number;
+        // Créneaux spécifiques fixés par le titulaire à la création du don.
+        // Prioritaires sur les fenêtres hebdo de la pharmacie.
+        pickup_windows?: unknown;
         pharmacy: {
           name: string;
           address: string | null;
@@ -396,25 +402,33 @@ export class DonationOrchestratorService {
       );
     }
 
+    const donationSlots = proposal.donation.pickup_windows as
+      | { start: string; end: string }[]
+      | null
+      | undefined;
+
+    if (!donationSlots?.length) {
+      throw new BadRequestException(
+        'Aucun créneau disponible — contactez la pharmacie'
+      );
+    }
     if (!input.slot_start || !input.slot_end) {
       throw new BadRequestException('Choisissez un créneau de récupération');
     }
     const slotStart = new Date(input.slot_start);
     const slotEnd = new Date(input.slot_end);
-    const windows = intersectWindows(
-      parsePickupWindows(proposal.donation.pharmacy.donation_pickup_windows),
-      proposal.association.pickup_windows
+    if (isNaN(slotStart.getTime()) || isNaN(slotEnd.getTime())) {
+      throw new BadRequestException(
+        "Ce créneau n'est plus disponible — rechargez la page"
+      );
+    }
+    const now = new Date();
+    const matches = donationSlots.some(
+      (s) =>
+        new Date(s.start).getTime() === slotStart.getTime() &&
+        new Date(s.end).getTime() === slotEnd.getTime()
     );
-    if (
-      isNaN(slotStart.getTime()) ||
-      isNaN(slotEnd.getTime()) ||
-      !isValidPickupSlot(
-        windows,
-        proposal.association.pickup_sla_days,
-        slotStart,
-        slotEnd
-      )
-    ) {
+    if (!matches || slotStart <= now) {
       throw new BadRequestException(
         "Ce créneau n'est plus disponible — rechargez la page"
       );
@@ -468,6 +482,7 @@ export class DonationOrchestratorService {
             lines: accepted as unknown as object[],
             pickup_slot_start: slotStart,
             pickup_slot_end: slotEnd,
+            recovery_code: generateRecoveryCode(),
           },
         });
         await tx.donationEvent.create({
@@ -801,16 +816,44 @@ export class DonationOrchestratorService {
     }
 
     await this.completeIfDone(allocation.donation_id);
+    // Retrait confirmé → +5 fiabilité
+    await this.updateAssoScore(allocation.association_id, +5);
     return prisma.donationAllocation.findUnique({
       where: { allocation_id: allocationId },
     });
   }
 
   /**
-   * Confirmation par scan du QR de l'allocation (app Flutter préparateur).
-   * Résout l'allocation dans le périmètre de l'officine puis délègue au flux
-   * de confirmation standard.
+   * Confirmation par saisie du code de récupération de l'allocation
+   * (app préparateur ou interface web). Résout l'allocation dans le périmètre
+   * de l'officine puis délègue au flux de confirmation standard.
    */
+  async confirmPickupByCode(
+    recoveryCode: string,
+    pharmacyId: string,
+    pickedUpBy: string,
+    actor: string
+  ) {
+    const allocation = await prisma.donationAllocation.findFirst({
+      where: {
+        recovery_code: recoveryCode,
+        donation: { pharmacy_id: pharmacyId },
+      },
+    });
+    if (!allocation) {
+      throw new NotFoundException(
+        'Code de récupération inconnu pour cette officine'
+      );
+    }
+    return this.confirmPickup(
+      allocation.allocation_id,
+      pharmacyId,
+      pickedUpBy,
+      actor
+    );
+  }
+
+  /** @deprecated Utiliser confirmPickupByCode */
   async confirmPickupByQr(
     qrCode: string,
     pharmacyId: string,
@@ -1014,6 +1057,9 @@ export class DonationOrchestratorService {
       });
       if (!claimed) continue;
 
+      // Non-récupération → -20 fiabilité
+      await this.updateAssoScore(allocation.association_id, -20);
+
       const summary = lines.map((l) => `${l.name} ×${l.quantity}`).join(', ');
       if (allocation.association.contact_email) {
         await this.sendOnce(
@@ -1137,6 +1183,7 @@ export class DonationOrchestratorService {
       pickup_slot_end: Date;
       cerfa_number: string | null;
       qr_code: string;
+      recovery_code: string;
     } | null;
   }) {
     const base = {
@@ -1193,11 +1240,11 @@ export class DonationOrchestratorService {
               pickup_slot_start: proposal.allocation.pickup_slot_start,
               pickup_slot_end: proposal.allocation.pickup_slot_end,
               cerfa_available: proposal.allocation.cerfa_number != null,
-              // QR à présenter au retrait : scanné par le préparateur pour
-              // confirmer le pickup (uniquement tant que le retrait est dû)
-              qr_code:
+              // Code de récupération à présenter au retrait : saisi par le
+              // préparateur pour confirmer le pickup (uniquement si PLANIFIEE)
+              recovery_code:
                 proposal.allocation.status === 'PLANIFIEE'
-                  ? proposal.allocation.qr_code
+                  ? proposal.allocation.recovery_code
                   : null,
             }
           : null,
@@ -1211,6 +1258,36 @@ export class DonationOrchestratorService {
       return { state: 'REMPLACEE', ...base };
     }
     return { state: 'EXPIREE', ...base };
+  }
+
+  // ── Score de fiabilité association ────────────────────────────────────────
+
+  /**
+   * Ajuste le score de fiabilité d'une association.
+   * delta positif = bon comportement (retrait confirmé)
+   * delta négatif = mauvais comportement (refus, non-récupération)
+   * Le score est borné à [0, 100]. Si le score passe sous 30, l'asso est SUSPENDUE.
+   */
+  private async updateAssoScore(
+    associationId: string,
+    delta: number,
+    tx?: Prisma.TransactionClient
+  ): Promise<void> {
+    const db = tx ?? prisma;
+    const asso = await db.association.findUnique({
+      where: { association_id: associationId },
+      select: { score_pickup: true },
+    });
+    if (!asso) return;
+
+    const newScore = Math.min(100, Math.max(0, asso.score_pickup + delta));
+    await db.association.update({
+      where: { association_id: associationId },
+      data: {
+        score_pickup: newScore,
+        ...(newScore < 30 ? { status: 'SUSPENDUE' } : {}),
+      },
+    });
   }
 
   // ── Idempotence des envois (le cron ne renvoie jamais deux fois) ──────────

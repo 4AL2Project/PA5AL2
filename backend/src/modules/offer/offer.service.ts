@@ -205,6 +205,18 @@ export class OfferService {
           'quantity_offered exceeds stock_quantity'
         );
       }
+      // Dès qu'une réservation est en cours sur l'offre, la quantité proposée
+      // est verrouillée : la modifier fausserait le disponible (quantité −
+      // réservé) déjà annoncé aux clients ayant réservé.
+      if (dto.quantity_offered !== offer.quantity_offered) {
+        const activeReservations =
+          await this.getActiveReservationCount(offerId);
+        if (activeReservations > 0) {
+          throw new BadRequestException(
+            'Cannot change the offered quantity while the offer has active reservations'
+          );
+        }
+      }
     }
 
     // Remplacement complet du jeu de catégories si fourni (set).
@@ -433,6 +445,16 @@ export class OfferService {
   }
 
   async suspend(pharmacyId: string, offerId: string) {
+    await this.findOwned(pharmacyId, offerId);
+    // Une offre avec une réservation en cours (pas encore retirée) ne peut pas
+    // être suspendue : cela retirerait du catalogue un article que des clients
+    // attendent de venir chercher.
+    const activeReservations = await this.getActiveReservationCount(offerId);
+    if (activeReservations > 0) {
+      throw new BadRequestException(
+        'Cannot suspend an offer with active reservations'
+      );
+    }
     this.logger.log(`[${pharmacyId}] Offer ${offerId} → SUSPENDUE`);
     return this.updateStatus(pharmacyId, offerId, 'ACTIVE', 'SUSPENDUE');
   }
@@ -504,6 +526,12 @@ export class OfferService {
     });
     const holds = await this.getActiveHolds([offerId]);
     return { ...updated, _count: { orders: holds.get(offerId)?.count ?? 0 } };
+  }
+
+  /** Nombre de réservations actives (holds non retirés) sur une offre. */
+  private async getActiveReservationCount(offerId: string): Promise<number> {
+    const holds = await this.getActiveHolds([offerId]);
+    return holds.get(offerId)?.count ?? 0;
   }
 
   /**

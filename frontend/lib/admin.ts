@@ -127,6 +127,54 @@ export async function fetchPharmacy(
   return unwrap<PharmacyDetail>(await res.json());
 }
 
+// ─── Métriques plateforme (tableau de bord admin) ─────────────────────────────
+
+export interface PharmacyCapital {
+  pharmacy_id: string;
+  name: string;
+  capital: number;
+  orders: number;
+}
+
+export interface AdminStats {
+  officines: number;
+  clients_b2c: number;
+  preparateurs: number;
+  orders: { total: number; by_status: Record<string, number> };
+  capital_total: number;
+  capital_by_pharmacy: PharmacyCapital[];
+}
+
+/** Métriques agrégées de la plateforme (`GET /api/admin/stats`). */
+export async function fetchStats(accessToken: string): Promise<AdminStats> {
+  const path = '/api/admin/stats';
+  const res = await request(accessToken, path);
+  if (!res.ok) throw new ApiError(res.status, path);
+  return unwrap<AdminStats>(await res.json());
+}
+
+// ─── Profil de l'admin courant ──────────────────────────────────────────────
+
+export interface AdminProfile {
+  user_id: string;
+  email: string;
+  role: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  status: string;
+  accepted_terms_at: string | null;
+  created_at: string;
+}
+
+/** Profil de l'administrateur connecté (`GET /api/auth/me`). */
+export async function fetchMe(accessToken: string): Promise<AdminProfile> {
+  const path = '/api/auth/me';
+  const res = await request(accessToken, path);
+  if (!res.ok) throw new ApiError(res.status, path);
+  return unwrap<AdminProfile>(await res.json());
+}
+
 // ─── Admin donations ──────────────────────────────────────────────────────────
 
 export interface AdminDonationItem {

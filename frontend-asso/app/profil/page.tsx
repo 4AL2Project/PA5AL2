@@ -27,7 +27,7 @@ export default function ProfilPage() {
 
   useEffect(() => {
     if (!localStorage.getItem('savely_asso_token')) {
-      router.replace('/auth/verify');
+      router.replace('/auth/login');
       return;
     }
     fetchProfile()
@@ -41,7 +41,7 @@ export default function ProfilPage() {
         setCategories(p.categories ?? []);
         setPickupWindows(p.pickup_windows);
       })
-      .catch(() => router.replace('/auth/verify'));
+      .catch(() => router.replace('/auth/login'));
   }, [router]);
 
   const toggleCat = (cat: string) =>

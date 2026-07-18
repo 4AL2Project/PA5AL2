@@ -280,6 +280,7 @@ export function createFakeDb(): FakeDb {
         seuil_dormance_jours: 90,
         rayon_matching_km: 50,
       });
+    if (model === 'association') Object.assign(row, { score_pickup: 100 });
 
     // Nested create ({relation: {create: ...}}) vs colonne scalaire (ex. le
     // JSON `lines` d'une allocation) : seuls les objets {create} avec une

@@ -1,4 +1,9 @@
-import { GoneException, Injectable, Logger } from '@nestjs/common';
+import {
+  ForbiddenException,
+  GoneException,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { config } from '../../core/config';
@@ -7,6 +12,10 @@ import { EmailService } from '../email/email.service';
 import { JwtPayload } from './jwt-payload';
 import { UserRole } from './roles.enum';
 import { generateToken, hashToken } from './token.util';
+
+// Message affiché au Titulaire dont l'officine a été désactivée par un admin.
+export const PHARMACY_DISABLED_MESSAGE =
+  'Votre officine a été désactivée. Contactez le support Savely pour réactiver votre accès.';
 
 @Injectable()
 export class MagicLinkService {
@@ -18,10 +27,20 @@ export class MagicLinkService {
   ) {}
 
   async send(email: string): Promise<void> {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: { pharmacy: { select: { status: true } } },
+    });
 
     // Reponse silencieuse si email inconnu ou utilisateur PENDING
     if (!user || user.status !== 'ACTIVE') return;
+
+    // Officine désactivée : on refuse explicitement (message affiché au
+    // Titulaire), contrairement à la réponse silencieuse des emails inconnus.
+    if (user.pharmacy && user.pharmacy.status !== 'ACTIVE') {
+      this.logger.warn(`Login blocked: pharmacy disabled for ${email}`);
+      throw new ForbiddenException(PHARMACY_DISABLED_MESSAGE);
+    }
     // Rate-limit : max 3 tokens actifs dans la fenetre de 15 min
     const windowStart = new Date(
       Date.now() - config.auth.magicLinkRateLimitWindowMs
@@ -58,12 +77,23 @@ export class MagicLinkService {
     const tokenHash = hashToken(rawToken);
     const record = await prisma.authToken.findFirst({
       where: { token_hash: tokenHash, type: 'MAGIC_LINK' },
-      include: { user: true },
+      include: {
+        user: { include: { pharmacy: { select: { status: true } } } },
+      },
     });
 
     if (!record || record.consumed_at || record.expires_at < new Date()) {
       this.logger.warn('Magic link token expired or already consumed');
       throw new GoneException('Ce lien est expire ou deja utilise');
+    }
+
+    // Officine désactivée entre l'envoi du lien et sa validation : on refuse la
+    // session sans consommer le token (réactivation possible plus tard).
+    if (record.user.pharmacy && record.user.pharmacy.status !== 'ACTIVE') {
+      this.logger.warn(
+        `Login blocked: pharmacy disabled for user ${record.user.user_id}`
+      );
+      throw new ForbiddenException(PHARMACY_DISABLED_MESSAGE);
     }
 
     await prisma.authToken.update({

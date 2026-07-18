@@ -54,14 +54,14 @@ export default function OffresPage() {
 
   useEffect(() => {
     if (!localStorage.getItem('savely_asso_token')) {
-      router.replace('/auth/verify');
+      router.replace('/auth/login');
       return;
     }
 
     const load = () =>
       fetchOffres()
         .then(setOffres)
-        .catch(() => router.replace('/auth/verify'))
+        .catch(() => router.replace('/auth/login'))
         .finally(() => setLoading(false));
 
     load();

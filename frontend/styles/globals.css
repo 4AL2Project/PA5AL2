@@ -77,8 +77,7 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 }
-
-@layer base {
+peux @layer base {
   * {
     @apply border-border outline-ring/50;
   }

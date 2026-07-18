@@ -56,6 +56,17 @@ export class AdminController {
     private readonly companySearch: CompanySearchService
   ) {}
 
+  @Get('stats')
+  @ApiOperation({
+    summary:
+      'Metriques plateforme pour le tableau de bord admin (ADMIN_SAVELY uniquement)',
+  })
+  @ApiOkResponse({ description: 'Statistiques agregees de la plateforme' })
+  @ApiForbiddenResponse({ description: 'Reserve aux administrateurs Savely' })
+  getStats(@CurrentUser() user: { role: UserRole }) {
+    return this.adminService.getPlatformStats(user.role);
+  }
+
   @Get('pharmacies')
   @ApiOperation({
     summary:
@@ -63,8 +74,8 @@ export class AdminController {
   })
   @ApiOkResponse({ description: 'Liste des pharmacies' })
   @ApiForbiddenResponse({ description: 'Reserve aux administrateurs Savely' })
-  listPharmacies(@CurrentUser() user: { role: UserRole; pharmacy_id: string }) {
-    return this.adminService.listPharmacies(user.role, user.pharmacy_id);
+  listPharmacies(@CurrentUser() user: { role: UserRole }) {
+    return this.adminService.listPharmacies(user.role);
   }
 
   @Get('pharmacies/:id')

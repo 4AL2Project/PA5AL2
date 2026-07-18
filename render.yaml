@@ -1,0 +1,182 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Blueprint Render — Savely (backend)
+#
+# Une seule image (backend/Dockerfile) déployée en 3 services distingués par ROLE,
+# autour d'un Postgres et d'un Redis (Key Value) managés Render.
+#   - savely-api        : HTTP + WebSocket (porte les migrations au boot)
+#   - savely-worker     : consomme les files BullMQ (ingestion + maintenance)
+#   - savely-scheduler  : @Cron qui enfile les tâches (singleton)
+#
+# Déploiement : Render → New → Blueprint → sélectionner ce repo.
+# Les secrets (sync:false) sont saisis dans le dashboard, jamais dans le repo.
+# Régions/plans ajustables (ici: frankfurt / starter).
+# ─────────────────────────────────────────────────────────────────────────────
+
+databases:
+  - name: savely-postgres
+    databaseName: savely
+    user: savely
+    region: frankfurt
+    plan: basic-256mb # connexion directe → prisma migrate deploy OK au boot
+
+envVarGroups:
+  # Variables communes aux 3 services. DATABASE_URL / REDIS_URL / ROLE sont
+  # injectés par service (voir plus bas).
+  - name: savely-shared
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # ── Auth : générés une fois par Render, partagés entre services ──
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_CUSTOMER_SECRET
+        generateValue: true
+
+      # ── Emails (Resend) ──
+      - key: EMAIL_TRANSPORT
+        value: resend
+      - key: EMAIL_FROM
+        value: noreply@savely.fr
+      - key: RESEND_API_KEY
+        sync: false
+
+      # ── Stockage : Cloudflare R2 (S3-compatible) ──
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: AWS_REGION
+        value: auto # R2 utilise "auto"
+      - key: AWS_S3_FORCE_PATH_STYLE
+        value: 'true'
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: AWS_S3_ENDPOINT # https://<accountid>.r2.cloudflarestorage.com
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: CLOUDFRONT_URL # domaine public R2/CDN, sans slash final
+        sync: false
+
+      # ── Divers ──
+      - key: FRONT_URL
+        sync: false
+
+services:
+  # ── Redis / Key Value (files BullMQ) ─────────────────────────────────────
+  - type: keyvalue
+    name: savely-redis
+    region: frankfurt
+    plan: starter
+    maxmemoryPolicy: noeviction # ne JAMAIS évincer les jobs BullMQ
+    ipAllowList: [] # connexions internes uniquement (aucune IP publique)
+
+  # ── API : HTTP + WebSocket ───────────────────────────────────────────────
+  - type: web
+    name: savely-api
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /health
+    envVars:
+      - key: ROLE
+        value: api
+      - fromGroup: savely-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: savely-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue # (Render historique : "redis")
+          name: savely-redis
+          property: connectionString
+
+  # ── Worker : consomme ingestion + maintenance ────────────────────────────
+  - type: worker
+    name: savely-worker
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: ROLE
+        value: worker
+      - fromGroup: savely-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: savely-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: savely-redis
+          property: connectionString
+
+  # ── Scheduler : @Cron qui enfile (singleton) ─────────────────────────────
+  # Implémenté en worker ROLE=scheduler : simple, robuste, utilise le code testé.
+  # numInstances:1 garantit un seul déclencheur (pas de double-fire).
+  - type: worker
+    name: savely-scheduler
+    runtime: docker
+    region: frankfurt
+    plan: starter
+    numInstances: 1
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: ROLE
+        value: scheduler
+      - fromGroup: savely-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: savely-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: savely-redis
+          property: connectionString
+# ─────────────────────────────────────────────────────────────────────────────
+# Alternative "zéro service always-on" pour le scheduler : remplacer le service
+# savely-scheduler ci-dessus par deux Cron Jobs Render qui tapent l'endpoint
+# POST /internal/scheduler/* (gardé par X-Scheduler-Key). Nécessite d'ajouter
+# SCHEDULER_SECRET au groupe savely-shared, puis :
+#
+#   - type: cron
+#     name: savely-cron-daily-analysis
+#     runtime: image
+#     image:
+#       url: curlimages/curl:8.10.1
+#     schedule: "0 2 * * *"
+#     dockerCommand: >
+#       curl -fsS -X POST
+#       -H "X-Scheduler-Key: $SCHEDULER_SECRET"
+#       "$API_URL/internal/scheduler/daily-analysis"
+#     envVars:
+#       - key: SCHEDULER_SECRET
+#         fromGroup: savely-shared
+#       - key: API_URL
+#         fromService: { type: web, name: savely-api, property: host }
+#
+#   - type: cron
+#     name: savely-cron-expire-orders
+#     runtime: image
+#     image: { url: curlimages/curl:8.10.1 }
+#     schedule: "0 * * * *"
+#     dockerCommand: >
+#       curl -fsS -X POST
+#       -H "X-Scheduler-Key: $SCHEDULER_SECRET"
+#       "$API_URL/internal/scheduler/expire-orders"
+#     envVars:
+#       - key: SCHEDULER_SECRET
+#         fromGroup: savely-shared
+#       - key: API_URL
+#         fromService: { type: web, name: savely-api, property: host }
+# ─────────────────────────────────────────────────────────────────────────────

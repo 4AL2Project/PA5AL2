@@ -1,35 +1,29 @@
-import {
-  AlertTriangle,
-  ArrowRight,
-  Euro,
-  Package,
-  TrendingUp,
-} from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-import { RiskChart } from '@/components/dashboard/risk-chart';
-import { RiskTable } from '@/components/dashboard/risk-table';
-import { StatsCard } from '@/components/dashboard/stats-card';
+import { CapitalByLevelChart } from '@/components/dashboard/capital-by-level-chart';
+import { DaysOfCoverChart } from '@/components/dashboard/days-of-cover-chart';
+import { DormancyDonutChart } from '@/components/dashboard/dormancy-donut-chart';
+import { SalesVelocityChart } from '@/components/dashboard/sales-velocity-chart';
+import { StaleDataAlert } from '@/components/dashboard/stale-data-alert';
+import { Top10DormantsTable } from '@/components/dashboard/top10-dormants-table';
+import { UpcomingPickupsCard } from '@/components/dashboard/upcoming-pickups-card';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Button } from '@/components/ui/button';
-import { UploadModal } from '@/components/upload/upload-modal';
-import { adaptToRiskDistribution, fetchLatestAnalysis } from '@/lib/api';
+import { fetchDashboard, fetchLatestAnalysis } from '@/lib/api';
+import { getSession } from '@/lib/session';
 
 export default async function DashboardPage() {
-  const { products, stats } = await fetchLatestAnalysis();
+  const [{ products, stats }, dashboard, session] = await Promise.all([
+    fetchLatestAnalysis(),
+    fetchDashboard(),
+    getSession(),
+  ]);
+
+  const financialMasked = session?.claims.role === 'PREPARATEUR';
+  const hasProducts = dashboard.totalProducts > 0;
 
   const criticalProducts = products.filter((p) => p.riskLevel === 'critical');
-  const topRiskProducts = products
-    .filter((p) => p.riskLevel === 'critical' || p.riskLevel === 'high')
-    .slice(0, 5);
-  const riskDistribution = adaptToRiskDistribution(stats);
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'EUR',
-      maximumFractionDigits: 0,
-    }).format(value);
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('fr-FR', {
@@ -46,7 +40,9 @@ export default async function DashboardPage() {
       description={`Derniere analyse : ${formatDate(stats.lastAnalysisDate)}`}
       actions={
         <>
-          <UploadModal />
+          <Button size="sm" asChild>
+            <Link href="/upload">Importer</Link>
+          </Button>
           <Button variant="outline" size="sm" asChild>
             <Link href="/products?filter=critical">
               Produits a donner ({criticalProducts.length})
@@ -56,63 +52,65 @@ export default async function DashboardPage() {
       }
     >
       <div className="space-y-6">
-        {/* Stats Grid */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="Produits Totaux"
-            value={stats.totalProducts.toLocaleString('fr-FR')}
-            description="Dans l'inventaire"
-            icon={Package}
-            iconClassName="bg-primary/10 text-primary"
-          />
-          <StatsCard
-            title="Don associatif"
-            value={stats.criticalProducts}
-            description="Action immediate requise"
-            icon={AlertTriangle}
-            iconClassName="bg-risk-critical/10 text-risk-critical"
-          />
-          <StatsCard
-            title="Vente B2C"
-            value={stats.highProducts}
-            description="A mettre en ligne"
-            icon={TrendingUp}
-            iconClassName="bg-risk-high/10 text-risk-high"
-          />
-          <StatsCard
-            title="Valeur Recuperable"
-            value={formatCurrency(stats.totalRecoveryValue)}
-            description="Potentiel de recuperation"
-            icon={Euro}
-            iconClassName="bg-risk-low/10 text-risk-low"
-          />
-        </div>
+        {/* Bandeau alerte données stales */}
+        <StaleDataAlert lastUploadAt={dashboard.lastUploadAt} />
 
-        {/* Main Content Grid */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          {/* Critical Products Table */}
-          <div className="lg:col-span-2 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-base font-medium">Produits Prioritaires</h2>
-                <p className="text-xs text-muted-foreground">
-                  Produits necessitant une action immediate
-                </p>
+        {/* Retraits de dons planifiés cette semaine */}
+        <UpcomingPickupsCard pickups={dashboard.upcomingDonationPickups} />
+
+        {/* CTA import si aucun produit */}
+        {!hasProducts && (
+          <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border py-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              Aucune donnée importée. Importez votre export LGO pour commencer.
+            </p>
+            <Button asChild>
+              <Link href="/upload">Importer vos données</Link>
+            </Button>
+          </div>
+        )}
+
+        {hasProducts && (
+          <>
+            {/* Ligne 1 : répartition + capital */}
+            <div className="grid gap-4 lg:grid-cols-3">
+              <DormancyDonutChart stats={stats} />
+              <div className="lg:col-span-2">
+                <CapitalByLevelChart products={products} stats={stats} />
               </div>
-              <Button variant="outline" size="sm" asChild>
-                <Link href="/products">
-                  Voir tout
-                  <ArrowRight className="ml-1 h-4 w-4" />
-                </Link>
-              </Button>
             </div>
-            <RiskTable products={topRiskProducts} compact />
-          </div>
 
-          <div className="lg:col-span-1">
-            <RiskChart data={riskDistribution} />
-          </div>
-        </div>
+            {/* Ligne 2 : ventes + jours de couverture */}
+            <div className="grid gap-4 lg:grid-cols-2">
+              <SalesVelocityChart products={products} />
+              <DaysOfCoverChart products={products} />
+            </div>
+
+            {/* Top 10 produits dormants */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-medium">
+                    Top 10 produits dormants
+                  </h2>
+                  <p className="text-xs text-muted-foreground">
+                    Triés par capital immobilisé décroissant
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/products">
+                    Voir tout
+                    <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+              <Top10DormantsTable
+                dormants={dashboard.top10Dormants}
+                financialMasked={financialMasked}
+              />
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

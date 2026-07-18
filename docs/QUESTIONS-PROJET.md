@@ -12,23 +12,25 @@
 Le système attend **deux fichiers distincts** (`upload.service.ts`), pas un seul.
 
 **Fichier PRODUITS**
-| Colonne | Obligatoire | Rôle |
-|---|---|---|
-| `external_sku` | non\* | identifiant produit côté LGO — clé anti-doublon |
-| `name` | oui | nom produit |
-| `category`, `brand` | non | classification |
-| `expiry_date` | oui | date de péremption → moteur risque |
-| `stock_quantity` | oui | stock actuel |
-| `unit_price` | oui | prix de vente |
-| `cost_price` | non | prix d'achat → calcul de la perte |
+
+| Colonne             | Obligatoire | Rôle                                            |
+| ------------------- | ----------- | ----------------------------------------------- |
+| `external_sku`      | non\*       | identifiant produit côté LGO — clé anti-doublon |
+| `name`              | oui         | nom produit                                     |
+| `category`, `brand` | non         | classification                                  |
+| `expiry_date`       | oui         | date de péremption → moteur risque              |
+| `stock_quantity`    | oui         | stock actuel                                    |
+| `unit_price`        | oui         | prix de vente                                   |
+| `cost_price`        | non         | prix d'achat → calcul de la perte               |
 
 **Fichier VENTES**
-| Colonne | Obligatoire | Rôle |
-|---|---|---|
-| `external_sku` | oui | rattache la vente au produit |
-| `sale_date` | oui | calcul vélocité 30j |
-| `quantity_sold` | oui | volume écoulé |
-| `unit_price_sold` | non | prix réel de vente |
+
+| Colonne           | Obligatoire | Rôle                         |
+| ----------------- | ----------- | ---------------------------- |
+| `external_sku`    | oui         | rattache la vente au produit |
+| `sale_date`       | oui         | calcul vélocité 30j          |
+| `quantity_sold`   | oui         | volume écoulé                |
+| `unit_price_sold` | non         | prix réel de vente           |
 
 > ⚠️ `external_sku` est optionnel pour les produits mais obligatoire pour les ventes. Un produit sans SKU ne peut pas être relié à ses ventes → classé "critical" à tort. **À verrouiller : rendre le SKU obligatoire.**
 
@@ -104,7 +106,7 @@ Quand le moteur classe un produit en `high` → action « Mise en vente B2C » �
 
 ### En quoi consiste le module des dons ? Quel est son process ?
 
-**Le pourquoi :** un produit invendable a 3 sorties — détruire (perte sèche), solder (récupère une partie), ou **donner** (réduction d'impôt 60-75 % via reçu fiscal Cerfa). Le don est souvent **plus rentable que la destruction**. Le module matérialise cette bascille.
+**Le pourquoi :** un produit invendable a 3 sorties — détruire (perte sèche), solder (récupère une partie), ou **donner** (réduction d'impôt de 60 % (art. 238 bis CGI) via reçu fiscal Cerfa 16216). Le don est souvent **plus rentable que la destruction**. Le module matérialise cette bascille.
 
 **Quand le don se déclenche** (piloté par le risque + la DLP) :
 
@@ -124,8 +126,8 @@ Aujourd'hui `risk-calculator.ts` envoie les `critical` vers le label `'Don assoc
 2. MATCHING     Associations dans 50 km acceptant la catégorie (géoloc)
 3. PROPOSITION  Email auto à l'association (lot dispo, retrait avant le …)
 4. SUIVI STATUT proposé → accepté → retiré (pickup confirmé)
-5. REÇU FISCAL  PDF Cerfa (n°11580) traçable
-6. VALORISATION Dashboard RSE : produits sauvés, valeur donnée, économie 75 %
+5. REÇU FISCAL  PDF Cerfa entreprise (n°16216) traçable
+6. VALORISATION Dashboard RSE : produits sauvés, valeur donnée (coût de revient HT), économie fiscale 60 %
 ```
 
 **Données manquantes (vraie charge de travail) — absentes du schéma Prisma :**

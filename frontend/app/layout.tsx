@@ -3,8 +3,7 @@ import './globals.css';
 import { Analytics } from '@vercel/analytics/next';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-
-import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from 'sonner';
 
 const geistSans = Geist({
   subsets: ['latin'],
@@ -16,8 +15,16 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'RiskAnalyzer - Product Risk Dashboard',
-  description: 'Analyze and monitor product risks with actionable insights',
+  title: 'Savely — Stocks dormants',
+  description:
+    'Identifiez et valorisez vos stocks dormants pour récupérer du capital',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({
@@ -26,18 +33,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="fr">
       <body
         className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        {children}
+        <Toaster richColors position="bottom-right" />
         <Analytics />
       </body>
     </html>

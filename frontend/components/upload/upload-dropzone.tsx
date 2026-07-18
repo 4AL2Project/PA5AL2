@@ -56,13 +56,10 @@ export function UploadDropzone({ fileType }: UploadDropzoneProps) {
       }, 300);
 
       try {
-        const data = await uploadFile(file, fileType);
+        await uploadFile(file, fileType);
         clearInterval(timer);
         setProgress(100);
         setStatus('success');
-        setResult(
-          (fileType === 'products' ? data.products : data.sales) ?? null
-        );
       } catch (err) {
         clearInterval(timer);
         setStatus('error');

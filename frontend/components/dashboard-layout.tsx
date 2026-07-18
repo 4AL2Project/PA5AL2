@@ -1,57 +1,14 @@
 'use client';
 
-import { PanelLeft } from 'lucide-react';
-
 import { AppSidebar } from '@/components/app-sidebar';
-import { Button } from '@/components/ui/button';
-import {
-  SidebarInset,
-  SidebarProvider,
-  useSidebar,
-} from '@/components/ui/sidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
   title: string;
   description?: string;
   actions?: React.ReactNode;
-}
-
-function DashboardHeader({
-  title,
-  description,
-  actions,
-}: {
-  title: string;
-  description?: string;
-  actions?: React.ReactNode;
-}) {
-  const { open, toggleSidebar } = useSidebar();
-
-  return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border/50 px-6">
-      {!open && (
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={toggleSidebar}
-          className="-ml-1 h-8 w-8"
-        >
-          <PanelLeft className="h-4 w-4" />
-          <span className="sr-only">Ouvrir la barre laterale</span>
-        </Button>
-      )}
-      <div className="flex flex-1 items-center justify-between">
-        <div className="flex flex-col">
-          <h1 className="text-sm font-semibold">{title}</h1>
-          {description && (
-            <p className="text-xs text-muted-foreground">{description}</p>
-          )}
-        </div>
-        {actions && <div className="flex items-center gap-2">{actions}</div>}
-      </div>
-    </header>
-  );
+  breadcrumb?: React.ReactNode;
+  userEmail?: string;
 }
 
 export function DashboardLayout({
@@ -59,18 +16,29 @@ export function DashboardLayout({
   title,
   description,
   actions,
+  breadcrumb,
+  userEmail,
 }: DashboardLayoutProps) {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <DashboardHeader
-          title={title}
-          description={description}
-          actions={actions}
-        />
-        <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
-      </SidebarInset>
-    </SidebarProvider>
+    <div className="flex min-h-svh bg-background">
+      <AppSidebar userEmail={userEmail} />
+      <div className="flex flex-1 flex-col overflow-auto">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-8 py-8">
+          {breadcrumb && <div className="mb-4">{breadcrumb}</div>}
+          <div className="mb-6 flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <h1 className="text-lg font-semibold">{title}</h1>
+              {description && (
+                <p className="text-xs text-muted-foreground">{description}</p>
+              )}
+            </div>
+            {actions && (
+              <div className="flex items-center gap-2">{actions}</div>
+            )}
+          </div>
+          {children}
+        </main>
+      </div>
+    </div>
   );
 }

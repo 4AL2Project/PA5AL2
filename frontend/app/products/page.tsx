@@ -1,6 +1,7 @@
 'use client';
 
 import { Loader2, Search, X } from 'lucide-react';
+import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 
 import { RiskTable } from '@/components/dashboard/risk-table';
@@ -14,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { UploadModal } from '@/components/upload/upload-modal';
 import { fetchProducts } from '@/lib/api';
 import { Product, RiskLevel } from '@/lib/types';
 
@@ -85,14 +85,9 @@ export default function ProductsPage() {
           : `${filteredProducts.length} produits sur ${products.length}`
       }
       actions={
-        <UploadModal
-          defaultFileType="products"
-          trigger={
-            <Button variant="outline" size="sm">
-              Importer produits
-            </Button>
-          }
-        />
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/upload">Importer produits</Link>
+        </Button>
       }
     >
       <div className="space-y-6">

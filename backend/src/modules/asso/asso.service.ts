@@ -109,6 +109,7 @@ export class AssoService {
                 pharmacy_id: true,
                 name: true,
                 address: true,
+                email: true,
                 donation_pickup_windows: true,
               },
             },

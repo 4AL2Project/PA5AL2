@@ -153,7 +153,7 @@ export default function PreparateurLoginPage() {
           <div className="rounded-lg border p-4 space-y-2.5">
             <div className="space-y-1 text-xs">
               <p className="font-medium text-foreground">
-                Vous n’avez pas reçu le code ?
+                Vous n'avez pas reçu le code ?
               </p>
               <p className="text-muted-foreground">
                 Pensez à vérifier vos courriers indésirables.
@@ -180,7 +180,7 @@ export default function PreparateurLoginPage() {
                 role="status"
               >
                 <CheckCircle2 className="h-3.5 w-3.5" />
-                Un nouveau code vient d’être envoyé.
+                Un nouveau code vient d'être envoyé.
               </p>
             )}
           </div>

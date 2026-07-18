@@ -17,7 +17,7 @@ export default function Shell({ children }: { children: React.ReactNode }) {
 
   const logout = () => {
     clearToken();
-    router.replace('/auth/verify');
+    router.replace('/auth/login');
   };
 
   return (

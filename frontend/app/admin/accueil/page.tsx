@@ -62,7 +62,7 @@ export default async function AdminAccueilPage() {
   return (
     <AdminShell
       title="Accueil"
-      description="Vue d’ensemble de la plateforme."
+      description="Vue d'ensemble de la plateforme."
       adminEmail={session.claims.email}
     >
       <div className="space-y-6">

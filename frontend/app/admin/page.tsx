@@ -39,10 +39,10 @@ export default async function AdminHomePage() {
             <Building2 className="h-5 w-5 text-muted-foreground" />
           </div>
           <h2 className="text-sm font-semibold">
-            Aucune officine pour l’instant
+            Aucune officine pour l'instant
           </h2>
           <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
-            Créez la première officine pour démarrer. Un email d’activation sera
+            Créez la première officine pour démarrer. Un email d'activation sera
             envoyé à son titulaire.
           </p>
           <AddPharmacyDrawer className="mt-5" />

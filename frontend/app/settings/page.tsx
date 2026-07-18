@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { OfficineSettingsForm } from '@/components/settings/officine-settings-form';
-import { PickupWindowsForm } from '@/components/settings/pickup-windows-form';
 import { fetchMyPharmacy } from '@/lib/pharmacy';
 import { getSession } from '@/lib/session';
 
@@ -27,11 +26,10 @@ export default async function SettingsPage() {
       {pharmacy ? (
         <div className="space-y-6">
           <OfficineSettingsForm pharmacy={pharmacy} />
-          <PickupWindowsForm initial={pharmacy.donation_pickup_windows} />
         </div>
       ) : (
         <div className="rounded-xl border bg-card p-12 text-center text-xs text-muted-foreground">
-          Impossible de charger les informations de l’officine.
+          Impossible de charger les informations de l'officine.
         </div>
       )}
     </DashboardLayout>

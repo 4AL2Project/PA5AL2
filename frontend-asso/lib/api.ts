@@ -42,6 +42,16 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 
 // ── Auth ────────────────────────────────────────────────────────────────────
 
+export async function requestAssoMagicLink(email: string): Promise<void> {
+  await fetch(`${API_BASE}/asso/auth/request-link`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+    cache: 'no-store',
+  });
+  // On ignore la réponse : le backend retourne toujours 200 (anti-énumération)
+}
+
 export async function verifyAssoToken(
   token: string
 ): Promise<{ access_token: string; is_onboarded: boolean }> {
@@ -106,6 +116,7 @@ export interface Offre {
       name: string;
       address: string | null;
       contact_phone?: string | null;
+      email?: string | null;
     } | null;
   } | null;
 }
@@ -121,8 +132,8 @@ export async function fetchOffre(id: string): Promise<Offre> {
 export async function accepterOffre(
   id: string,
   data: {
-    pickup_slot_start: string;
-    pickup_slot_end: string;
+    pickup_slot_start?: string;
+    pickup_slot_end?: string;
     picked_up_by?: string;
   }
 ): Promise<unknown> {

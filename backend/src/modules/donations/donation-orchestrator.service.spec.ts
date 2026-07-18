@@ -93,6 +93,13 @@ function validSlot() {
   return { slot_start: slots[0].start, slot_end: slots[0].end };
 }
 
+// Slots ISO compatibles avec validSlot() — à passer en pickup_windows
+// sur la donation (le titulaire doit toujours fixer des créneaux)
+function defaultPickupWindows() {
+  const slots = computePickupSlots(ALL_DAYS as never, 7);
+  return slots.slice(0, 3).map((s) => ({ start: s.start, end: s.end }));
+}
+
 beforeEach(() => {
   db = createFakeDb();
   Object.assign(clientModule.prisma, db);
@@ -205,7 +212,10 @@ describe('Cascade', () => {
     const donation = await orchestrator.createDonation(
       pharmacy.pharmacy_id,
       'user-1',
-      { lines: [{ product_id: product.product_id, quantity: 6 }] }
+      {
+        lines: [{ product_id: product.product_id, quantity: 6 }],
+        pickup_windows: defaultPickupWindows(),
+      }
     );
     return { pharmacy, product, assoA, assoB, donation: donation! };
   }
@@ -302,7 +312,10 @@ describe('Concurrence et cas limites', () => {
     const donation = await orchestrator.createDonation(
       pharmacy.pharmacy_id,
       'user-1',
-      { lines: [{ product_id: product.product_id, quantity: 5 }] }
+      {
+        lines: [{ product_id: product.product_id, quantity: 5 }],
+        pickup_windows: defaultPickupWindows(),
+      }
     );
     return { pharmacy, product, donation: donation! };
   }
@@ -463,7 +476,10 @@ describe('Retrait, non-récupération, épuisement', () => {
     const donation = (await orchestrator.createDonation(
       pharmacy.pharmacy_id,
       'user-1',
-      { lines: [{ product_id: product.product_id, quantity: 5 }] }
+      {
+        lines: [{ product_id: product.product_id, quantity: 5 }],
+        pickup_windows: defaultPickupWindows(),
+      }
     ))!;
     await orchestrator.respondToProposal(activeProposal()!.token, {
       decision: 'ACCEPT',
@@ -524,20 +540,20 @@ describe('Retrait, non-récupération, épuisement', () => {
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
-  it('confirme le retrait par scan du QR (app préparateur), scopé officine', async () => {
+  it('confirme le retrait par code de récupération (app préparateur), scopé officine', async () => {
     const { pharmacy, allocation } = await setupAccepted();
 
     await expect(
-      orchestrator.confirmPickupByQr(
-        allocation.qr_code,
+      orchestrator.confirmPickupByCode(
+        allocation.recovery_code,
         'autre-officine',
         'Marie',
         'PREPARATEUR:user-2'
       )
-    ).rejects.toThrow(/QR inconnu/);
+    ).rejects.toThrow(/Code de récupération inconnu/);
 
-    const result = await orchestrator.confirmPickupByQr(
-      allocation.qr_code,
+    const result = await orchestrator.confirmPickupByCode(
+      allocation.recovery_code,
       pharmacy.pharmacy_id,
       'Marie Bénévole',
       'PREPARATEUR:user-2'
@@ -630,11 +646,12 @@ describe('Idempotence des emails (cron)', () => {
     const pharmacy = seedPharmacy();
     const product = seedProduct(pharmacy.pharmacy_id);
     seedAsso();
-    await orchestrator.createDonation(pharmacy.pharmacy_id, 'user-1', {
-      lines: [{ product_id: product.product_id, quantity: 2 }],
-    });
     const slots = computePickupSlots(ALL_DAYS as never, 7);
     const slot = slots[slots.length - 1]; // le plus lointain (≈ 7 jours)
+    await orchestrator.createDonation(pharmacy.pharmacy_id, 'user-1', {
+      lines: [{ product_id: product.product_id, quantity: 2 }],
+      pickup_windows: slots.map((s) => ({ start: s.start, end: s.end })),
+    });
     await orchestrator.respondToProposal(activeProposal()!.token, {
       decision: 'ACCEPT',
       slot_start: slot.start,
@@ -682,6 +699,7 @@ describe('Scénario E2E : partiel → reliquat → 2 retraits → COMPLETEE', ()
           { product_id: cream.product_id, quantity: 6 },
           { product_id: shampoo.product_id, quantity: 4 },
         ],
+        pickup_windows: defaultPickupWindows(),
       }
     ))!;
 

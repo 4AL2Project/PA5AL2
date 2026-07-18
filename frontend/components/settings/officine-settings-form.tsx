@@ -74,7 +74,7 @@ export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
         toast.error("Impossible d'enregistrer les modifications");
         return;
       }
-      toast.success('Informations de l’officine mises à jour');
+      toast.success("Informations de l'officine mises à jour");
       router.refresh();
     } catch {
       toast.error("Impossible d'enregistrer les modifications");
@@ -87,14 +87,14 @@ export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
     <form onSubmit={onSubmit} className="max-w-2xl space-y-3">
       <Card className="border-border/50">
         <CardHeader>
-          <CardTitle>Informations de l’officine</CardTitle>
+          <CardTitle>Informations de l'officine</CardTitle>
           <CardDescription>
-            Mettez à jour le nom et l’adresse de votre officine.
+            Mettez à jour le nom et l'adresse de votre officine.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Nom de l’officine</Label>
+            <Label htmlFor="name">Nom de l'officine</Label>
             <Input
               id="name"
               value={name}
@@ -126,7 +126,7 @@ export function OfficineSettingsForm({ pharmacy }: { pharmacy: MyPharmacy }) {
               </p>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email de l’officine</Label>
+              <Label htmlFor="email">Email de l'officine</Label>
               <Input id="email" value={pharmacy.email ?? '—'} disabled />
               <p className="text-xs text-muted-foreground">
                 Contactez Savely pour changer cette adresse.

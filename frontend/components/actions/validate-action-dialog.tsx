@@ -261,7 +261,7 @@ export function ValidateActionDialog({
                         Éco. fiscale :{' '}
                         {eligible.tax_savings != null
                           ? `${Math.round(eligible.tax_savings)} €`
-                          : 'prix d’achat manquant'}
+                          : "prix d'achat manquant"}
                       </span>
                     </p>
                     <p className="text-[11px] text-muted-foreground">
@@ -364,7 +364,7 @@ export function ValidateActionDialog({
                       >
                         {advancedOpen
                           ? 'Masquer le mode avancé'
-                          : 'Mode avancé : proposer d’abord à…'}
+                          : "Mode avancé : proposer d'abord à…"}
                       </button>
                       {advancedOpen && (
                         <Select

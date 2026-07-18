@@ -1,17 +1,14 @@
 'use client';
 
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  ASSO_CATEGORY_OPTIONS,
-  AssociationAdminRow,
-  CreateAssoDto,
-} from '@/lib/admin-associations';
+import { AddressSuggestion, searchAddresses } from '@/lib/address';
+import { AssociationAdminRow, CreateAssoDto } from '@/lib/admin-associations';
 import { isValidEmail } from '@/lib/validation';
 
 export interface AssoFormValues {
@@ -23,7 +20,6 @@ export interface AssoFormValues {
   postal_code: string;
   agrement_numero: string;
   agrement_valide: boolean;
-  categories: string[];
   send_invitation: boolean;
 }
 
@@ -37,7 +33,6 @@ export function emptyAssoForm(): AssoFormValues {
     postal_code: '',
     agrement_numero: '',
     agrement_valide: false,
-    categories: [],
     send_invitation: true,
   };
 }
@@ -52,7 +47,6 @@ export function assoFormFrom(a: AssociationAdminRow): AssoFormValues {
     postal_code: a.postal_code ?? '',
     agrement_numero: a.agrement_numero ?? '',
     agrement_valide: a.agrement_valide,
-    categories: a.categories,
     send_invitation: false,
   };
 }
@@ -67,7 +61,6 @@ export function formToDto(v: AssoFormValues): CreateAssoDto {
     postal_code: v.postal_code.trim() || undefined,
     agrement_numero: v.agrement_numero.trim() || undefined,
     agrement_valide: v.agrement_valide,
-    categories: v.categories,
     send_invitation: v.send_invitation,
   };
 }
@@ -95,21 +88,63 @@ export function AssoAdminForm({
     value: AssoFormValues[K]
   ) => setForm((f) => ({ ...f, [key]: value }));
 
-  const toggleCategory = (cat: string) =>
+  // Address autocomplete
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const handleAddressChange = (value: string) => {
+    update('address', value);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim().length < 3) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      if (abortRef.current) abortRef.current.abort();
+      abortRef.current = new AbortController();
+      try {
+        const results = await searchAddresses(
+          value.trim(),
+          abortRef.current.signal
+        );
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+      } catch {
+        // abort ou erreur réseau — on ignore silencieusement
+      }
+    }, 350);
+  };
+
+  const handleSelectSuggestion = (s: AddressSuggestion) => {
     setForm((f) => ({
       ...f,
-      categories: f.categories.includes(cat)
-        ? f.categories.filter((c) => c !== cat)
-        : [...f.categories, cat],
+      address: s.label,
+      city: s.city,
+      postal_code: s.postcode,
     }));
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (abortRef.current) abortRef.current.abort();
+    };
+  }, []);
 
   const emailOk = isValidEmail(form.email.trim());
   const canSubmit =
     form.name.trim() !== '' &&
     emailOk &&
     form.address.trim() !== '' &&
-    form.city.trim() !== '' &&
-    form.categories.length > 0;
+    form.city.trim() !== '';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,12 +188,30 @@ export function AssoAdminForm({
         </div>
         <div className="col-span-2 space-y-1.5">
           <Label className="text-xs">Adresse *</Label>
-          <Input
-            value={form.address}
-            onChange={(e) => update('address', e.target.value)}
-            disabled={submitting}
-            placeholder="1 rue de la Paix"
-          />
+          <div className="relative">
+            <Input
+              value={form.address}
+              onChange={(e) => handleAddressChange(e.target.value)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+              disabled={submitting}
+              placeholder="1 rue de la Paix"
+              autoComplete="off"
+            />
+            {showSuggestions && (
+              <ul className="absolute left-0 right-0 top-full z-50 mt-0.5 overflow-hidden rounded-md border bg-popover shadow-md">
+                {suggestions.map((s, i) => (
+                  <li
+                    key={i}
+                    onMouseDown={() => handleSelectSuggestion(s)}
+                    className="cursor-pointer px-3 py-2 text-sm hover:bg-accent hover:text-accent-foreground"
+                  >
+                    {s.label}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Ville *</Label>
@@ -205,34 +258,6 @@ export function AssoAdminForm({
           Génération de Cerfa impossible sans agrément.
         </div>
       )}
-
-      <div className="space-y-2">
-        <Label className="text-xs">Catégories acceptées *</Label>
-        <div className="flex flex-wrap gap-2">
-          {ASSO_CATEGORY_OPTIONS.map((cat) => {
-            const selected = form.categories.includes(cat.value);
-            return (
-              <button
-                key={cat.value}
-                type="button"
-                onClick={() => toggleCategory(cat.value)}
-                className={`rounded-full border px-3 py-1 text-xs transition-colors ${
-                  selected
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-border text-muted-foreground hover:border-primary/50'
-                }`}
-              >
-                {cat.label}
-              </button>
-            );
-          })}
-        </div>
-        {form.categories.length === 0 && (
-          <p className="text-[11px] text-destructive">
-            Sélectionnez au moins une catégorie.
-          </p>
-        )}
-      </div>
 
       {!isEdit && (
         <label className="flex cursor-pointer items-center gap-2 text-xs">

@@ -5,6 +5,7 @@ import {
   Heart,
   Home,
   LogOut,
+  Mail,
   Terminal,
   UserCircle,
   Users,
@@ -31,6 +32,7 @@ const NAV = [
   { href: '/admin', label: 'Officines', icon: Building2 },
   { href: '/admin/utilisateurs', label: 'Utilisateurs', icon: Users },
   { href: '/admin/associations', label: 'Associations', icon: Heart },
+  { href: '/admin/leads', label: 'Leads', icon: Mail },
   { href: '/admin/compte', label: 'Compte', icon: UserCircle },
   // Outils destructifs : le lien disparaît quand les outils sont désactivés.
   ...(devToolsEnabled

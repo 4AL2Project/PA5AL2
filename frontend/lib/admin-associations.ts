@@ -20,6 +20,7 @@ export interface AssociationAdminRow {
   address: string;
   city: string;
   postal_code: string;
+  rna_or_siren: string | null;
   categories: string[];
   contact_email: string | null;
   contact_phone: string | null;
@@ -101,7 +102,7 @@ export interface CreateAssoDto {
   postal_code?: string;
   agrement_numero?: string;
   agrement_valide?: boolean;
-  categories: string[];
+  categories?: string[];
   pickup_windows?: AssoPickupWindow[];
   send_invitation?: boolean;
 }

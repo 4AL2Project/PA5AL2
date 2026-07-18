@@ -59,8 +59,6 @@ export default function OffrePage() {
   >('detail');
 
   const [selectedSlot, setSelectedSlot] = useState<PickupSlot | null>(null);
-  const [slotStart, setSlotStart] = useState('');
-  const [slotEnd, setSlotEnd] = useState('');
   const [pickedUpBy, setPickedUpBy] = useState('');
 
   const [refusalReason, setRefusalReason] = useState('');
@@ -70,7 +68,7 @@ export default function OffrePage() {
 
   useEffect(() => {
     if (!localStorage.getItem('savely_asso_token')) {
-      router.replace(`/auth/verify?redirect=/offres/${id}`);
+      router.replace(`/auth/login?redirect=/offres/${id}`);
       return;
     }
     fetchOffre(id)
@@ -79,25 +77,15 @@ export default function OffrePage() {
       .finally(() => setLoading(false));
   }, [id, router]);
 
-  const titulaireSLots: PickupSlot[] =
+  // Filtre sur la fin du créneau : affiche aussi les créneaux en cours
+  // (commencés mais pas encore terminés), pas seulement les futurs.
+  const titulaireSlots: PickupSlot[] =
     offre?.donation?.pickup_windows?.filter(
-      (s) => new Date(s.start) > new Date()
+      (s) => new Date(s.end) > new Date()
     ) ?? [];
-  const hasTitulaireSlots = titulaireSLots.length > 0;
 
   const handleAccept = async () => {
-    const effectiveStart = hasTitulaireSlots
-      ? selectedSlot?.start
-      : slotStart
-        ? new Date(slotStart).toISOString()
-        : undefined;
-    const effectiveEnd = hasTitulaireSlots
-      ? selectedSlot?.end
-      : slotEnd
-        ? new Date(slotEnd).toISOString()
-        : undefined;
-
-    if (!effectiveStart || !effectiveEnd) {
+    if (!selectedSlot) {
       setError('Veuillez sélectionner un créneau de récupération');
       return;
     }
@@ -105,8 +93,8 @@ export default function OffrePage() {
     setError('');
     try {
       await accepterOffre(id, {
-        pickup_slot_start: effectiveStart,
-        pickup_slot_end: effectiveEnd,
+        pickup_slot_start: selectedSlot?.start,
+        pickup_slot_end: selectedSlot?.end,
         picked_up_by: pickedUpBy.trim(),
       });
       setView('accept_done');
@@ -166,8 +154,8 @@ export default function OffrePage() {
           </div>
           <h2 className="text-xl font-bold text-foreground">Don accepté !</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Rendez-vous à l&apos;officine au créneau convenu. Votre QR code de
-            récupération est disponible dans l&apos;onglet{' '}
+            Rendez-vous à l&apos;officine au créneau convenu. Votre code de
+            récupération (SAV-XXXX) est disponible dans l&apos;onglet{' '}
             <strong>Mes dons</strong>.
           </p>
           <button
@@ -262,6 +250,28 @@ export default function OffrePage() {
                   {offre.donation.pharmacy.address}
                 </p>
               )}
+              {offre.donation?.pharmacy?.contact_phone && (
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  📞{' '}
+                  <a
+                    href={`tel:${offre.donation.pharmacy.contact_phone}`}
+                    className="hover:underline"
+                  >
+                    {offre.donation.pharmacy.contact_phone}
+                  </a>
+                </p>
+              )}
+              {offre.donation?.pharmacy?.email && (
+                <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  ✉️{' '}
+                  <a
+                    href={`mailto:${offre.donation.pharmacy.email}`}
+                    className="hover:underline"
+                  >
+                    {offre.donation.pharmacy.email}
+                  </a>
+                </p>
+              )}
             </div>
 
             <div className="mb-4">
@@ -301,69 +311,37 @@ export default function OffrePage() {
                 Créneau de récupération
               </h2>
 
-              {hasTitulaireSlots ? (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    L&apos;officine a proposé les créneaux suivants.
-                    Sélectionnez celui qui vous convient :
-                  </p>
-                  {titulaireSLots.map((slot) => {
-                    const { date, heure } = fmtSlot(slot);
-                    const isSelected =
-                      selectedSlot?.start === slot.start &&
-                      selectedSlot?.end === slot.end;
-                    return (
-                      <button
-                        key={slot.start}
-                        type="button"
-                        onClick={() => setSelectedSlot(slot)}
-                        className={`w-full rounded-xl border-2 p-4 text-left transition-all ${
-                          isSelected
-                            ? 'border-primary bg-primary-tint'
-                            : 'border-border bg-card hover:border-primary/50'
-                        }`}
-                      >
-                        <p className="font-medium capitalize text-foreground">
-                          {date}
-                        </p>
-                        <p className="mt-0.5 text-sm font-semibold text-primary">
-                          🕐 {heure}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Indiquez quand vous pourrez passer récupérer le don :
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                        Début *
-                      </label>
-                      <input
-                        type="datetime-local"
-                        value={slotStart}
-                        onChange={(e) => setSlotStart(e.target.value)}
-                        className={inputCls}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                        Fin *
-                      </label>
-                      <input
-                        type="datetime-local"
-                        value={slotEnd}
-                        onChange={(e) => setSlotEnd(e.target.value)}
-                        className={inputCls}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  L&apos;officine a fixé les créneaux suivants. Choisissez celui
+                  qui vous convient :
+                </p>
+                {titulaireSlots.map((slot) => {
+                  const { date, heure } = fmtSlot(slot);
+                  const isSelected =
+                    selectedSlot?.start === slot.start &&
+                    selectedSlot?.end === slot.end;
+                  return (
+                    <button
+                      key={slot.start}
+                      type="button"
+                      onClick={() => setSelectedSlot(slot)}
+                      className={`w-full rounded-xl border-2 p-4 text-left transition-all ${
+                        isSelected
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border bg-card hover:border-primary/50'
+                      }`}
+                    >
+                      <p className="font-medium capitalize text-foreground">
+                        {date}
+                      </p>
+                      <p className="mt-0.5 text-sm font-semibold text-primary">
+                        🕐 {heure}
+                      </p>
+                    </button>
+                  );
+                })}
+              </div>
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
@@ -391,10 +369,7 @@ export default function OffrePage() {
               <div className="flex gap-3">
                 <button
                   onClick={handleAccept}
-                  disabled={
-                    submitting ||
-                    (hasTitulaireSlots ? !selectedSlot : !slotStart || !slotEnd)
-                  }
+                  disabled={submitting || !selectedSlot}
                   className="flex-1 rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-40"
                 >
                   {submitting ? 'Envoi…' : '✅ Accepter ce don'}

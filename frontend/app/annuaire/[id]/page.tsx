@@ -30,7 +30,6 @@ import {
   donationCerfaUrl,
   fetchAssociationFiche,
 } from '@/lib/api';
-import { formatWindows } from '@/lib/pickup-windows';
 
 function euros(v: number): string {
   return v.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' });
@@ -119,27 +118,19 @@ export default function AssociationFichePage({
             </div>
           </section>
 
-          {/* Catégories + créneaux */}
-          <div className="grid gap-6 sm:grid-cols-2">
-            <section className="rounded-xl border bg-card p-4">
-              <h2 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
-                Catégories acceptées
-              </h2>
-              <div className="flex flex-wrap gap-1.5">
-                {fiche.categories.map((c) => (
-                  <Badge key={c} variant="secondary">
-                    {c}
-                  </Badge>
-                ))}
-              </div>
-            </section>
-            <section className="rounded-xl border bg-card p-4">
-              <h2 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
-                Créneaux de pickup (V1 statiques)
-              </h2>
-              <p className="text-sm">{formatWindows(fiche.pickup_windows)}</p>
-            </section>
-          </div>
+          {/* Catégories */}
+          <section className="rounded-xl border bg-card p-4">
+            <h2 className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
+              Catégories acceptées
+            </h2>
+            <div className="flex flex-wrap gap-1.5">
+              {fiche.categories.map((c) => (
+                <Badge key={c} variant="secondary">
+                  {c}
+                </Badge>
+              ))}
+            </div>
+          </section>
 
           {/* Fiabilité */}
           <section className="rounded-xl border bg-card p-4">

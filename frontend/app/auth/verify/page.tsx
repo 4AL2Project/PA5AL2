@@ -105,13 +105,13 @@ function VerifyContent() {
   return (
     <AuthShell
       title="Lien expiré ou invalide"
-      description="Ce lien magique n’est plus valide. Demandez-en un nouveau pour continuer."
+      description="Ce lien magique n'est plus valide. Demandez-en un nouveau pour continuer."
     >
       <div className="rounded-lg border bg-muted/30 p-4 flex items-start gap-3 mb-5">
         <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
         <p className="text-xs text-muted-foreground">
           Les liens de connexion expirent au bout de 15 minutes et ne peuvent
-          être utilisés qu’une seule fois.
+          être utilisés qu'une seule fois.
         </p>
       </div>
       <Button asChild className="w-full">

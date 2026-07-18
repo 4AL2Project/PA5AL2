@@ -49,7 +49,7 @@ export default async function AdminComptePage() {
   return (
     <AdminShell
       title="Compte"
-      description="Vos informations d’administrateur Savely."
+      description="Vos informations d'administrateur Savely."
       adminEmail={session.claims.email}
     >
       <div className="max-w-2xl space-y-6">

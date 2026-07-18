@@ -120,6 +120,21 @@ export function isValidPickupSlot(
   );
 }
 
+/**
+ * Génère un code alphanumérique court de récupération (ex: SAV-4X9K).
+ * Exclut les caractères ambigus (0/O, 1/I/L).
+ */
+export function generateRecoveryCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return (
+    'SAV-' +
+    Array.from(
+      { length: 4 },
+      () => chars[Math.floor(Math.random() * chars.length)]
+    ).join('')
+  );
+}
+
 function atTime(day: Date, hhmm: string): Date {
   const [h, m] = hhmm.split(':').map(Number);
   const d = new Date(day);

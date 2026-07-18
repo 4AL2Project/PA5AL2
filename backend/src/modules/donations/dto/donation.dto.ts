@@ -92,11 +92,11 @@ export class ConfirmPickupDto {
   picked_up_by?: string;
 }
 
-// Scan du QR de l'allocation par le préparateur (app Flutter)
+// Saisie du code de récupération de l'allocation par le préparateur
 export class ScanPickupDto {
   @IsString()
-  @MaxLength(64)
-  qr_code!: string;
+  @MaxLength(16)
+  recovery_code!: string;
 
   @IsOptional()
   @IsString()

@@ -218,6 +218,14 @@ export default function ActionsPage() {
     async (slots: PickupSlot[] | undefined) => {
       const pending = pendingDonPayloadRef.current;
       if (!pending) return;
+      if (!slots || slots.length === 0) {
+        toast.error(
+          'Aucun créneau disponible — configurez vos créneaux hebdomadaires dans les paramètres des dons'
+        );
+        pendingDonPayloadRef.current = null;
+        setCreneauxOpen(false);
+        return;
+      }
       const { id, payload, action } = pending;
       pendingDonPayloadRef.current = null;
       setCreneauxOpen(false);
@@ -231,7 +239,7 @@ export default function ActionsPage() {
             { product_id: action.productId, quantity: payload.donQuantity! },
           ],
           preferred_association_id: payload.preferredAssociationId,
-          ...(slots ? { pickup_windows: slots } : {}),
+          pickup_windows: slots,
         });
         toast.success(
           'Don validé — Savely propose le lot aux associations de la zone'

@@ -19,7 +19,7 @@ export function AssoSidebar() {
 
   const logout = () => {
     clearToken();
-    router.replace('/auth/verify');
+    router.replace('/auth/login');
   };
 
   return (

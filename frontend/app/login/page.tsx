@@ -100,7 +100,7 @@ export default function LoginPage() {
         <div className="rounded-lg border p-4 space-y-2.5">
           <div className="space-y-1 text-xs">
             <p className="font-medium text-foreground">
-              Vous n’avez pas reçu le lien ?
+              Vous n'avez pas reçu le lien ?
             </p>
             <p className="text-muted-foreground">
               Cliquez ci-dessous pour recevoir un nouveau lien de connexion à la
@@ -128,7 +128,7 @@ export default function LoginPage() {
               role="status"
             >
               <CheckCircle2 className="h-3.5 w-3.5" />
-              Un nouveau lien vient d’être envoyé.
+              Un nouveau lien vient d'être envoyé.
             </p>
           )}
           {serverError && (

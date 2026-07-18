@@ -13,6 +13,10 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { DashboardLayout } from '@/components/dashboard-layout';
+import {
+  PickupWindow,
+  PickupWindowsForm,
+} from '@/components/settings/pickup-windows-form';
 import { Slider } from '@/components/ui/slider';
 import {
   DonParametres,
@@ -31,15 +35,34 @@ export default function DonParametresPage() {
   const [params, setParams] = useState<DonParametres | null>(null);
   const [seuil, setSeuil] = useState(SEUIL_DEFAULT);
   const [rayon, setRayon] = useState(RAYON_DEFAULT);
+  const [pickupWindows, setPickupWindows] = useState<PickupWindow[] | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchDonParametres()
-      .then((p) => {
+    Promise.all([
+      fetchDonParametres(),
+      fetch('/api/be/api/pharmacies/me', { cache: 'no-cache' })
+        .then((r) => r.json())
+        .then(
+          (payload: {
+            success?: boolean;
+            data?: { donation_pickup_windows?: PickupWindow[] | null };
+            donation_pickup_windows?: PickupWindow[] | null;
+          }) =>
+            (payload.success
+              ? payload.data?.donation_pickup_windows
+              : payload.donation_pickup_windows) ?? null
+        )
+        .catch(() => null),
+    ])
+      .then(([p, windows]) => {
         setParams(p);
         setSeuil(p.seuil_dormance_jours);
         setRayon(p.rayon_matching_km);
+        setPickupWindows(windows);
       })
       .catch(() => toast.error('Impossible de charger les paramètres'))
       .finally(() => setLoading(false));
@@ -155,6 +178,9 @@ export default function DonParametresPage() {
               associations auront du mal à venir récupérer.
             </p>
           </section>
+
+          {/* Créneaux hebdomadaires de récupération des dons */}
+          <PickupWindowsForm initial={pickupWindows} />
 
           <button
             onClick={handleSave}

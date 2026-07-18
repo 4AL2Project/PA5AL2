@@ -32,6 +32,7 @@ export interface RankedAssociation {
   pickup_sla_days: number;
   response_sla_hours: number;
   score: number;
+  score_pickup: number;
 }
 
 @Injectable()
@@ -117,25 +118,35 @@ export class DonationMatchingService {
     );
     const now = Date.now();
 
-    return eligible
-      .map(({ asso, distance }) => {
-        const rel = reliability.get(asso.association_id) ?? 0;
-        const equity = equityScore(asso.last_proposal_at, now);
-        const proximity = 1 - distance / asso.action_radius_km;
-        return {
-          association_id: asso.association_id,
-          name: asso.name,
-          contact_email: asso.contact_email,
-          distance_km: Math.round(distance * 10) / 10,
-          pickup_sla_days: asso.pickup_sla_days,
-          response_sla_hours: asso.response_sla_hours,
-          score:
-            WEIGHT_RELIABILITY * rel +
-            WEIGHT_EQUITY * equity +
-            WEIGHT_PROXIMITY * proximity,
-        };
-      })
-      .sort((a, b) => b.score - a.score);
+    const ranked = eligible.map(({ asso, distance }) => {
+      const rel = reliability.get(asso.association_id) ?? 0;
+      const equity = equityScore(asso.last_proposal_at, now);
+      const proximity = 1 - distance / asso.action_radius_km;
+      return {
+        association_id: asso.association_id,
+        name: asso.name,
+        contact_email: asso.contact_email,
+        distance_km: Math.round(distance * 10) / 10,
+        pickup_sla_days: asso.pickup_sla_days,
+        response_sla_hours: asso.response_sla_hours,
+        score_pickup: asso.score_pickup,
+        score:
+          WEIGHT_RELIABILITY * rel +
+          WEIGHT_EQUITY * equity +
+          WEIGHT_PROXIMITY * proximity,
+      };
+    });
+
+    // Tri primaire : score_pickup décroissant (fiabilité déclarée),
+    // secondaire : score pondéré décroissant, tertiaire : distance croissante
+    ranked.sort((a, b) => {
+      if (b.score_pickup !== a.score_pickup)
+        return b.score_pickup - a.score_pickup;
+      if (b.score !== a.score) return b.score - a.score;
+      return (a.distance_km ?? 999) - (b.distance_km ?? 999);
+    });
+
+    return ranked;
   }
 }
 

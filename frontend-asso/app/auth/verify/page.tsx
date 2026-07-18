@@ -3,6 +3,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { saveToken, verifyAssoToken } from '@/lib/api';
+import { SavelyLogo } from '@/components/savely-logo';
 
 type State = 'loading' | 'success' | 'expired' | 'invalid' | 'no_token';
 
@@ -24,10 +25,10 @@ function VerifyContent() {
       .then(({ access_token, is_onboarded }) => {
         saveToken(access_token);
         setState('success');
-        setTimeout(
-          () => router.replace(is_onboarded ? redirect : '/auth/setup'),
-          800
-        );
+        const stored = sessionStorage.getItem('savely_asso_redirect');
+        if (stored) sessionStorage.removeItem('savely_asso_redirect');
+        const dest = is_onboarded ? (stored ?? redirect) : '/auth/setup';
+        setTimeout(() => router.replace(dest), 800);
       })
       .catch((err: Error) => {
         setState(
@@ -40,9 +41,7 @@ function VerifyContent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm space-y-6 text-center">
         <div className="mb-8 flex items-center justify-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-            <span className="text-lg font-bold text-primary-foreground">S</span>
-          </div>
+          <SavelyLogo size={36} />
           <span className="text-xl font-bold text-foreground">Savely</span>
         </div>
 
@@ -96,8 +95,14 @@ function VerifyContent() {
             </div>
             <p className="font-semibold text-foreground">Ce lien a expiré</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Contactez l'équipe Savely pour recevoir un nouveau lien d'accès.
+              Demandez un nouveau lien de connexion.
             </p>
+            <a
+              href="/auth/login"
+              className="mt-5 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Se connecter →
+            </a>
           </div>
         )}
 
@@ -120,8 +125,14 @@ function VerifyContent() {
             </div>
             <p className="font-semibold text-foreground">Lien invalide</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Ce lien n'est pas valide. Contactez l'équipe Savely.
+              Ce lien n'est pas valide ou a déjà été utilisé.
             </p>
+            <a
+              href="/auth/login"
+              className="mt-5 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            >
+              Se connecter →
+            </a>
           </div>
         )}
       </div>

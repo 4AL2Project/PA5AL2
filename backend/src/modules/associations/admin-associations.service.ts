@@ -272,7 +272,7 @@ export class AdminAssociationsService {
         postal_code: dto.postal_code ?? '',
         agrement_numero: dto.agrement_numero ?? null,
         agrement_valide: dto.agrement_valide ?? false,
-        categories: dto.categories,
+        categories: dto.categories ?? [],
         pickup_windows: dto.pickup_windows
           ? (dto.pickup_windows as unknown as Prisma.InputJsonValue)
           : undefined,

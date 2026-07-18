@@ -23,6 +23,7 @@ import { DevModule } from './modules/dev/dev.module';
 import { DonationsModule } from './modules/donations/donations.module';
 import { IngestionModule } from './modules/ingestion/ingestion.module';
 import { InvitationModule } from './modules/invitation/invitation.module';
+import { LeadsModule } from './modules/leads/leads.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { OfferModule } from './modules/offer/offer.module';
 import { OrderModule } from './modules/order/order.module';
@@ -71,6 +72,7 @@ import { SchedulingModule } from './modules/scheduling/scheduling.module';
     OfferModule,
     OrderModule,
     CategoryModule,
+    LeadsModule,
     SchedulingModule,
     // Outils destructifs (reset/seed de la base) : opt-in via DEV_TOOLS_ENABLED.
     ...(config.devToolsEnabled ? [DevModule] : []),

@@ -1767,7 +1767,7 @@ async function seedDonationCycles(
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 
-async function main() {
+export async function runSeed() {
   console.log('🌱 Démarrage du seed complet...\n');
 
   await seedAdmin();
@@ -1836,9 +1836,13 @@ async function main() {
   console.log('─────────────────────────────────────────────────────────\n');
 }
 
-main()
-  .catch((e) => {
-    console.error('❌ Erreur seed :', e);
-    process.exit(1);
-  })
-  .finally(() => prisma.$disconnect());
+// Auto-exécution uniquement en lancement CLI direct (`ts-node seed.ts`),
+// pas lorsqu'un module applicatif (DevService) importe `runSeed`.
+if (require.main === module) {
+  runSeed()
+    .catch((e) => {
+      console.error('❌ Erreur seed :', e);
+      process.exit(1);
+    })
+    .finally(() => prisma.$disconnect());
+}

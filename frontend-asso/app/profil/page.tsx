@@ -4,12 +4,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { AssoLayout } from '@/components/asso-layout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { type AssoProfile, fetchProfile, updateProfile } from '@/lib/api';
 
 const CATEGORIES = ['Cosmétiques', 'Parapharmacie', 'Hygiène', 'Autre'];
-
-const inputCls =
-  'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-shadow focus:ring-2 focus:ring-ring';
 
 export default function ProfilPage() {
   const router = useRouter();
@@ -124,11 +124,10 @@ export default function ProfilPage() {
                 <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                   {label}
                 </label>
-                <input
+                <Input
                   type={type}
                   value={value}
                   onChange={(e) => set(e.target.value)}
-                  className={inputCls}
                 />
               </div>
             ))}
@@ -136,11 +135,11 @@ export default function ProfilPage() {
               <label className="mb-1.5 block text-xs font-medium text-muted-foreground">
                 Description
               </label>
-              <textarea
+              <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                className={`${inputCls} resize-none`}
+                className="resize-none"
               />
             </div>
           </div>
@@ -203,14 +202,15 @@ export default function ProfilPage() {
           </div>
         )}
 
-        <button
+        <Button
           onClick={handleSave}
           disabled={saving}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-40"
+          size="lg"
+          className="w-full"
         >
           {saving && <Loader2 className="h-4 w-4 animate-spin" />}
           {saving ? 'Enregistrement…' : 'Enregistrer les modifications'}
-        </button>
+        </Button>
       </div>
     </AssoLayout>
   );

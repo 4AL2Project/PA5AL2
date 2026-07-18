@@ -37,15 +37,16 @@ const INITIAL: FormState = {
 };
 
 const inputStyle: React.CSSProperties = {
-  padding: '11px 14px',
-  border: '1.5px solid #E5E7EB',
+  padding: '7px 10px',
+  border: '1px solid #E5E7EB',
   borderRadius: 10,
-  fontSize: 14,
+  fontSize: 13,
   outline: 'none',
   color: '#1A1A1A',
   width: '100%',
-  transition: 'border-color .2s',
-  background: '#fff',
+  transition: 'border-color .2s, box-shadow .2s',
+  background: '#FAFAFA',
+  boxShadow: '0 1px 2px 0 rgba(0,0,0,0.03)',
 };
 
 interface AdresseSuggestion {
@@ -172,7 +173,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
   };
 
   const focus = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) =>
-    (e.currentTarget.style.borderColor = '#4A9B8E');
+    (e.currentTarget.style.borderColor = '#009689');
   const blur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) =>
     (e.currentTarget.style.borderColor = '#E5E7EB');
 
@@ -249,7 +250,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
               style={{
                 width: 56,
                 height: 56,
-                background: '#F0F7F6',
+                background: '#e8f9f6',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
@@ -260,7 +261,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M5 13l4 4L19 7"
-                  stroke="#4A9B8E"
+                  stroke="#009689"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -287,7 +288,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
               onClick={onClose}
               style={{
                 marginTop: 24,
-                background: '#4A9B8E',
+                background: '#009689',
                 color: '#fff',
                 fontSize: 14,
                 fontWeight: 700,
@@ -308,14 +309,14 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
               <div
                 style={{
                   display: 'inline-block',
-                  background: '#F0F7F6',
+                  background: '#e8f9f6',
                   borderRadius: 100,
                   padding: '4px 12px',
                   marginBottom: 10,
                 }}
               >
                 <span
-                  style={{ fontSize: 12, fontWeight: 600, color: '#4A9B8E' }}
+                  style={{ fontSize: 12, fontWeight: 600, color: '#009689' }}
                 >
                   Inscription gratuite
                 </span>
@@ -333,7 +334,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
               </h2>
               <p style={{ fontSize: 14, color: '#6B7280' }}>
                 Tous les champs marqués{' '}
-                <span style={{ color: '#4A9B8E' }}>*</span> sont obligatoires.
+                <span style={{ color: '#009689' }}>*</span> sont obligatoires.
               </p>
             </div>
 
@@ -350,7 +351,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                   style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
                 >
                   Nom de l'association{' '}
-                  <span style={{ color: '#4A9B8E' }}>*</span>
+                  <span style={{ color: '#009689' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -408,7 +409,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 <label
                   style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
                 >
-                  Email de contact <span style={{ color: '#4A9B8E' }}>*</span>
+                  Email de contact <span style={{ color: '#009689' }}>*</span>
                 </label>
                 <input
                   type="email"
@@ -425,7 +426,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 <label
                   style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
                 >
-                  Téléphone <span style={{ color: '#4A9B8E' }}>*</span>
+                  Téléphone <span style={{ color: '#009689' }}>*</span>
                 </label>
                 <input
                   type="tel"
@@ -446,7 +447,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
               <label
                 style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
               >
-                Adresse <span style={{ color: '#4A9B8E' }}>*</span>
+                Adresse <span style={{ color: '#009689' }}>*</span>
               </label>
               <div style={{ position: 'relative' }}>
                 <input
@@ -501,7 +502,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                             borderBottom: '1px solid #F3F4F6',
                           }}
                           onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = '#F0F7F6')
+                            (e.currentTarget.style.background = '#e8f9f6')
                           }
                           onMouseLeave={(e) =>
                             (e.currentTarget.style.background = 'none')
@@ -528,7 +529,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 <label
                   style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
                 >
-                  Code postal <span style={{ color: '#4A9B8E' }}>*</span>
+                  Code postal <span style={{ color: '#009689' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -546,7 +547,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 <label
                   style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
                 >
-                  Ville <span style={{ color: '#4A9B8E' }}>*</span>
+                  Ville <span style={{ color: '#009689' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -568,7 +569,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                 style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
               >
                 Rayon d'action :{' '}
-                <strong style={{ color: '#4A9B8E' }}>
+                <strong style={{ color: '#009689' }}>
                   {form.action_radius_km} km
                 </strong>
               </label>
@@ -585,7 +586,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
                   onChange={(e) =>
                     set('action_radius_km', Number(e.target.value))
                   }
-                  style={{ flex: 1, accentColor: '#4A9B8E' }}
+                  style={{ flex: 1, accentColor: '#009689' }}
                 />
                 <span style={{ fontSize: 12, color: '#9CA3AF', minWidth: 32 }}>
                   100 km
@@ -635,7 +636,7 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
               type="submit"
               disabled={submitDisabled}
               style={{
-                background: '#4A9B8E',
+                background: '#009689',
                 color: '#fff',
                 fontSize: 15,
                 fontWeight: 700,
@@ -647,10 +648,10 @@ export function AssociationModal({ isOpen, onClose }: AssociationModalProps) {
               }}
               onMouseEnter={(e) => {
                 if (!submitDisabled)
-                  e.currentTarget.style.background = '#2D6B62';
+                  e.currentTarget.style.background = '#00786c';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#4A9B8E';
+                e.currentTarget.style.background = '#009689';
               }}
             >
               {loading ? 'Envoi en cours…' : 'Inscrire mon association →'}

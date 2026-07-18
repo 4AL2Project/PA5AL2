@@ -25,14 +25,14 @@ export function Associations() {
               <div
                 style={{
                   display: 'inline-block',
-                  background: '#F0F7F6',
+                  background: '#e8f9f6',
                   borderRadius: 100,
                   padding: '6px 16px',
                   marginBottom: 24,
                 }}
               >
                 <span
-                  style={{ fontSize: 13, fontWeight: 600, color: '#4A9B8E' }}
+                  style={{ fontSize: 13, fontWeight: 600, color: '#009689' }}
                 >
                   Pour les associations
                 </span>
@@ -91,7 +91,7 @@ export function Associations() {
                         marginTop: 2,
                         width: 20,
                         height: 20,
-                        background: '#F0F7F6',
+                        background: '#e8f9f6',
                         borderRadius: '50%',
                         display: 'flex',
                         alignItems: 'center',
@@ -106,7 +106,7 @@ export function Associations() {
                       >
                         <path
                           d="M2 5.5l2.5 2.5 4.5-4.5"
-                          stroke="#4A9B8E"
+                          stroke="#009689"
                           strokeWidth="1.8"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -121,24 +121,24 @@ export function Associations() {
               <button
                 onClick={() => setModalOpen(true)}
                 style={{
-                  background: '#4A9B8E',
+                  background: '#009689',
                   color: '#fff',
                   fontSize: 15,
                   fontWeight: 700,
                   padding: '15px 28px',
-                  borderRadius: 12,
+                  borderRadius: 10,
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 8,
                   cursor: 'pointer',
                   transition: 'background .2s',
-                  boxShadow: '0 4px 16px rgba(74,155,142,.3)',
+                  boxShadow: '0 4px 16px rgba(0, 150, 137,.3)',
                 }}
                 onMouseEnter={(e) =>
-                  (e.currentTarget.style.background = '#2D6B62')
+                  (e.currentTarget.style.background = '#00786c')
                 }
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = '#4A9B8E')
+                  (e.currentTarget.style.background = '#009689')
                 }
               >
                 Inscrire mon association →
@@ -170,14 +170,14 @@ export function Associations() {
                     background: '#fff',
                     borderRadius: 20,
                     boxShadow: '0 16px 48px rgba(0,0,0,.1)',
-                    border: '1px solid #EAF4F3',
+                    border: '1px solid #e8f9f6',
                     overflow: 'hidden',
                   }}
                 >
                   {/* Header */}
                   <div
                     style={{
-                      background: '#4A9B8E',
+                      background: '#009689',
                       padding: '16px 20px',
                       display: 'flex',
                       alignItems: 'center',
@@ -235,7 +235,7 @@ export function Associations() {
                         style={{
                           width: 40,
                           height: 40,
-                          background: '#F0F7F6',
+                          background: '#e8f9f6',
                           borderRadius: 10,
                           display: 'flex',
                           alignItems: 'center',
@@ -250,10 +250,10 @@ export function Associations() {
                         >
                           <path
                             d="M10 2C6.7 2 4 4.7 4 8c0 4 6 10 6 10s6-6 6-10c0-3.3-2.7-6-6-6z"
-                            fill="#4A9B8E"
+                            fill="#009689"
                             opacity=".3"
                           />
-                          <circle cx="10" cy="8" r="2.5" fill="#4A9B8E" />
+                          <circle cx="10" cy="8" r="2.5" fill="#009689" />
                         </svg>
                       </div>
                       <div>
@@ -278,7 +278,7 @@ export function Associations() {
                         borderRadius: 12,
                         padding: 14,
                         marginBottom: 16,
-                        border: '1px solid #EAF4F3',
+                        border: '1px solid #e8f9f6',
                       }}
                     >
                       <div
@@ -362,7 +362,7 @@ export function Associations() {
                     >
                       <button
                         style={{
-                          background: '#4A9B8E',
+                          background: '#009689',
                           color: '#fff',
                           fontSize: 13,
                           fontWeight: 700,

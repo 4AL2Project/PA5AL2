@@ -1,0 +1,5506 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Savely — Architecture (modèle C4)</title>
+    <style>
+      :root {
+        --bg: #f8fafc;
+        --card: #fff;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          Roboto,
+          sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+        line-height: 1.5;
+      }
+      header {
+        padding: 32px 24px 8px;
+        max-width: 1120px;
+        margin: 0 auto;
+      }
+      header h1 {
+        margin: 0 0 4px;
+        font-size: 26px;
+      }
+      header p {
+        margin: 0;
+        color: var(--muted);
+      }
+      main {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 16px 24px 64px;
+      }
+      .diagram {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 20px 20px 24px;
+        margin: 24px 0;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+      }
+      .diagram-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      .diagram-head h2 {
+        margin: 0 0 2px;
+        font-size: 19px;
+      }
+      .diagram-head p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13.5px;
+        max-width: 660px;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+      button {
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--ink);
+        border-radius: 8px;
+        padding: 7px 12px;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
+      }
+      button:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+      }
+      button.primary {
+        background: #4f46e5;
+        color: #fff;
+        border-color: #4f46e5;
+      }
+      button.primary:hover {
+        background: #4338ca;
+      }
+      .svg-wrap {
+        width: 100%;
+        overflow-x: auto;
+      }
+      .svg-wrap svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 14px;
+        font-size: 12.5px;
+        color: var(--muted);
+      }
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .legend i {
+        width: 13px;
+        height: 13px;
+        border-radius: 3px;
+        display: inline-block;
+      }
+      .l-person {
+        background: #08427b;
+      }
+      .l-container {
+        background: #438dd5;
+      }
+      .l-component {
+        background: #85bbf0;
+      }
+      .l-ext {
+        background: #8a8a8a;
+      }
+      .l-ko {
+        background: #c0392b;
+      }
+      footer {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 24px 48px;
+        color: var(--muted);
+        font-size: 12.5px;
+      }
+      code {
+        background: #f1f5f9;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Savely — Architecture (modèle C4)</h1>
+      <p>
+        Trois niveaux du modèle <strong>C4</strong> :
+        <strong>Contexte</strong> (qui utilise le système),
+        <strong>Conteneurs</strong> (les briques applicatives &amp; outils), et
+        <strong>Composants</strong> (vue dynamique de l'analyse du stock) — plus
+        la <strong>pipeline CI/CD</strong>. Chaque schéma est exportable en
+        <strong>SVG</strong> ou <strong>PNG</strong>.
+      </p>
+    </header>
+
+    <main>
+      <!-- ============================================================= -->
+      <!-- C4 — NIVEAU 1 : CONTEXTE                                       -->
+      <!-- ============================================================= -->
+      <section class="diagram">
+        <div class="diagram-head">
+          <div>
+            <h2>1. C4 — Niveau 1 : Contexte du système</h2>
+            <p>
+              Qui interagit avec Savely et quels systèmes externes il utilise.
+            </p>
+          </div>
+          <div class="actions">
+            <button
+              class="primary"
+              onclick="downloadSVG('svg-context', 'savely-c4-1-contexte')"
+            >
+              ⬇ SVG
+            </button>
+            <button
+              onclick="downloadPNG('svg-context', 'savely-c4-1-contexte')"
+            >
+              ⬇ PNG
+            </button>
+          </div>
+        </div>
+        <div class="svg-wrap">
+          <svg
+            id="svg-context"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 960 600"
+            role="img"
+            aria-label="C4 Niveau 1 Contexte"
+          >
+            <style>
+              #svg-context text {
+                font-family:
+                  ui-sans-serif,
+                  system-ui,
+                  -apple-system,
+                  'Segoe UI',
+                  Roboto,
+                  sans-serif;
+              }
+              #svg-context .b {
+                stroke-width: 1.5;
+              }
+              #svg-context .person {
+                fill: #08427b;
+                stroke: #052e56;
+              }
+              #svg-context .system {
+                fill: #1168bd;
+                stroke: #0b4a86;
+              }
+              #svg-context .ext {
+                fill: #8a8a8a;
+                stroke: #5f5f5f;
+              }
+              #svg-context .tag {
+                font-size: 10px;
+                fill: #dbeafe;
+                font-style: italic;
+              }
+              #svg-context .name {
+                font-size: 15px;
+                font-weight: 700;
+                fill: #fff;
+              }
+              #svg-context .desc {
+                font-size: 11px;
+                fill: #e5edf6;
+              }
+              #svg-context .edge {
+                fill: none;
+                stroke: #8497ab;
+                stroke-width: 1.6;
+              }
+              #svg-context .el {
+                font-size: 10.5px;
+                fill: #334155;
+                font-weight: 500;
+              }
+            </style>
+            <defs>
+              <marker
+                id="a-ctx"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#8497ab" />
+              </marker>
+            </defs>
+
+            <!-- Persons -->
+            <g>
+              <rect
+                class="b person"
+                x="80"
+                y="44"
+                width="200"
+                height="94"
+                rx="10"
+              />
+              <text class="tag" x="180" y="70" text-anchor="middle">
+                « Personne »
+              </text>
+              <text class="name" x="180" y="94" text-anchor="middle">
+                Pharmacien
+              </text>
+              <text class="desc" x="180" y="114" text-anchor="middle">
+                Titulaire / Préparateur
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b person"
+                x="380"
+                y="44"
+                width="200"
+                height="94"
+                rx="10"
+              />
+              <text class="tag" x="480" y="70" text-anchor="middle">
+                « Personne »
+              </text>
+              <text class="name" x="480" y="94" text-anchor="middle">
+                Association
+              </text>
+              <text class="desc" x="480" y="114" text-anchor="middle">
+                Bénéficiaire de dons
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b person"
+                x="680"
+                y="44"
+                width="200"
+                height="94"
+                rx="10"
+              />
+              <text class="tag" x="780" y="70" text-anchor="middle">
+                « Personne »
+              </text>
+              <text class="name" x="780" y="94" text-anchor="middle">
+                Client B2C
+              </text>
+              <text class="desc" x="780" y="114" text-anchor="middle">
+                Click &amp; collect (V2)
+              </text>
+            </g>
+
+            <!-- Central system -->
+            <rect
+              class="b system"
+              x="330"
+              y="250"
+              width="300"
+              height="120"
+              rx="12"
+            />
+            <text class="tag" x="480" y="284" text-anchor="middle">
+              « Système »
+            </text>
+            <text
+              class="name"
+              x="480"
+              y="312"
+              text-anchor="middle"
+              style="font-size: 20px"
+            >
+              Savely
+            </text>
+            <text class="desc" x="480" y="336" text-anchor="middle">
+              Détection du stock dormant &amp;
+            </text>
+            <text class="desc" x="480" y="352" text-anchor="middle">
+              recommandation d'actions
+            </text>
+
+            <!-- External source -->
+            <g>
+              <rect
+                class="b ext"
+                x="40"
+                y="250"
+                width="180"
+                height="94"
+                rx="10"
+              />
+              <text class="tag" x="130" y="278" text-anchor="middle">
+                « Système externe »
+              </text>
+              <text class="name" x="130" y="302" text-anchor="middle">
+                Logiciel LGO
+              </text>
+              <text class="desc" x="130" y="322" text-anchor="middle">
+                Exports stock / ventes
+              </text>
+            </g>
+
+            <!-- External services -->
+            <g>
+              <rect
+                class="b ext"
+                x="70"
+                y="460"
+                width="190"
+                height="92"
+                rx="10"
+              />
+              <text class="tag" x="165" y="488" text-anchor="middle">
+                « Système externe »
+              </text>
+              <text class="name" x="165" y="512" text-anchor="middle">
+                Resend
+              </text>
+              <text class="desc" x="165" y="532" text-anchor="middle">
+                Emails
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b ext"
+                x="345"
+                y="460"
+                width="190"
+                height="92"
+                rx="10"
+              />
+              <text class="tag" x="440" y="488" text-anchor="middle">
+                « Système externe »
+              </text>
+              <text class="name" x="440" y="512" text-anchor="middle">
+                Nominatim
+              </text>
+              <text class="desc" x="440" y="532" text-anchor="middle">
+                Géolocalisation
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b ext"
+                x="620"
+                y="460"
+                width="190"
+                height="92"
+                rx="10"
+              />
+              <text class="tag" x="715" y="488" text-anchor="middle">
+                « Système externe »
+              </text>
+              <text class="name" x="715" y="512" text-anchor="middle">
+                Sentry
+              </text>
+              <text class="desc" x="715" y="532" text-anchor="middle">
+                Supervision
+              </text>
+            </g>
+
+            <!-- Relationships -->
+            <path class="edge" marker-end="url(#a-ctx)" d="M130,250 L152,140" />
+            <text class="el" x="70" y="200" text-anchor="middle">
+              fournit les
+            </text>
+            <text class="el" x="70" y="214" text-anchor="middle">exports</text>
+
+            <path
+              class="edge"
+              marker-end="url(#a-ctx)"
+              d="M185,138 C230,200 340,240 392,262"
+            />
+            <text class="el" x="255" y="205" text-anchor="middle">
+              dépose ses fichiers,
+            </text>
+            <text class="el" x="255" y="219" text-anchor="middle">
+              consulte les actions
+            </text>
+
+            <path class="edge" marker-end="url(#a-ctx)" d="M480,138 L480,248" />
+            <text class="el" x="558" y="198" text-anchor="middle">
+              reçoit les dons
+            </text>
+            <text class="el" x="558" y="212" text-anchor="middle">
+              &amp; le Cerfa
+            </text>
+
+            <path
+              class="edge"
+              marker-end="url(#a-ctx)"
+              d="M780,138 C740,200 620,240 566,264"
+            />
+            <text class="el" x="705" y="205" text-anchor="middle">
+              réserve les
+            </text>
+            <text class="el" x="705" y="219" text-anchor="middle">
+              offres (V2)
+            </text>
+
+            <path
+              class="edge"
+              marker-end="url(#a-ctx)"
+              d="M410,370 C320,400 220,430 185,458"
+            />
+            <text class="el" x="255" y="424" text-anchor="middle">
+              envoie les emails
+            </text>
+
+            <path class="edge" marker-end="url(#a-ctx)" d="M470,370 L448,458" />
+            <text class="el" x="518" y="418" text-anchor="middle">
+              géolocalise
+            </text>
+
+            <path
+              class="edge"
+              marker-end="url(#a-ctx)"
+              d="M560,370 C630,400 690,430 712,458"
+            />
+            <text class="el" x="668" y="424" text-anchor="middle">
+              remonte les erreurs
+            </text>
+          </svg>
+        </div>
+        <div class="legend">
+          <span><i class="l-person"></i> Personne</span>
+          <span
+            ><i class="l-container" style="background: #1168bd"></i> Système
+            (Savely)</span
+          >
+          <span><i class="l-ext"></i> Système externe</span>
+        </div>
+      </section>
+
+      <!-- ============================================================= -->
+      <!-- C4 — NIVEAU 2 : CONTENEURS                                     -->
+      <!-- ============================================================= -->
+      <section class="diagram">
+        <div class="diagram-head">
+          <div>
+            <h2>2. C4 — Niveau 2 : Conteneurs</h2>
+            <p>
+              Les briques applicatives de Savely (apps, API, worker,
+              planificateur, données) et leurs relations avec les outils
+              externes.
+            </p>
+          </div>
+          <div class="actions">
+            <button
+              class="primary"
+              onclick="downloadSVG('svg-container', 'savely-c4-2-conteneurs')"
+            >
+              ⬇ SVG
+            </button>
+            <button
+              onclick="downloadPNG('svg-container', 'savely-c4-2-conteneurs')"
+            >
+              ⬇ PNG
+            </button>
+          </div>
+        </div>
+        <div class="svg-wrap">
+          <svg
+            id="svg-container"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 980 700"
+            role="img"
+            aria-label="C4 Niveau 2 Conteneurs"
+          >
+            <style>
+              #svg-container text {
+                font-family:
+                  ui-sans-serif,
+                  system-ui,
+                  -apple-system,
+                  'Segoe UI',
+                  Roboto,
+                  sans-serif;
+              }
+              #svg-container .b {
+                stroke-width: 1.5;
+              }
+              #svg-container .person {
+                fill: #08427b;
+                stroke: #052e56;
+              }
+              #svg-container .container {
+                fill: #438dd5;
+                stroke: #2e6295;
+              }
+              #svg-container .store {
+                fill: #3a7ab8;
+                stroke: #255182;
+              }
+              #svg-container .queue {
+                fill: #c2578f;
+                stroke: #8f3a67;
+              }
+              #svg-container .ext {
+                fill: #8a8a8a;
+                stroke: #5f5f5f;
+              }
+              #svg-container .tag {
+                font-size: 9.5px;
+                fill: #e3ecf6;
+                font-style: italic;
+              }
+              #svg-container .name {
+                font-size: 13.5px;
+                font-weight: 700;
+                fill: #fff;
+              }
+              #svg-container .desc {
+                font-size: 10.5px;
+                fill: #eaf1f8;
+              }
+              #svg-container .edge {
+                fill: none;
+                stroke: #8497ab;
+                stroke-width: 1.5;
+              }
+              #svg-container .el {
+                font-size: 10px;
+                fill: #334155;
+                font-weight: 500;
+              }
+              #svg-container .boundary {
+                fill: none;
+                stroke: #7c3aed;
+                stroke-width: 1.5;
+                stroke-dasharray: 6 5;
+              }
+              #svg-container .bt {
+                font-size: 12px;
+                fill: #7c3aed;
+                font-weight: 700;
+              }
+            </style>
+            <defs>
+              <marker
+                id="a-cnt"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#8497ab" />
+              </marker>
+            </defs>
+
+            <!-- Boundary -->
+            <rect
+              class="boundary"
+              x="200"
+              y="45"
+              width="580"
+              height="620"
+              rx="14"
+            />
+            <text class="bt" x="215" y="66">Système Savely</text>
+
+            <!-- Persons -->
+            <g>
+              <rect
+                class="b person"
+                x="25"
+                y="70"
+                width="150"
+                height="74"
+                rx="9"
+              />
+              <text class="tag" x="100" y="94" text-anchor="middle">
+                « Personne »
+              </text>
+              <text class="name" x="100" y="116" text-anchor="middle">
+                Pharmacien
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b person"
+                x="25"
+                y="175"
+                width="150"
+                height="74"
+                rx="9"
+              />
+              <text class="tag" x="100" y="199" text-anchor="middle">
+                « Personne »
+              </text>
+              <text class="name" x="100" y="221" text-anchor="middle">
+                Association
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b person"
+                x="25"
+                y="280"
+                width="150"
+                height="74"
+                rx="9"
+              />
+              <text class="tag" x="100" y="304" text-anchor="middle">
+                « Personne »
+              </text>
+              <text class="name" x="100" y="326" text-anchor="middle">
+                Client B2C
+              </text>
+            </g>
+
+            <!-- Client containers -->
+            <g>
+              <rect
+                class="b container"
+                x="225"
+                y="70"
+                width="180"
+                height="74"
+                rx="9"
+              />
+              <text class="tag" x="315" y="93" text-anchor="middle">
+                « Conteneur »
+              </text>
+              <text class="name" x="315" y="114" text-anchor="middle">
+                Front Pharmacie
+              </text>
+              <text class="desc" x="315" y="132" text-anchor="middle">
+                Dashboard &amp; imports
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b container"
+                x="225"
+                y="175"
+                width="180"
+                height="74"
+                rx="9"
+              />
+              <text class="tag" x="315" y="198" text-anchor="middle">
+                « Conteneur »
+              </text>
+              <text class="name" x="315" y="219" text-anchor="middle">
+                Front Association
+              </text>
+              <text class="desc" x="315" y="237" text-anchor="middle">
+                Dons &amp; Cerfa
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b container"
+                x="225"
+                y="280"
+                width="180"
+                height="74"
+                rx="9"
+              />
+              <text class="tag" x="315" y="303" text-anchor="middle">
+                « Conteneur »
+              </text>
+              <text class="name" x="315" y="324" text-anchor="middle">
+                App Mobile
+              </text>
+              <text class="desc" x="315" y="342" text-anchor="middle">
+                Click &amp; collect (V2)
+              </text>
+            </g>
+
+            <!-- API + async -->
+            <g>
+              <rect
+                class="b container"
+                x="470"
+                y="95"
+                width="190"
+                height="110"
+                rx="9"
+              />
+              <text class="tag" x="565" y="124" text-anchor="middle">
+                « Conteneur »
+              </text>
+              <text
+                class="name"
+                x="565"
+                y="150"
+                text-anchor="middle"
+                style="font-size: 16px"
+              >
+                API
+              </text>
+              <text class="desc" x="565" y="170" text-anchor="middle">
+                Point d'entrée &amp; temps réel,
+              </text>
+              <text class="desc" x="565" y="186" text-anchor="middle">
+                orchestration des jobs
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b queue"
+                x="470"
+                y="250"
+                width="190"
+                height="74"
+                rx="9"
+              />
+              <text class="tag" x="565" y="273" text-anchor="middle">
+                « Conteneur »
+              </text>
+              <text class="name" x="565" y="294" text-anchor="middle">
+                Redis · BullMQ
+              </text>
+              <text class="desc" x="565" y="312" text-anchor="middle">
+                File de messages
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b container"
+                x="470"
+                y="360"
+                width="190"
+                height="74"
+                rx="9"
+              />
+              <text class="tag" x="565" y="383" text-anchor="middle">
+                « Conteneur »
+              </text>
+              <text class="name" x="565" y="404" text-anchor="middle">
+                Worker
+              </text>
+              <text class="desc" x="565" y="422" text-anchor="middle">
+                Ingestion &amp; maintenance
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b container"
+                x="470"
+                y="470"
+                width="190"
+                height="74"
+                rx="9"
+              />
+              <text class="tag" x="565" y="493" text-anchor="middle">
+                « Conteneur »
+              </text>
+              <text class="name" x="565" y="514" text-anchor="middle">
+                Scheduler
+              </text>
+              <text class="desc" x="565" y="532" text-anchor="middle">
+                Tâches planifiées
+              </text>
+            </g>
+
+            <!-- Data stores -->
+            <g>
+              <rect
+                class="b store"
+                x="215"
+                y="490"
+                width="180"
+                height="74"
+                rx="9"
+              />
+              <text class="tag" x="305" y="513" text-anchor="middle">
+                « Base de données »
+              </text>
+              <text class="name" x="305" y="534" text-anchor="middle">
+                PostgreSQL
+              </text>
+              <text class="desc" x="305" y="552" text-anchor="middle">
+                Source de vérité
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b store"
+                x="215"
+                y="580"
+                width="180"
+                height="70"
+                rx="9"
+              />
+              <text class="tag" x="305" y="602" text-anchor="middle">
+                « Stockage »
+              </text>
+              <text class="name" x="305" y="623" text-anchor="middle">S3</text>
+              <text class="desc" x="305" y="641" text-anchor="middle">
+                Fichiers d'import
+              </text>
+            </g>
+
+            <!-- External services -->
+            <g>
+              <rect
+                class="b ext"
+                x="820"
+                y="95"
+                width="150"
+                height="70"
+                rx="9"
+              />
+              <text class="tag" x="895" y="118" text-anchor="middle">
+                « externe »
+              </text>
+              <text class="name" x="895" y="139" text-anchor="middle">
+                Resend
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b ext"
+                x="820"
+                y="210"
+                width="150"
+                height="70"
+                rx="9"
+              />
+              <text class="tag" x="895" y="233" text-anchor="middle">
+                « externe »
+              </text>
+              <text class="name" x="895" y="254" text-anchor="middle">
+                Nominatim
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b ext"
+                x="820"
+                y="330"
+                width="150"
+                height="70"
+                rx="9"
+              />
+              <text class="tag" x="895" y="353" text-anchor="middle">
+                « externe »
+              </text>
+              <text class="name" x="895" y="374" text-anchor="middle">
+                Sentry
+              </text>
+            </g>
+
+            <!-- Person -> front -->
+            <path class="edge" marker-end="url(#a-cnt)" d="M175,107 L223,107" />
+            <path class="edge" marker-end="url(#a-cnt)" d="M175,212 L223,212" />
+            <path class="edge" marker-end="url(#a-cnt)" d="M175,317 L223,317" />
+            <text class="el" x="199" y="99" text-anchor="middle">utilise</text>
+
+            <!-- front/mobile -> API -->
+            <path class="edge" marker-end="url(#a-cnt)" d="M405,107 L468,128" />
+            <path class="edge" marker-end="url(#a-cnt)" d="M405,212 L468,160" />
+            <path class="edge" marker-end="url(#a-cnt)" d="M405,317 L468,190" />
+            <text class="el" x="438" y="245" text-anchor="middle">
+              requêtes + temps réel
+            </text>
+
+            <!-- API -> queue -->
+            <path class="edge" marker-end="url(#a-cnt)" d="M565,205 L565,248" />
+            <text class="el" x="628" y="230" text-anchor="middle">
+              enfile les jobs
+            </text>
+            <!-- queue -> worker -->
+            <path class="edge" marker-end="url(#a-cnt)" d="M565,324 L565,358" />
+            <text class="el" x="622" y="345" text-anchor="middle">
+              distribue
+            </text>
+            <!-- scheduler -> queue -->
+            <path
+              class="edge"
+              marker-end="url(#a-cnt)"
+              d="M660,500 C740,500 740,300 662,290"
+            />
+            <text class="el" x="726" y="400" text-anchor="middle">
+              planifie
+            </text>
+
+            <!-- API -> DB -->
+            <path
+              class="edge"
+              marker-end="url(#a-cnt)"
+              d="M490,205 C420,300 340,430 320,488"
+            />
+            <text class="el" x="360" y="360" text-anchor="middle">
+              lit / écrit
+            </text>
+            <!-- API -> S3 -->
+            <path
+              class="edge"
+              marker-end="url(#a-cnt)"
+              d="M545,205 C520,360 430,540 397,600"
+            />
+            <text class="el" x="470" y="450" text-anchor="middle">archive</text>
+            <!-- Worker -> DB -->
+            <path
+              class="edge"
+              marker-end="url(#a-cnt)"
+              d="M470,410 C430,450 380,480 372,502"
+            />
+            <text class="el" x="405" y="475" text-anchor="middle">
+              lit / écrit
+            </text>
+
+            <!-- API -> ext -->
+            <path class="edge" marker-end="url(#a-cnt)" d="M660,125 L818,128" />
+            <text class="el" x="740" y="118" text-anchor="middle">emails</text>
+            <path class="edge" marker-end="url(#a-cnt)" d="M660,150 L818,238" />
+            <text class="el" x="742" y="205" text-anchor="middle">géoloc.</text>
+            <path
+              class="edge"
+              marker-end="url(#a-cnt)"
+              d="M660,190 C720,260 780,320 818,352"
+            />
+            <path
+              class="edge"
+              marker-end="url(#a-cnt)"
+              d="M660,395 C720,395 780,375 818,368"
+            />
+            <text class="el" x="742" y="330" text-anchor="middle">erreurs</text>
+          </svg>
+        </div>
+        <div class="legend">
+          <span><i class="l-person"></i> Personne</span>
+          <span><i class="l-container"></i> Conteneur</span>
+          <span
+            ><i class="l-container" style="background: #3a7ab8"></i> Données /
+            stockage</span
+          >
+          <span
+            ><i class="l-container" style="background: #c2578f"></i> File de
+            messages</span
+          >
+          <span><i class="l-ext"></i> Système externe</span>
+        </div>
+      </section>
+
+      <!-- ============================================================= -->
+      <!-- C4 — NIVEAU 3 : COMPOSANTS (DYNAMIQUE)                        -->
+      <!-- ============================================================= -->
+      <section class="diagram">
+        <div class="diagram-head">
+          <div>
+            <h2>3. C4 — Niveau 3 : Composants (analyse du stock)</h2>
+            <p>
+              Vue dynamique numérotée : du dépôt des fichiers jusqu'au calcul du
+              risque et aux actions. Composants internes de l'API &amp; du
+              Worker.
+            </p>
+          </div>
+          <div class="actions">
+            <button
+              class="primary"
+              onclick="downloadSVG('svg-component', 'savely-c4-3-composants')"
+            >
+              ⬇ SVG
+            </button>
+            <button
+              onclick="downloadPNG('svg-component', 'savely-c4-3-composants')"
+            >
+              ⬇ PNG
+            </button>
+          </div>
+        </div>
+        <div class="svg-wrap">
+          <svg
+            id="svg-component"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 980 970"
+            role="img"
+            aria-label="C4 Niveau 3 Composants analyse du stock"
+          >
+            <style>
+              #svg-component text {
+                font-family:
+                  ui-sans-serif,
+                  system-ui,
+                  -apple-system,
+                  'Segoe UI',
+                  Roboto,
+                  sans-serif;
+              }
+              #svg-component .b {
+                stroke-width: 1.5;
+              }
+              #svg-component .person {
+                fill: #08427b;
+                stroke: #052e56;
+              }
+              #svg-component .component {
+                fill: #85bbf0;
+                stroke: #5d82a8;
+              }
+              #svg-component .queue {
+                fill: #e6a3c8;
+                stroke: #b06b92;
+              }
+              #svg-component .store {
+                fill: #7fb0dc;
+                stroke: #4f7ba6;
+              }
+              #svg-component .ko {
+                fill: #e79a92;
+                stroke: #b5453a;
+              }
+              #svg-component .cron {
+                fill: #d8c7f0;
+                stroke: #9a78d0;
+              }
+              #svg-component .tag {
+                font-size: 9.5px;
+                fill: #1e3a5f;
+                font-style: italic;
+              }
+              #svg-component .tagw {
+                font-size: 9.5px;
+                fill: #dbeafe;
+                font-style: italic;
+              }
+              #svg-component .name {
+                font-size: 13.5px;
+                font-weight: 700;
+                fill: #0f2540;
+              }
+              #svg-component .namew {
+                font-size: 13.5px;
+                font-weight: 700;
+                fill: #fff;
+              }
+              #svg-component .desc {
+                font-size: 10.5px;
+                fill: #28425f;
+              }
+              #svg-component .edge {
+                fill: none;
+                stroke: #5f7794;
+                stroke-width: 1.8;
+              }
+              #svg-component .edge-ko {
+                fill: none;
+                stroke: #c0392b;
+                stroke-width: 1.6;
+                stroke-dasharray: 6 4;
+              }
+              #svg-component .edge-ok {
+                fill: none;
+                stroke: #1e8449;
+                stroke-width: 1.8;
+                stroke-dasharray: 6 4;
+              }
+              #svg-component .edge-cron {
+                fill: none;
+                stroke: #7c3aed;
+                stroke-width: 1.6;
+                stroke-dasharray: 4 4;
+              }
+              #svg-component .el {
+                font-size: 10px;
+                fill: #334155;
+                font-weight: 500;
+              }
+              #svg-component .boundary {
+                fill: none;
+                stroke: #7c3aed;
+                stroke-width: 1.5;
+                stroke-dasharray: 6 5;
+              }
+              #svg-component .bt {
+                font-size: 12px;
+                fill: #7c3aed;
+                font-weight: 700;
+              }
+              #svg-component .badge {
+                fill: #0f172a;
+              }
+              #svg-component .bnum {
+                fill: #fff;
+                font-size: 11px;
+                font-weight: 800;
+              }
+            </style>
+            <defs>
+              <marker
+                id="a-cmp"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#5f7794" />
+              </marker>
+              <marker
+                id="a-ko"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#c0392b" />
+              </marker>
+              <marker
+                id="a-ok"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#1e8449" />
+              </marker>
+              <marker
+                id="a-cron"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#7c3aed" />
+              </marker>
+            </defs>
+
+            <!-- Boundary -->
+            <rect
+              class="boundary"
+              x="285"
+              y="95"
+              width="410"
+              height="855"
+              rx="14"
+            />
+            <text class="bt" x="300" y="116">API &amp; Worker</text>
+
+            <!-- Pharmacien -->
+            <g>
+              <rect
+                class="b person"
+                x="45"
+                y="120"
+                width="190"
+                height="76"
+                rx="10"
+              />
+              <text class="tagw" x="140" y="146" text-anchor="middle">
+                « Personne »
+              </text>
+              <text class="namew" x="140" y="168" text-anchor="middle">
+                Pharmacien
+              </text>
+            </g>
+
+            <!-- Main column components -->
+            <g>
+              <rect
+                class="b component"
+                x="300"
+                y="120"
+                width="360"
+                height="76"
+                rx="10"
+              />
+              <text class="tag" x="480" y="145" text-anchor="middle">
+                « Composant »
+              </text>
+              <text class="name" x="480" y="167" text-anchor="middle">
+                Contrôleur Upload
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b component"
+                x="300"
+                y="245"
+                width="360"
+                height="76"
+                rx="10"
+              />
+              <text class="tag" x="480" y="270" text-anchor="middle">
+                « Composant »
+              </text>
+              <text class="name" x="480" y="292" text-anchor="middle">
+                Service Ingestion
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b queue"
+                x="300"
+                y="370"
+                width="360"
+                height="76"
+                rx="10"
+              />
+              <text class="tag" x="480" y="395" text-anchor="middle">
+                « File »
+              </text>
+              <text class="name" x="480" y="417" text-anchor="middle">
+                Redis · BullMQ
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b component"
+                x="300"
+                y="495"
+                width="360"
+                height="90"
+                rx="10"
+              />
+              <text class="tag" x="480" y="521" text-anchor="middle">
+                « Composant »
+              </text>
+              <text class="name" x="480" y="543" text-anchor="middle">
+                Worker Ingestion
+              </text>
+              <text class="desc" x="480" y="562" text-anchor="middle">
+                orchestration du traitement
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b component"
+                x="300"
+                y="730"
+                width="360"
+                height="90"
+                rx="10"
+              />
+              <text class="tag" x="480" y="756" text-anchor="middle">
+                « Composant »
+              </text>
+              <text class="name" x="480" y="778" text-anchor="middle">
+                Service d'analyse
+              </text>
+              <text class="desc" x="480" y="797" text-anchor="middle">
+                classe safe / high / critical
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b component"
+                x="300"
+                y="865"
+                width="360"
+                height="76"
+                rx="10"
+              />
+              <text class="tag" x="480" y="890" text-anchor="middle">
+                « Composant »
+              </text>
+              <text class="name" x="480" y="912" text-anchor="middle">
+                Centre d'actions
+              </text>
+            </g>
+
+            <!-- Side components -->
+            <g>
+              <rect
+                class="b component"
+                x="60"
+                y="495"
+                width="190"
+                height="90"
+                rx="10"
+              />
+              <text class="tag" x="155" y="521" text-anchor="middle">
+                « Composant »
+              </text>
+              <text class="name" x="155" y="543" text-anchor="middle">
+                Parseur /
+              </text>
+              <text class="name" x="155" y="561" text-anchor="middle">
+                Validateur
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b ko"
+                x="60"
+                y="640"
+                width="190"
+                height="76"
+                rx="10"
+              />
+              <text
+                class="name"
+                x="155"
+                y="672"
+                text-anchor="middle"
+                style="fill: #7a241b"
+              >
+                Import ÉCHOUÉ
+              </text>
+              <text
+                class="desc"
+                x="155"
+                y="692"
+                text-anchor="middle"
+                style="fill: #7a241b"
+              >
+                tout-ou-rien
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b store"
+                x="730"
+                y="245"
+                width="200"
+                height="76"
+                rx="10"
+              />
+              <text class="tag" x="830" y="270" text-anchor="middle">
+                « Stockage »
+              </text>
+              <text class="name" x="830" y="292" text-anchor="middle">S3</text>
+            </g>
+            <g>
+              <rect
+                class="b store"
+                x="730"
+                y="500"
+                width="200"
+                height="80"
+                rx="10"
+              />
+              <text class="tag" x="830" y="526" text-anchor="middle">
+                « Base de données »
+              </text>
+              <text class="name" x="830" y="548" text-anchor="middle">
+                PostgreSQL
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b component"
+                x="730"
+                y="730"
+                width="200"
+                height="90"
+                rx="10"
+              />
+              <text class="tag" x="830" y="756" text-anchor="middle">
+                « Composant »
+              </text>
+              <text class="name" x="830" y="778" text-anchor="middle">
+                Calculateur
+              </text>
+              <text class="name" x="830" y="796" text-anchor="middle">
+                de risque
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b cron"
+                x="60"
+                y="730"
+                width="190"
+                height="90"
+                rx="10"
+              />
+              <text
+                class="tag"
+                x="155"
+                y="758"
+                text-anchor="middle"
+                style="fill: #4c2889"
+              >
+                « planifié »
+              </text>
+              <text
+                class="name"
+                x="155"
+                y="780"
+                text-anchor="middle"
+                style="fill: #4c2889"
+              >
+                Cron quotidien
+              </text>
+              <text
+                class="desc"
+                x="155"
+                y="799"
+                text-anchor="middle"
+                style="fill: #4c2889"
+              >
+                2h — réanalyse
+              </text>
+            </g>
+
+            <!-- Flows with numbered badges -->
+            <!-- 1 Pharmacien -> Controleur -->
+            <path class="edge" marker-end="url(#a-cmp)" d="M235,158 L298,158" />
+            <circle class="badge" cx="266" cy="145" r="10" />
+            <text class="bnum" x="266" y="149" text-anchor="middle">1</text>
+            <text class="el" x="266" y="178" text-anchor="middle">
+              dépose products + sales
+            </text>
+
+            <!-- 2 Controleur -> Service Ingestion -->
+            <path class="edge" marker-end="url(#a-cmp)" d="M480,196 L480,243" />
+            <circle class="badge" cx="480" cy="220" r="10" />
+            <text class="bnum" x="480" y="224" text-anchor="middle">2</text>
+            <text class="el" x="560" y="224" text-anchor="middle">
+              crée l'import
+            </text>
+
+            <!-- 3 Service Ingestion -> S3 -->
+            <path class="edge" marker-end="url(#a-cmp)" d="M660,283 L728,283" />
+            <circle class="badge" cx="694" cy="270" r="10" />
+            <text class="bnum" x="694" y="274" text-anchor="middle">3</text>
+            <text class="el" x="694" y="303" text-anchor="middle">archive</text>
+
+            <!-- 4 Service Ingestion -> File -->
+            <path class="edge" marker-end="url(#a-cmp)" d="M480,321 L480,368" />
+            <circle class="badge" cx="480" cy="345" r="10" />
+            <text class="bnum" x="480" y="349" text-anchor="middle">4</text>
+            <text class="el" x="565" y="349" text-anchor="middle">
+              enfile le job (202)
+            </text>
+
+            <!-- 5 File -> Worker -->
+            <path class="edge" marker-end="url(#a-cmp)" d="M480,446 L480,493" />
+            <circle class="badge" cx="480" cy="470" r="10" />
+            <text class="bnum" x="480" y="474" text-anchor="middle">5</text>
+            <text class="el" x="546" y="474" text-anchor="middle">
+              distribue
+            </text>
+
+            <!-- 6 Worker -> Parseur -->
+            <path class="edge" marker-end="url(#a-cmp)" d="M300,540 L252,540" />
+            <circle class="badge" cx="276" cy="527" r="10" />
+            <text class="bnum" x="276" y="531" text-anchor="middle">6</text>
+            <text class="el" x="276" y="560" text-anchor="middle">
+              parse &amp; valide
+            </text>
+
+            <!-- 7 Parseur -> Echoue -->
+            <path
+              class="edge-ko"
+              marker-end="url(#a-ko)"
+              d="M155,585 L155,638"
+            />
+            <circle class="badge" cx="155" cy="612" r="10" />
+            <text class="bnum" x="155" y="616" text-anchor="middle">7</text>
+            <text
+              class="el"
+              x="210"
+              y="616"
+              text-anchor="middle"
+              style="fill: #b5453a"
+            >
+              si erreur
+            </text>
+
+            <!-- 8 Worker -> DB -->
+            <path class="edge" marker-end="url(#a-cmp)" d="M660,540 L728,540" />
+            <circle class="badge" cx="694" cy="527" r="10" />
+            <text class="bnum" x="694" y="531" text-anchor="middle">8</text>
+            <text class="el" x="694" y="560" text-anchor="middle">
+              écrit produits + ventes
+            </text>
+
+            <!-- 9 Worker -> Service analyse -->
+            <path class="edge" marker-end="url(#a-cmp)" d="M480,585 L480,728" />
+            <circle class="badge" cx="480" cy="656" r="10" />
+            <text class="bnum" x="480" y="660" text-anchor="middle">9</text>
+            <text class="el" x="560" y="660" text-anchor="middle">
+              déclenche l'analyse
+            </text>
+
+            <!-- 10 Service analyse -> Calculateur -->
+            <path class="edge" marker-end="url(#a-cmp)" d="M660,775 L728,775" />
+            <circle class="badge" cx="694" cy="762" r="10" />
+            <text class="bnum" x="694" y="766" text-anchor="middle">10</text>
+            <text class="el" x="694" y="805" text-anchor="middle">
+              days_of_cover, capital_locked
+            </text>
+
+            <!-- 11 Service analyse -> Centre actions -->
+            <path class="edge" marker-end="url(#a-cmp)" d="M480,820 L480,863" />
+            <circle class="badge" cx="480" cy="842" r="10" />
+            <text class="bnum" x="480" y="846" text-anchor="middle">11</text>
+            <text class="el" x="575" y="846" text-anchor="middle">
+              DON / B2C / aucune
+            </text>
+
+            <!-- 12 Worker -> Pharmacien (terminé) -->
+            <path
+              class="edge-ok"
+              marker-end="url(#a-ok)"
+              d="M300,515 C210,470 140,320 140,198"
+            />
+            <circle class="badge" cx="150" cy="360" r="10" />
+            <text class="bnum" x="150" y="364" text-anchor="middle">12</text>
+            <text
+              class="el"
+              x="205"
+              y="360"
+              text-anchor="middle"
+              style="fill: #1e8449"
+            >
+              TERMINÉ (temps réel)
+            </text>
+
+            <!-- Cron -> Service analyse -->
+            <path
+              class="edge-cron"
+              marker-end="url(#a-cron)"
+              d="M250,775 L298,775"
+            />
+            <text
+              class="el"
+              x="274"
+              y="768"
+              text-anchor="middle"
+              style="fill: #7c3aed"
+            >
+              réanalyse
+            </text>
+          </svg>
+        </div>
+        <div class="legend">
+          <span><i class="l-person"></i> Personne</span>
+          <span><i class="l-component"></i> Composant</span>
+          <span
+            ><i class="l-container" style="background: #e6a3c8"></i> File</span
+          >
+          <span
+            ><i class="l-container" style="background: #7fb0dc"></i> Données /
+            stockage</span
+          >
+          <span><i class="l-ko" style="background: #e79a92"></i> Échec</span>
+          <span style="color: #1e8449"
+            >- - - vert : notification temps réel</span
+          >
+        </div>
+      </section>
+
+      <!-- ============================================================= -->
+      <!-- PIPELINE CI/CD                                                -->
+      <!-- ============================================================= -->
+      <section class="diagram">
+        <div class="diagram-head">
+          <div>
+            <h2>4. Pipeline CI/CD</h2>
+            <p>
+              De la validation qualité au déploiement : le job CI garde le
+              déploiement, puis <code>dev → Render</code> et
+              <code>main → Cloud Run</code>. Une Pull Request ne fait que la CI.
+            </p>
+          </div>
+          <div class="actions">
+            <button
+              class="primary"
+              onclick="downloadSVG('svg-cicd', 'savely-pipeline-cicd')"
+            >
+              ⬇ SVG
+            </button>
+            <button onclick="downloadPNG('svg-cicd', 'savely-pipeline-cicd')">
+              ⬇ PNG
+            </button>
+          </div>
+        </div>
+        <div class="svg-wrap">
+          <svg
+            id="svg-cicd"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1000 928"
+            role="img"
+            aria-label="Pipeline CI/CD Savely"
+          >
+            <style>
+              #svg-cicd text {
+                font-family:
+                  ui-sans-serif,
+                  system-ui,
+                  -apple-system,
+                  'Segoe UI',
+                  Roboto,
+                  sans-serif;
+              }
+              #svg-cicd .b {
+                stroke-width: 1.5;
+              }
+              #svg-cicd .src {
+                fill: #1e293b;
+                stroke: #0f172a;
+              }
+              #svg-cicd .step {
+                fill: #438dd5;
+                stroke: #2e6295;
+              }
+              #svg-cicd .job {
+                fill: #7c3aed;
+                stroke: #5b23b0;
+              }
+              #svg-cicd .gate {
+                fill: #e6a23c;
+                stroke: #b57e1f;
+              }
+              #svg-cicd .svc {
+                fill: #438dd5;
+                stroke: #2e6295;
+              }
+              #svg-cicd .store {
+                fill: #3a7ab8;
+                stroke: #255182;
+              }
+              #svg-cicd .stop {
+                fill: #8a8a8a;
+                stroke: #5f5f5f;
+              }
+              #svg-cicd .name {
+                font-size: 12.5px;
+                font-weight: 700;
+                fill: #fff;
+              }
+              #svg-cicd .named {
+                font-size: 12.5px;
+                font-weight: 700;
+                fill: #1e293b;
+              }
+              #svg-cicd .desc {
+                font-size: 10px;
+                fill: #e8eef5;
+              }
+              #svg-cicd .tag {
+                font-size: 9px;
+                fill: #e8eef5;
+                font-style: italic;
+              }
+              #svg-cicd .edge {
+                fill: none;
+                stroke: #64748b;
+                stroke-width: 1.8;
+              }
+              #svg-cicd .edge-dev {
+                fill: none;
+                stroke: #0e7490;
+                stroke-width: 1.8;
+              }
+              #svg-cicd .edge-main {
+                fill: none;
+                stroke: #b45309;
+                stroke-width: 1.8;
+              }
+              #svg-cicd .el {
+                font-size: 10.5px;
+                fill: #334155;
+                font-weight: 600;
+              }
+              #svg-cicd .boundary {
+                fill: none;
+                stroke-width: 1.5;
+                stroke-dasharray: 6 5;
+              }
+              #svg-cicd .bt {
+                font-size: 12px;
+                font-weight: 700;
+              }
+              #svg-cicd .badge {
+                fill: #0f172a;
+              }
+              #svg-cicd .bnum {
+                fill: #fff;
+                font-size: 10px;
+                font-weight: 800;
+              }
+            </style>
+            <defs>
+              <marker
+                id="a-cc"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#64748b" />
+              </marker>
+              <marker
+                id="a-dev"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#0e7490" />
+              </marker>
+              <marker
+                id="a-main"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#b45309" />
+              </marker>
+            </defs>
+
+            <!-- Trigger -->
+            <rect
+              class="b src"
+              x="390"
+              y="36"
+              width="220"
+              height="78"
+              rx="10"
+            />
+            <text
+              class="name"
+              x="500"
+              y="66"
+              text-anchor="middle"
+              style="font-size: 14px"
+            >
+              GitHub
+            </text>
+            <text class="desc" x="500" y="86" text-anchor="middle">
+              push / PR · branches main + dev
+            </text>
+            <text class="desc" x="500" y="101" text-anchor="middle">
+              chemins backend/**
+            </text>
+            <path class="edge" marker-end="url(#a-cc)" d="M500,114 L500,148" />
+
+            <!-- CI band -->
+            <rect
+              class="boundary"
+              x="40"
+              y="150"
+              width="920"
+              height="126"
+              rx="12"
+              stroke="#7c3aed"
+            />
+            <text class="bt" x="55" y="172" fill="#7c3aed">
+              Job CI — exécuté sur chaque push &amp; PR (garde le déploiement)
+            </text>
+
+            <!-- CI chips -->
+            <g>
+              <rect
+                class="b step"
+                x="55"
+                y="196"
+                width="128"
+                height="60"
+                rx="9"
+              />
+              <text class="name" x="119" y="232" text-anchor="middle">
+                Install
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b step"
+                x="205"
+                y="196"
+                width="128"
+                height="60"
+                rx="9"
+              />
+              <text class="name" x="269" y="226" text-anchor="middle">
+                Prisma
+              </text>
+              <text class="name" x="269" y="242" text-anchor="middle">
+                generate
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b step"
+                x="355"
+                y="196"
+                width="128"
+                height="60"
+                rx="9"
+              />
+              <text class="name" x="419" y="232" text-anchor="middle">
+                Lint
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b step"
+                x="505"
+                y="196"
+                width="128"
+                height="60"
+                rx="9"
+              />
+              <text class="name" x="569" y="232" text-anchor="middle">
+                Format check
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b step"
+                x="655"
+                y="196"
+                width="128"
+                height="60"
+                rx="9"
+              />
+              <text class="name" x="719" y="232" text-anchor="middle">
+                Typecheck
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b step"
+                x="805"
+                y="196"
+                width="128"
+                height="60"
+                rx="9"
+              />
+              <text class="name" x="869" y="232" text-anchor="middle">
+                Test
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-cc)" d="M183,226 L203,226" />
+            <path class="edge" marker-end="url(#a-cc)" d="M333,226 L353,226" />
+            <path class="edge" marker-end="url(#a-cc)" d="M483,226 L503,226" />
+            <path class="edge" marker-end="url(#a-cc)" d="M633,226 L653,226" />
+            <path class="edge" marker-end="url(#a-cc)" d="M783,226 L803,226" />
+
+            <path class="edge" marker-end="url(#a-cc)" d="M500,276 L500,300" />
+
+            <!-- Gate -->
+            <polygon class="b gate" points="500,300 582,344 500,388 418,344" />
+            <text
+              class="named"
+              x="500"
+              y="341"
+              text-anchor="middle"
+              style="fill: #4a3208"
+            >
+              branche
+            </text>
+            <text
+              class="named"
+              x="500"
+              y="356"
+              text-anchor="middle"
+              style="fill: #4a3208"
+            >
+              &amp; événement ?
+            </text>
+
+            <!-- PR branch -->
+            <path class="edge" marker-end="url(#a-cc)" d="M500,388 L500,414" />
+            <g>
+              <rect
+                class="b stop"
+                x="392"
+                y="414"
+                width="216"
+                height="54"
+                rx="9"
+              />
+              <text class="name" x="500" y="438" text-anchor="middle">
+                Pull Request
+              </text>
+              <text class="desc" x="500" y="456" text-anchor="middle">
+                CI seule — aucun déploiement
+              </text>
+            </g>
+
+            <!-- dev branch -->
+            <path
+              class="edge-dev"
+              marker-end="url(#a-dev)"
+              d="M418,344 C320,344 285,395 262,428"
+            />
+            <text
+              class="el"
+              x="330"
+              y="372"
+              text-anchor="middle"
+              fill="#0e7490"
+            >
+              push → dev
+            </text>
+            <!-- main branch -->
+            <path
+              class="edge-main"
+              marker-end="url(#a-main)"
+              d="M582,344 C700,344 730,395 745,428"
+            />
+            <text
+              class="el"
+              x="690"
+              y="372"
+              text-anchor="middle"
+              fill="#b45309"
+            >
+              push → main
+            </text>
+
+            <!-- ===== LEFT LANE : dev -> Render ===== -->
+            <g>
+              <rect
+                class="b job"
+                x="110"
+                y="430"
+                width="300"
+                height="58"
+                rx="9"
+              />
+              <text class="name" x="260" y="454" text-anchor="middle">
+                deploy-render
+              </text>
+              <text class="desc" x="260" y="472" text-anchor="middle">
+                Deploy Hook (curl POST)
+              </text>
+            </g>
+            <path
+              class="edge-dev"
+              marker-end="url(#a-dev)"
+              d="M260,488 L260,524"
+            />
+
+            <rect
+              class="boundary"
+              x="70"
+              y="526"
+              width="380"
+              height="312"
+              rx="12"
+              stroke="#0e7490"
+            />
+            <text class="bt" x="85" y="548" fill="#0e7490">
+              Render — dev (1 image · ROLE)
+            </text>
+
+            <g>
+              <rect
+                class="b svc"
+                x="95"
+                y="566"
+                width="150"
+                height="52"
+                rx="8"
+              />
+              <text class="name" x="170" y="588" text-anchor="middle">
+                savely-api
+              </text>
+              <text class="tag" x="170" y="605" text-anchor="middle">
+                « service »
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b svc"
+                x="280"
+                y="566"
+                width="150"
+                height="52"
+                rx="8"
+              />
+              <text class="name" x="355" y="588" text-anchor="middle">
+                savely-worker
+              </text>
+              <text class="tag" x="355" y="605" text-anchor="middle">
+                « service »
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b svc"
+                x="95"
+                y="636"
+                width="150"
+                height="52"
+                rx="8"
+              />
+              <text class="name" x="170" y="658" text-anchor="middle">
+                savely-scheduler
+              </text>
+              <text class="tag" x="170" y="675" text-anchor="middle">
+                « singleton »
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b store"
+                x="280"
+                y="636"
+                width="150"
+                height="52"
+                rx="8"
+              />
+              <text class="name" x="355" y="658" text-anchor="middle">
+                PostgreSQL
+              </text>
+              <text class="tag" x="355" y="675" text-anchor="middle">
+                « managé »
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b store"
+                x="187"
+                y="706"
+                width="150"
+                height="52"
+                rx="8"
+              />
+              <text class="name" x="262" y="728" text-anchor="middle">
+                Redis
+              </text>
+              <text class="tag" x="262" y="745" text-anchor="middle">
+                « managé »
+              </text>
+            </g>
+
+            <!-- ===== RIGHT LANE : main -> GCP ===== -->
+            <g>
+              <rect
+                class="b job"
+                x="560"
+                y="430"
+                width="340"
+                height="58"
+                rx="9"
+              />
+              <text class="name" x="730" y="454" text-anchor="middle">
+                deploy-gcp
+              </text>
+              <text class="desc" x="730" y="472" text-anchor="middle">
+                Build &amp; Push image (Docker)
+              </text>
+            </g>
+            <path
+              class="edge-main"
+              marker-end="url(#a-main)"
+              d="M730,488 L730,524"
+            />
+
+            <rect
+              class="boundary"
+              x="520"
+              y="526"
+              width="440"
+              height="312"
+              rx="12"
+              stroke="#b45309"
+            />
+            <text class="bt" x="535" y="548" fill="#b45309">
+              Google Cloud — production (1 image · ROLE)
+            </text>
+
+            <g>
+              <rect
+                class="b store"
+                x="545"
+                y="566"
+                width="185"
+                height="52"
+                rx="8"
+              />
+              <text class="name" x="637" y="588" text-anchor="middle">
+                Artifact Registry
+              </text>
+              <text class="tag" x="637" y="605" text-anchor="middle">
+                « image »
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b svc"
+                x="750"
+                y="566"
+                width="185"
+                height="52"
+                rx="8"
+              />
+              <text class="name" x="842" y="588" text-anchor="middle">
+                Cloud Run · api
+              </text>
+              <text class="tag" x="842" y="605" text-anchor="middle">
+                « service »
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b svc"
+                x="750"
+                y="636"
+                width="185"
+                height="52"
+                rx="8"
+              />
+              <text class="name" x="842" y="658" text-anchor="middle">
+                Cloud Run · worker
+              </text>
+              <text class="tag" x="842" y="675" text-anchor="middle">
+                « service »
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b svc"
+                x="545"
+                y="636"
+                width="185"
+                height="52"
+                rx="8"
+              />
+              <text class="name" x="637" y="658" text-anchor="middle">
+                Cloud Scheduler
+              </text>
+              <text class="tag" x="637" y="675" text-anchor="middle">
+                « planifié »
+              </text>
+            </g>
+            <g>
+              <rect
+                class="b store"
+                x="647"
+                y="706"
+                width="185"
+                height="52"
+                rx="8"
+              />
+              <text class="name" x="739" y="728" text-anchor="middle">
+                Cloud SQL
+              </text>
+              <text class="tag" x="739" y="745" text-anchor="middle">
+                « managé »
+              </text>
+            </g>
+
+            <path
+              class="edge-main"
+              marker-end="url(#a-main)"
+              d="M730,618 L748,596"
+            />
+            <text
+              class="el"
+              x="742"
+              y="628"
+              text-anchor="middle"
+              fill="#b45309"
+            >
+              déploie
+            </text>
+            <path
+              class="edge-main"
+              marker-end="url(#a-main)"
+              d="M730,650 L748,626"
+            />
+            <text
+              class="el"
+              x="695"
+              y="648"
+              text-anchor="middle"
+              fill="#b45309"
+            >
+              /internal/scheduler
+            </text>
+
+            <!-- Redis Cloud : managé, hébergé hors Google Cloud -->
+            <g>
+              <rect
+                class="b store"
+                x="748"
+                y="860"
+                width="185"
+                height="52"
+                rx="8"
+              />
+              <text class="name" x="840" y="882" text-anchor="middle">
+                Redis Cloud
+              </text>
+              <text class="tag" x="840" y="899" text-anchor="middle">
+                « externe managé »
+              </text>
+            </g>
+            <path
+              class="edge-main"
+              marker-end="url(#a-main)"
+              d="M842,688 L842,858"
+            />
+            <text
+              class="el"
+              x="898"
+              y="800"
+              text-anchor="middle"
+              fill="#b45309"
+            >
+              files BullMQ
+            </text>
+          </svg>
+        </div>
+        <div class="legend">
+          <span
+            ><i class="l-container" style="background: #1e293b"></i>
+            Source</span
+          >
+          <span><i class="l-container"></i> Étape CI / service</span>
+          <span
+            ><i class="l-container" style="background: #7c3aed"></i> Job de
+            déploiement</span
+          >
+          <span
+            ><i class="l-container" style="background: #e6a23c"></i>
+            Décision</span
+          >
+          <span
+            ><i class="l-container" style="background: #3a7ab8"></i> Données /
+            image</span
+          >
+          <span><i class="l-ext"></i> Pull Request (stop)</span>
+        </div>
+      </section>
+      <section class="diagram">
+        <div class="diagram-head">
+          <div>
+            <h2>5. Événements métier &amp; acteurs (Event Storming)</h2>
+            <p>
+              Modèle des événements du domaine (au passé) déclenchés par les
+              commandes des acteurs, et enchaînés par des politiques métier — de
+              l'accès aux comptes jusqu'au don et au click &amp; collect.
+            </p>
+          </div>
+          <div class="actions">
+            <button
+              class="primary"
+              onclick="downloadSVG('svg-events', 'savely-evenements-metier')"
+            >
+              ⬇ SVG
+            </button>
+            <button
+              onclick="downloadPNG('svg-events', 'savely-evenements-metier')"
+            >
+              ⬇ PNG
+            </button>
+          </div>
+        </div>
+        <div class="svg-wrap">
+          <svg
+            id="svg-events"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1260 1060"
+            role="img"
+            aria-label="Modèle d'événements métier Savely"
+          >
+            <style>
+              #svg-events text {
+                font-family:
+                  ui-sans-serif,
+                  system-ui,
+                  -apple-system,
+                  'Segoe UI',
+                  Roboto,
+                  sans-serif;
+              }
+              #svg-events .lname {
+                font-size: 12px;
+                font-weight: 700;
+                fill: #475569;
+              }
+              #svg-events .laneband {
+                fill: #f8fafc;
+                stroke: #e2e8f0;
+                stroke-width: 1;
+              }
+              #svg-events .tag {
+                font-size: 8.5px;
+                font-style: italic;
+              }
+              #svg-events .lab {
+                font-size: 11px;
+                font-weight: 700;
+              }
+              #svg-events .edge {
+                fill: none;
+                stroke: #64748b;
+                stroke-width: 1.6;
+              }
+              #svg-events .edge-ko {
+                fill: none;
+                stroke: #dc2626;
+                stroke-width: 1.5;
+                stroke-dasharray: 5 4;
+              }
+              #svg-events .edge-pol {
+                fill: none;
+                stroke: #7c3aed;
+                stroke-width: 1.7;
+              }
+              #svg-events .elab {
+                font-size: 10px;
+                font-weight: 600;
+                fill: #334155;
+              }
+              #svg-events .elab-pol {
+                font-size: 10px;
+                font-weight: 700;
+                fill: #6d28d9;
+              }
+            </style>
+            <defs>
+              <marker
+                id="a-es"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#64748b" />
+              </marker>
+              <marker
+                id="a-es-ko"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#dc2626" />
+              </marker>
+              <marker
+                id="a-es-pol"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#7c3aed" />
+              </marker>
+            </defs>
+            <text
+              x="20"
+              y="30"
+              style="font-size: 13px; font-weight: 700; fill: #0f172a"
+            >
+              Légende
+            </text>
+            <rect
+              x="135"
+              y="18"
+              width="16"
+              height="16"
+              rx="3"
+              fill="#fde047"
+              stroke="#ca8a04"
+              stroke-width="1.5"
+            />
+            <text x="157" y="31" style="font-size: 11.5px; fill: #334155">
+              Acteur
+            </text>
+            <rect
+              x="240.6"
+              y="18"
+              width="16"
+              height="16"
+              rx="3"
+              fill="#60a5fa"
+              stroke="#2563eb"
+              stroke-width="1.5"
+            />
+            <text x="262.6" y="31" style="font-size: 11.5px; fill: #334155">
+              Commande
+            </text>
+            <rect
+              x="359.4"
+              y="18"
+              width="16"
+              height="16"
+              rx="3"
+              fill="#fb923c"
+              stroke="#ea580c"
+              stroke-width="1.5"
+            />
+            <text x="381.4" y="31" style="font-size: 11.5px; fill: #334155">
+              Événement métier
+            </text>
+            <rect
+              x="531"
+              y="18"
+              width="16"
+              height="16"
+              rx="3"
+              fill="#c4b5fd"
+              stroke="#7c3aed"
+              stroke-width="1.5"
+            />
+            <text x="553" y="31" style="font-size: 11.5px; fill: #334155">
+              Politique / règle
+            </text>
+            <rect
+              x="709.2"
+              y="18"
+              width="16"
+              height="16"
+              rx="3"
+              fill="#e2e8f0"
+              stroke="#94a3b8"
+              stroke-width="1.5"
+            />
+            <text x="731.2" y="31" style="font-size: 11.5px; fill: #334155">
+              Déclencheur temps
+            </text>
+            <rect
+              x="887.4000000000001"
+              y="18"
+              width="16"
+              height="16"
+              rx="3"
+              fill="#fca5a5"
+              stroke="#dc2626"
+              stroke-width="1.5"
+            />
+            <text
+              x="909.4000000000001"
+              y="31"
+              style="font-size: 11.5px; fill: #334155"
+            >
+              Échec / alternative
+            </text>
+            <rect
+              class="laneband"
+              x="16"
+              y="84"
+              width="1236"
+              height="178"
+              rx="10"
+            />
+            <rect
+              x="16"
+              y="84"
+              width="104"
+              height="178"
+              rx="10"
+              fill="#eef2f7"
+              stroke="#e2e8f0"
+            />
+            <text class="lname" x="68" y="165" text-anchor="middle">
+              Accès &
+            </text>
+            <text class="lname" x="68" y="180" text-anchor="middle">
+              comptes
+            </text>
+            <rect
+              class="laneband"
+              x="16"
+              y="278"
+              width="1236"
+              height="178"
+              rx="10"
+            />
+            <rect
+              x="16"
+              y="278"
+              width="104"
+              height="178"
+              rx="10"
+              fill="#eef2f7"
+              stroke="#e2e8f0"
+            />
+            <text class="lname" x="68" y="351" text-anchor="middle">
+              Import &
+            </text>
+            <text class="lname" x="68" y="366" text-anchor="middle">
+              analyse du
+            </text>
+            <text class="lname" x="68" y="381" text-anchor="middle">stock</text>
+            <rect
+              class="laneband"
+              x="16"
+              y="472"
+              width="1236"
+              height="178"
+              rx="10"
+            />
+            <rect
+              x="16"
+              y="472"
+              width="104"
+              height="178"
+              rx="10"
+              fill="#eef2f7"
+              stroke="#e2e8f0"
+            />
+            <text class="lname" x="68" y="553" text-anchor="middle">
+              Centre
+            </text>
+            <text class="lname" x="68" y="568" text-anchor="middle">
+              d'actions
+            </text>
+            <rect
+              class="laneband"
+              x="16"
+              y="666"
+              width="1236"
+              height="178"
+              rx="10"
+            />
+            <rect
+              x="16"
+              y="666"
+              width="104"
+              height="178"
+              rx="10"
+              fill="#eef2f7"
+              stroke="#e2e8f0"
+            />
+            <text class="lname" x="68" y="739" text-anchor="middle">
+              Don aux
+            </text>
+            <text class="lname" x="68" y="754" text-anchor="middle">
+              associations ·
+            </text>
+            <text class="lname" x="68" y="769" text-anchor="middle">V1</text>
+            <rect
+              class="laneband"
+              x="16"
+              y="860"
+              width="1236"
+              height="178"
+              rx="10"
+            />
+            <rect
+              x="16"
+              y="860"
+              width="104"
+              height="178"
+              rx="10"
+              fill="#eef2f7"
+              stroke="#e2e8f0"
+            />
+            <text class="lname" x="68" y="933" text-anchor="middle">
+              Click &
+            </text>
+            <text class="lname" x="68" y="948" text-anchor="middle">
+              collect B2C ·
+            </text>
+            <text class="lname" x="68" y="963" text-anchor="middle">V2</text>
+            <g>
+              <rect
+                x="135"
+                y="96"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fde047"
+                stroke="#ca8a04"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="214"
+                y="111"
+                text-anchor="middle"
+                fill="#422006"
+                opacity="0.75"
+              >
+                acteur
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="135"
+                text-anchor="middle"
+                fill="#422006"
+              >
+                Admin Savely
+              </text>
+            </g>
+            <g>
+              <rect
+                x="325"
+                y="96"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#60a5fa"
+                stroke="#2563eb"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="404"
+                y="111"
+                text-anchor="middle"
+                fill="#0b2e63"
+                opacity="0.75"
+              >
+                commande
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="129"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                Inviter la
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="144"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                pharmacie
+              </text>
+            </g>
+            <g>
+              <rect
+                x="515"
+                y="96"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="594"
+                y="111"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="129"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Pharmacie
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="144"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                invitée
+              </text>
+            </g>
+            <g>
+              <rect
+                x="705"
+                y="96"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="784"
+                y="111"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="129"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Titulaire
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="144"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                enrôlé
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-es)" d="M293,126 L323,126" />
+            <path class="edge" marker-end="url(#a-es)" d="M483,126 L513,126" />
+            <path class="edge" marker-end="url(#a-es)" d="M673,126 L703,126" />
+            <g>
+              <rect
+                x="135"
+                y="172"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fde047"
+                stroke="#ca8a04"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="214"
+                y="187"
+                text-anchor="middle"
+                fill="#422006"
+                opacity="0.75"
+              >
+                acteur
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="205"
+                text-anchor="middle"
+                fill="#422006"
+              >
+                Pharmacien /
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="220"
+                text-anchor="middle"
+                fill="#422006"
+              >
+                Préparateur
+              </text>
+            </g>
+            <g>
+              <rect
+                x="325"
+                y="172"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#60a5fa"
+                stroke="#2563eb"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="404"
+                y="187"
+                text-anchor="middle"
+                fill="#0b2e63"
+                opacity="0.75"
+              >
+                commande
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="205"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                Demander
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="220"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                un accès
+              </text>
+            </g>
+            <g>
+              <rect
+                x="515"
+                y="172"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="594"
+                y="187"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="205"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Lien / code
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="220"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                envoyé
+              </text>
+            </g>
+            <g>
+              <rect
+                x="705"
+                y="172"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="784"
+                y="187"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="205"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Utilisateur
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="220"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                authentifié
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-es)" d="M293,202 L323,202" />
+            <path class="edge" marker-end="url(#a-es)" d="M483,202 L513,202" />
+            <path class="edge" marker-end="url(#a-es)" d="M673,202 L703,202" />
+            <g>
+              <rect
+                x="135"
+                y="290"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fde047"
+                stroke="#ca8a04"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="214"
+                y="305"
+                text-anchor="middle"
+                fill="#422006"
+                opacity="0.75"
+              >
+                acteur
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="329"
+                text-anchor="middle"
+                fill="#422006"
+              >
+                Pharmacien
+              </text>
+            </g>
+            <g>
+              <rect
+                x="325"
+                y="290"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#60a5fa"
+                stroke="#2563eb"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="404"
+                y="305"
+                text-anchor="middle"
+                fill="#0b2e63"
+                opacity="0.75"
+              >
+                commande
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="323"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                Déposer les
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="338"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                fichiers
+              </text>
+            </g>
+            <g>
+              <rect
+                x="515"
+                y="290"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="594"
+                y="305"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="323"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Import
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="338"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                créé
+              </text>
+            </g>
+            <g>
+              <rect
+                x="705"
+                y="290"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="784"
+                y="305"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="323"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Import
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="338"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                terminé
+              </text>
+            </g>
+            <g>
+              <rect
+                x="895"
+                y="290"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="974"
+                y="305"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="974"
+                y="323"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Stock
+              </text>
+              <text
+                class="lab"
+                x="974"
+                y="338"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                analysé
+              </text>
+            </g>
+            <g>
+              <rect
+                x="1085"
+                y="290"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="1164"
+                y="305"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="1164"
+                y="323"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Actions
+              </text>
+              <text
+                class="lab"
+                x="1164"
+                y="338"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                générées
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-es)" d="M293,320 L323,320" />
+            <path class="edge" marker-end="url(#a-es)" d="M483,320 L513,320" />
+            <path class="edge" marker-end="url(#a-es)" d="M673,320 L703,320" />
+            <path class="edge" marker-end="url(#a-es)" d="M863,320 L893,320" />
+            <path
+              class="edge"
+              marker-end="url(#a-es)"
+              d="M1053,320 L1083,320"
+            />
+            <g>
+              <rect
+                x="135"
+                y="366"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#e2e8f0"
+                stroke="#94a3b8"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="214"
+                y="381"
+                text-anchor="middle"
+                fill="#0f172a"
+                opacity="0.75"
+              >
+                ⏱ temps
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="399"
+                text-anchor="middle"
+                fill="#0f172a"
+              >
+                Chaque jour
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="414"
+                text-anchor="middle"
+                fill="#0f172a"
+              >
+                à 2 h
+              </text>
+            </g>
+            <g>
+              <rect
+                x="325"
+                y="366"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#c4b5fd"
+                stroke="#7c3aed"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="404"
+                y="381"
+                text-anchor="middle"
+                fill="#2e1065"
+                opacity="0.75"
+              >
+                politique
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="399"
+                text-anchor="middle"
+                fill="#2e1065"
+              >
+                Réanalyser
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="414"
+                text-anchor="middle"
+                fill="#2e1065"
+              >
+                le stock
+              </text>
+            </g>
+            <g>
+              <rect
+                x="515"
+                y="366"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="594"
+                y="381"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="399"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Stock
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="414"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                réanalysé
+              </text>
+            </g>
+            <g>
+              <rect
+                x="705"
+                y="366"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fca5a5"
+                stroke="#dc2626"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="784"
+                y="381"
+                text-anchor="middle"
+                fill="#7f1d1d"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="399"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                Import
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="414"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                échoué
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-es)" d="M293,396 L323,396" />
+            <path class="edge" marker-end="url(#a-es)" d="M483,396 L513,396" />
+            <g>
+              <rect
+                x="135"
+                y="484"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fde047"
+                stroke="#ca8a04"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="214"
+                y="499"
+                text-anchor="middle"
+                fill="#422006"
+                opacity="0.75"
+              >
+                acteur
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="523"
+                text-anchor="middle"
+                fill="#422006"
+              >
+                Pharmacien
+              </text>
+            </g>
+            <g>
+              <rect
+                x="325"
+                y="484"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#60a5fa"
+                stroke="#2563eb"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="404"
+                y="499"
+                text-anchor="middle"
+                fill="#0b2e63"
+                opacity="0.75"
+              >
+                commande
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="517"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                Traiter
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="532"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                l'action
+              </text>
+            </g>
+            <g>
+              <rect
+                x="515"
+                y="484"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="594"
+                y="499"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="517"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Action
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="532"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                validée
+              </text>
+            </g>
+            <g>
+              <rect
+                x="705"
+                y="484"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="784"
+                y="499"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="517"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Action
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="532"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                ignorée
+              </text>
+            </g>
+            <g>
+              <rect
+                x="895"
+                y="484"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="974"
+                y="499"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="974"
+                y="517"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Action
+              </text>
+              <text
+                class="lab"
+                x="974"
+                y="532"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                reportée
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-es)" d="M293,514 L323,514" />
+            <path class="edge" marker-end="url(#a-es)" d="M483,514 L513,514" />
+            <g>
+              <rect
+                x="135"
+                y="560"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#c4b5fd"
+                stroke="#7c3aed"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="214"
+                y="575"
+                text-anchor="middle"
+                fill="#2e1065"
+                opacity="0.75"
+              >
+                politique
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="593"
+                text-anchor="middle"
+                fill="#2e1065"
+              >
+                Selon le risque
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="608"
+                text-anchor="middle"
+                fill="#2e1065"
+              >
+                du produit…
+              </text>
+            </g>
+            <g>
+              <rect
+                x="135"
+                y="678"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="214"
+                y="693"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="711"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Proposition de
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="726"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                don envoyée
+              </text>
+            </g>
+            <g>
+              <rect
+                x="325"
+                y="678"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fde047"
+                stroke="#ca8a04"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="404"
+                y="693"
+                text-anchor="middle"
+                fill="#422006"
+                opacity="0.75"
+              >
+                acteur
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="717"
+                text-anchor="middle"
+                fill="#422006"
+              >
+                Association
+              </text>
+            </g>
+            <g>
+              <rect
+                x="515"
+                y="678"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#60a5fa"
+                stroke="#2563eb"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="594"
+                y="693"
+                text-anchor="middle"
+                fill="#0b2e63"
+                opacity="0.75"
+              >
+                commande
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="711"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                Répondre à la
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="726"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                proposition
+              </text>
+            </g>
+            <g>
+              <rect
+                x="705"
+                y="678"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="784"
+                y="693"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="711"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Proposition
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="726"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                acceptée
+              </text>
+            </g>
+            <g>
+              <rect
+                x="895"
+                y="678"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="974"
+                y="693"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="974"
+                y="711"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Retrait
+              </text>
+              <text
+                class="lab"
+                x="974"
+                y="726"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                planifié
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-es)" d="M293,708 L323,708" />
+            <path class="edge" marker-end="url(#a-es)" d="M483,708 L513,708" />
+            <path class="edge" marker-end="url(#a-es)" d="M673,708 L703,708" />
+            <path class="edge" marker-end="url(#a-es)" d="M863,708 L893,708" />
+            <g>
+              <rect
+                x="135"
+                y="754"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fde047"
+                stroke="#ca8a04"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="214"
+                y="769"
+                text-anchor="middle"
+                fill="#422006"
+                opacity="0.75"
+              >
+                acteur
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="793"
+                text-anchor="middle"
+                fill="#422006"
+              >
+                Association
+              </text>
+            </g>
+            <g>
+              <rect
+                x="325"
+                y="754"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#60a5fa"
+                stroke="#2563eb"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="404"
+                y="769"
+                text-anchor="middle"
+                fill="#0b2e63"
+                opacity="0.75"
+              >
+                commande
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="787"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                Confirmer
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="802"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                le retrait
+              </text>
+            </g>
+            <g>
+              <rect
+                x="515"
+                y="754"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="594"
+                y="769"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="787"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Don
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="802"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                complété
+              </text>
+            </g>
+            <g>
+              <rect
+                x="705"
+                y="754"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="784"
+                y="769"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="787"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Reçu Cerfa
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="802"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                émis
+              </text>
+            </g>
+            <g>
+              <rect
+                x="895"
+                y="754"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fca5a5"
+                stroke="#dc2626"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="974"
+                y="769"
+                text-anchor="middle"
+                fill="#7f1d1d"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="974"
+                y="787"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                Don non
+              </text>
+              <text
+                class="lab"
+                x="974"
+                y="802"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                récupéré
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-es)" d="M293,784 L323,784" />
+            <path class="edge" marker-end="url(#a-es)" d="M483,784 L513,784" />
+            <path class="edge" marker-end="url(#a-es)" d="M673,784 L703,784" />
+            <g>
+              <rect
+                x="135"
+                y="872"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="214"
+                y="887"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="905"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Offre
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="920"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                publiée
+              </text>
+            </g>
+            <g>
+              <rect
+                x="325"
+                y="872"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fde047"
+                stroke="#ca8a04"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="404"
+                y="887"
+                text-anchor="middle"
+                fill="#422006"
+                opacity="0.75"
+              >
+                acteur
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="911"
+                text-anchor="middle"
+                fill="#422006"
+              >
+                Client B2C
+              </text>
+            </g>
+            <g>
+              <rect
+                x="515"
+                y="872"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#60a5fa"
+                stroke="#2563eb"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="594"
+                y="887"
+                text-anchor="middle"
+                fill="#0b2e63"
+                opacity="0.75"
+              >
+                commande
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="905"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                Réserver
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="920"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                l'offre
+              </text>
+            </g>
+            <g>
+              <rect
+                x="705"
+                y="872"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="784"
+                y="887"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="905"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Commande
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="920"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                réservée
+              </text>
+            </g>
+            <g>
+              <rect
+                x="895"
+                y="872"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fde047"
+                stroke="#ca8a04"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="974"
+                y="887"
+                text-anchor="middle"
+                fill="#422006"
+                opacity="0.75"
+              >
+                acteur
+              </text>
+              <text
+                class="lab"
+                x="974"
+                y="911"
+                text-anchor="middle"
+                fill="#422006"
+              >
+                Préparateur
+              </text>
+            </g>
+            <g>
+              <rect
+                x="1085"
+                y="872"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#60a5fa"
+                stroke="#2563eb"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="1164"
+                y="887"
+                text-anchor="middle"
+                fill="#0b2e63"
+                opacity="0.75"
+              >
+                commande
+              </text>
+              <text
+                class="lab"
+                x="1164"
+                y="905"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                Préparer la
+              </text>
+              <text
+                class="lab"
+                x="1164"
+                y="920"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                commande
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-es)" d="M293,902 L323,902" />
+            <path class="edge" marker-end="url(#a-es)" d="M483,902 L513,902" />
+            <path class="edge" marker-end="url(#a-es)" d="M673,902 L703,902" />
+            <path class="edge" marker-end="url(#a-es)" d="M863,902 L893,902" />
+            <path
+              class="edge"
+              marker-end="url(#a-es)"
+              d="M1053,902 L1083,902"
+            />
+            <g>
+              <rect
+                x="135"
+                y="948"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="214"
+                y="963"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="981"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Commande
+              </text>
+              <text
+                class="lab"
+                x="214"
+                y="996"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                prête
+              </text>
+            </g>
+            <g>
+              <rect
+                x="325"
+                y="948"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fde047"
+                stroke="#ca8a04"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="404"
+                y="963"
+                text-anchor="middle"
+                fill="#422006"
+                opacity="0.75"
+              >
+                acteur
+              </text>
+              <text
+                class="lab"
+                x="404"
+                y="987"
+                text-anchor="middle"
+                fill="#422006"
+              >
+                Client B2C
+              </text>
+            </g>
+            <g>
+              <rect
+                x="515"
+                y="948"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#60a5fa"
+                stroke="#2563eb"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="594"
+                y="963"
+                text-anchor="middle"
+                fill="#0b2e63"
+                opacity="0.75"
+              >
+                commande
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="981"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                Retirer la
+              </text>
+              <text
+                class="lab"
+                x="594"
+                y="996"
+                text-anchor="middle"
+                fill="#0b2e63"
+              >
+                commande
+              </text>
+            </g>
+            <g>
+              <rect
+                x="705"
+                y="948"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="784"
+                y="963"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="981"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Commande
+              </text>
+              <text
+                class="lab"
+                x="784"
+                y="996"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                retirée
+              </text>
+            </g>
+            <g>
+              <rect
+                x="895"
+                y="948"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fca5a5"
+                stroke="#dc2626"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="974"
+                y="963"
+                text-anchor="middle"
+                fill="#7f1d1d"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="974"
+                y="981"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                Commande
+              </text>
+              <text
+                class="lab"
+                x="974"
+                y="996"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                expirée
+              </text>
+            </g>
+            <g>
+              <rect
+                x="1085"
+                y="948"
+                width="158"
+                height="60"
+                rx="7"
+                fill="#fca5a5"
+                stroke="#dc2626"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="1164"
+                y="963"
+                text-anchor="middle"
+                fill="#7f1d1d"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="1164"
+                y="981"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                Commande
+              </text>
+              <text
+                class="lab"
+                x="1164"
+                y="996"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                annulée
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-es)" d="M293,978 L323,978" />
+            <path class="edge" marker-end="url(#a-es)" d="M483,978 L513,978" />
+            <path class="edge" marker-end="url(#a-es)" d="M673,978 L703,978" />
+            <text
+              class="elab"
+              x="689"
+              y="518"
+              text-anchor="middle"
+              fill="#64748b"
+            >
+              ou
+            </text>
+            <text
+              class="elab"
+              x="879"
+              y="518"
+              text-anchor="middle"
+              fill="#64748b"
+            >
+              ou
+            </text>
+            <text
+              class="elab"
+              x="879"
+              y="788"
+              text-anchor="middle"
+              fill="#64748b"
+            >
+              ou
+            </text>
+            <text
+              class="elab"
+              x="879"
+              y="982"
+              text-anchor="middle"
+              fill="#64748b"
+            >
+              ou
+            </text>
+            <text
+              class="elab"
+              x="1069"
+              y="982"
+              text-anchor="middle"
+              fill="#64748b"
+            >
+              ou
+            </text>
+            <path
+              class="edge-ko"
+              marker-end="url(#a-es-ko)"
+              d="M594,350 C594,374 784,342 784,364"
+            />
+            <text
+              class="elab"
+              x="689"
+              y="361"
+              text-anchor="middle"
+              fill="#b91c1c"
+            >
+              sinon
+            </text>
+            <path
+              class="edge"
+              marker-end="url(#a-es)"
+              d="M1164,350 C1164,376 404,458 404,482"
+            />
+            <text class="elab" x="824" y="420" text-anchor="middle">
+              notifie
+            </text>
+            <path
+              class="edge"
+              marker-end="url(#a-es)"
+              d="M594,544 C594,570 214,534 214,558"
+            />
+            <path
+              class="edge-pol"
+              marker-end="url(#a-es-pol)"
+              d="M214,620 C214,646 214,652 214,676"
+            />
+            <text class="elab-pol" x="224" y="652" text-anchor="middle">
+              critical → don
+            </text>
+            <path
+              class="edge-pol"
+              marker-end="url(#a-es-pol)"
+              d="M214,620 C214,646 214,846 214,870"
+            />
+            <text class="elab-pol" x="224" y="749" text-anchor="middle">
+              high → offre B2C
+            </text>
+          </svg>
+        </div>
+        <div class="legend">
+          <span
+            ><i style="background: #fde047; border: 2px solid #ca8a04"></i>
+            Acteur</span
+          >
+          <span
+            ><i style="background: #60a5fa; border: 2px solid #2563eb"></i>
+            Commande</span
+          >
+          <span
+            ><i style="background: #fb923c; border: 2px solid #ea580c"></i>
+            Événement métier</span
+          >
+          <span
+            ><i style="background: #c4b5fd; border: 2px solid #7c3aed"></i>
+            Politique</span
+          >
+          <span
+            ><i style="background: #e2e8f0; border: 2px solid #94a3b8"></i>
+            Déclencheur temps</span
+          >
+          <span
+            ><i style="background: #fca5a5; border: 2px solid #dc2626"></i>
+            Échec / alternative</span
+          >
+        </div>
+      </section>
+      <section class="diagram">
+        <div class="diagram-head">
+          <div>
+            <h2>
+              6. Flux d'événements — Import, Don &amp; Click &amp; collect
+            </h2>
+            <p>
+              Vue resserrée sur les seuls événements métier des trois flux clés,
+              avec leurs alternatives et cas d'échec.
+            </p>
+          </div>
+          <div class="actions">
+            <button
+              class="primary"
+              onclick="downloadSVG('svg-flow', 'savely-flux-evenements')"
+            >
+              ⬇ SVG
+            </button>
+            <button onclick="downloadPNG('svg-flow', 'savely-flux-evenements')">
+              ⬇ PNG
+            </button>
+          </div>
+        </div>
+        <div class="svg-wrap">
+          <svg
+            id="svg-flow"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1180 660"
+            role="img"
+            aria-label="Flux d'événements Import, Don, Click and collect"
+          >
+            <style>
+              #svg-flow text {
+                font-family:
+                  ui-sans-serif,
+                  system-ui,
+                  -apple-system,
+                  'Segoe UI',
+                  Roboto,
+                  sans-serif;
+              }
+              #svg-flow .lname {
+                font-size: 12.5px;
+                font-weight: 700;
+                fill: #475569;
+              }
+              #svg-flow .tag {
+                font-size: 8.5px;
+                font-style: italic;
+              }
+              #svg-flow .lab {
+                font-size: 11.5px;
+                font-weight: 700;
+              }
+              #svg-flow .edge {
+                fill: none;
+                stroke: #64748b;
+                stroke-width: 1.7;
+              }
+              #svg-flow .edge-ko {
+                fill: none;
+                stroke: #dc2626;
+                stroke-width: 1.5;
+                stroke-dasharray: 5 4;
+              }
+              #svg-flow .elab {
+                font-size: 10px;
+                font-weight: 600;
+                fill: #b91c1c;
+              }
+            </style>
+            <defs>
+              <marker
+                id="a-fl"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#64748b" />
+              </marker>
+              <marker
+                id="a-fl-ko"
+                markerWidth="8"
+                markerHeight="8"
+                refX="6"
+                refY="3"
+                orient="auto"
+              >
+                <path d="M0,0 L6,3 L0,6 Z" fill="#dc2626" />
+              </marker>
+            </defs>
+            <text
+              x="20"
+              y="30"
+              style="font-size: 13px; font-weight: 700; fill: #0f172a"
+            >
+              Légende
+            </text>
+            <rect
+              x="140"
+              y="18"
+              width="16"
+              height="16"
+              rx="3"
+              fill="#fb923c"
+              stroke="#ea580c"
+              stroke-width="1.5"
+            />
+            <text x="162" y="31" style="font-size: 11.5px; fill: #334155">
+              Événement métier
+            </text>
+            <rect
+              x="320"
+              y="18"
+              width="16"
+              height="16"
+              rx="3"
+              fill="#fca5a5"
+              stroke="#dc2626"
+              stroke-width="1.5"
+            />
+            <text x="342" y="31" style="font-size: 11.5px; fill: #334155">
+              Alternative / échec
+            </text>
+            <rect
+              x="16"
+              y="72"
+              width="1148"
+              height="178"
+              rx="10"
+              fill="#f8fafc"
+              stroke="#e2e8f0"
+            />
+            <rect
+              x="16"
+              y="72"
+              width="110"
+              height="178"
+              rx="10"
+              fill="#eef2f7"
+              stroke="#e2e8f0"
+            />
+            <text class="lname" x="71" y="153" text-anchor="middle">
+              Import du
+            </text>
+            <text class="lname" x="71" y="168" text-anchor="middle">stock</text>
+            <g>
+              <rect
+                x="138"
+                y="83"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="223"
+                y="98"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="223"
+                y="121"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Import créé
+              </text>
+            </g>
+            <g>
+              <rect
+                x="338"
+                y="83"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="423"
+                y="98"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="423"
+                y="121"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Import terminé
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-fl)" d="M308,112 L336,112" />
+            <g>
+              <rect
+                x="538"
+                y="83"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="623"
+                y="98"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="623"
+                y="121"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Stock analysé
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-fl)" d="M508,112 L536,112" />
+            <g>
+              <rect
+                x="738"
+                y="83"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="823"
+                y="98"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="823"
+                y="121"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Actions générées
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-fl)" d="M708,112 L736,112" />
+            <g>
+              <rect
+                x="938"
+                y="83"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="1023"
+                y="98"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="1023"
+                y="121"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Stock réanalysé
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-fl)" d="M908,112 L936,112" />
+            <g>
+              <rect
+                x="138"
+                y="163"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fca5a5"
+                stroke="#dc2626"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="223"
+                y="178"
+                text-anchor="middle"
+                fill="#7f1d1d"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="223"
+                y="201"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                Import échoué
+              </text>
+            </g>
+            <path
+              class="edge-ko"
+              marker-end="url(#a-fl-ko)"
+              d="M223,141 L223,161"
+            />
+            <text class="elab" x="269" y="156" text-anchor="middle">sinon</text>
+            <rect
+              x="16"
+              y="266"
+              width="1148"
+              height="178"
+              rx="10"
+              fill="#f8fafc"
+              stroke="#e2e8f0"
+            />
+            <rect
+              x="16"
+              y="266"
+              width="110"
+              height="178"
+              rx="10"
+              fill="#eef2f7"
+              stroke="#e2e8f0"
+            />
+            <text class="lname" x="71" y="347" text-anchor="middle">
+              Don aux
+            </text>
+            <text class="lname" x="71" y="362" text-anchor="middle">
+              associations
+            </text>
+            <g>
+              <rect
+                x="138"
+                y="277"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="223"
+                y="292"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="223"
+                y="309"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Proposition de
+              </text>
+              <text
+                class="lab"
+                x="223"
+                y="324"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                don envoyée
+              </text>
+            </g>
+            <g>
+              <rect
+                x="338"
+                y="277"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="423"
+                y="292"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="423"
+                y="309"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Proposition
+              </text>
+              <text
+                class="lab"
+                x="423"
+                y="324"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                acceptée
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-fl)" d="M308,306 L336,306" />
+            <g>
+              <rect
+                x="538"
+                y="277"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="623"
+                y="292"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="623"
+                y="315"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Retrait planifié
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-fl)" d="M508,306 L536,306" />
+            <g>
+              <rect
+                x="738"
+                y="277"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="823"
+                y="292"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="823"
+                y="315"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Don complété
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-fl)" d="M708,306 L736,306" />
+            <g>
+              <rect
+                x="938"
+                y="277"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="1023"
+                y="292"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="1023"
+                y="315"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Reçu Cerfa émis
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-fl)" d="M908,306 L936,306" />
+            <g>
+              <rect
+                x="138"
+                y="357"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fca5a5"
+                stroke="#dc2626"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="223"
+                y="372"
+                text-anchor="middle"
+                fill="#7f1d1d"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="223"
+                y="389"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                Proposition
+              </text>
+              <text
+                class="lab"
+                x="223"
+                y="404"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                refusée
+              </text>
+            </g>
+            <path
+              class="edge-ko"
+              marker-end="url(#a-fl-ko)"
+              d="M223,335 L223,355"
+            />
+            <text class="elab" x="269" y="350" text-anchor="middle">refus</text>
+            <g>
+              <rect
+                x="538"
+                y="357"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fca5a5"
+                stroke="#dc2626"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="623"
+                y="372"
+                text-anchor="middle"
+                fill="#7f1d1d"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="623"
+                y="395"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                Don non récupéré
+              </text>
+            </g>
+            <path
+              class="edge-ko"
+              marker-end="url(#a-fl-ko)"
+              d="M623,335 L623,355"
+            />
+            <text class="elab" x="669" y="350" text-anchor="middle">
+              non retiré
+            </text>
+            <rect
+              x="16"
+              y="460"
+              width="1148"
+              height="178"
+              rx="10"
+              fill="#f8fafc"
+              stroke="#e2e8f0"
+            />
+            <rect
+              x="16"
+              y="460"
+              width="110"
+              height="178"
+              rx="10"
+              fill="#eef2f7"
+              stroke="#e2e8f0"
+            />
+            <text class="lname" x="71" y="541" text-anchor="middle">
+              Click &
+            </text>
+            <text class="lname" x="71" y="556" text-anchor="middle">
+              collect B2C
+            </text>
+            <g>
+              <rect
+                x="138"
+                y="471"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="223"
+                y="486"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="223"
+                y="509"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Offre publiée
+              </text>
+            </g>
+            <g>
+              <rect
+                x="338"
+                y="471"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="423"
+                y="486"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="423"
+                y="503"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Commande
+              </text>
+              <text
+                class="lab"
+                x="423"
+                y="518"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                réservée
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-fl)" d="M308,500 L336,500" />
+            <g>
+              <rect
+                x="538"
+                y="471"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="623"
+                y="486"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="623"
+                y="509"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Commande prête
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-fl)" d="M508,500 L536,500" />
+            <g>
+              <rect
+                x="738"
+                y="471"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fb923c"
+                stroke="#ea580c"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="823"
+                y="486"
+                text-anchor="middle"
+                fill="#431407"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="823"
+                y="509"
+                text-anchor="middle"
+                fill="#431407"
+              >
+                Commande retirée
+              </text>
+            </g>
+            <path class="edge" marker-end="url(#a-fl)" d="M708,500 L736,500" />
+            <g>
+              <rect
+                x="338"
+                y="551"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fca5a5"
+                stroke="#dc2626"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="423"
+                y="566"
+                text-anchor="middle"
+                fill="#7f1d1d"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="423"
+                y="589"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                Commande expirée
+              </text>
+            </g>
+            <path
+              class="edge-ko"
+              marker-end="url(#a-fl-ko)"
+              d="M423,529 L423,549"
+            />
+            <text class="elab" x="469" y="544" text-anchor="middle">
+              délai dépassé
+            </text>
+            <g>
+              <rect
+                x="538"
+                y="551"
+                width="170"
+                height="58"
+                rx="7"
+                fill="#fca5a5"
+                stroke="#dc2626"
+                stroke-width="1.5"
+              />
+              <text
+                class="tag"
+                x="623"
+                y="566"
+                text-anchor="middle"
+                fill="#7f1d1d"
+                opacity="0.75"
+              >
+                événement
+              </text>
+              <text
+                class="lab"
+                x="623"
+                y="589"
+                text-anchor="middle"
+                fill="#7f1d1d"
+              >
+                Commande annulée
+              </text>
+            </g>
+            <path
+              class="edge-ko"
+              marker-end="url(#a-fl-ko)"
+              d="M623,529 L623,549"
+            />
+            <text class="elab" x="669" y="544" text-anchor="middle">
+              réappro. stock
+            </text>
+          </svg>
+        </div>
+        <div class="legend">
+          <span
+            ><i style="background: #fb923c; border: 2px solid #ea580c"></i>
+            Événement métier</span
+          >
+          <span
+            ><i style="background: #fca5a5; border: 2px solid #dc2626"></i>
+            Alternative / échec</span
+          >
+          <span
+            >— trait plein : suite nominale · - - - trait pointillé :
+            bifurcation</span
+          >
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Schémas alignés sur le code (<code>backend/src/modules/ingestion</code>,
+      <code>analysis</code>, <code>scheduling</code>). Notation
+      <strong>C4</strong> (Simon Brown) : Personne · Conteneur · Composant ·
+      Système externe. Export <strong>SVG</strong> (vectoriel autonome) ou
+      <strong>PNG</strong> (×2).
+    </footer>
+
+    <script>
+      function serializeSVG(id) {
+        const svg = document.getElementById(id).cloneNode(true);
+        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+        const source = new XMLSerializer().serializeToString(svg);
+        return '<?xml version="1.0" encoding="UTF-8"?>\n' + source;
+      }
+      function triggerDownload(href, filename) {
+        const a = document.createElement('a');
+        a.href = href;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+      function downloadSVG(id, filename) {
+        const blob = new Blob([serializeSVG(id)], {
+          type: 'image/svg+xml;charset=utf-8',
+        });
+        const url = URL.createObjectURL(blob);
+        triggerDownload(url, filename + '.svg');
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+      function downloadPNG(id, filename) {
+        const svgEl = document.getElementById(id);
+        const vb = svgEl.viewBox.baseVal;
+        const scale = 2;
+        const w = (vb && vb.width) || svgEl.clientWidth;
+        const h = (vb && vb.height) || svgEl.clientHeight;
+        const svgBlob = new Blob([serializeSVG(id)], {
+          type: 'image/svg+xml;charset=utf-8',
+        });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+        img.onload = function () {
+          const canvas = document.createElement('canvas');
+          canvas.width = w * scale;
+          canvas.height = h * scale;
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          URL.revokeObjectURL(url);
+          canvas.toBlob(function (blob) {
+            const pngUrl = URL.createObjectURL(blob);
+            triggerDownload(pngUrl, filename + '.png');
+            setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
+          }, 'image/png');
+        };
+        img.onerror = function () {
+          URL.revokeObjectURL(url);
+          alert("Export PNG impossible — utilisez l'export SVG.");
+        };
+        img.src = url;
+      }
+    </script>
+  </body>
+</html>

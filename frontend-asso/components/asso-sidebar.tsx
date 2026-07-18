@@ -4,6 +4,7 @@ import { Gift, LogOut, Package, User2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 
+import { SavelyLogo } from '@/components/savely-logo';
 import { clearToken } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
@@ -27,13 +28,10 @@ export function AssoSidebar() {
       {/* Logo */}
       <div className="flex h-14 items-center px-4">
         <Link href="/offres" className="flex items-center gap-2">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-savely-600">
-            <span className="text-[11px] font-bold leading-none text-white">
-              S
-            </span>
-          </div>
-          <span className="text-sm font-semibold text-foreground">Savely</span>
-          <span className="text-[10px] text-muted-foreground">Asso</span>
+          <SavelyLogo className="h-auto w-20 text-foreground" />
+          <span className="rounded bg-primary-tint px-1.5 py-0.5 text-[10px] font-medium text-primary">
+            Asso
+          </span>
         </Link>
       </div>
 

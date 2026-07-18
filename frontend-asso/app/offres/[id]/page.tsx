@@ -4,6 +4,9 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { AssoLayout } from '@/components/asso-layout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   accepterOffre,
   fetchOffre,
@@ -43,9 +46,6 @@ function fmtSlot(slot: PickupSlot) {
   });
   return { date, heure: `${heureDebut} – ${heureFin}` };
 }
-
-const inputCls =
-  'w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none transition-shadow focus:ring-2 focus:ring-ring';
 
 export default function OffrePage() {
   const router = useRouter();
@@ -158,12 +158,13 @@ export default function OffrePage() {
             récupération (SAV-XXXX) est disponible dans l&apos;onglet{' '}
             <strong>Mes dons</strong>.
           </p>
-          <button
+          <Button
             onClick={() => router.push('/dons')}
-            className="mt-4 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:opacity-90"
+            size="lg"
+            className="mt-4 px-6"
           >
             Voir mes dons
-          </button>
+          </Button>
         </div>
       )}
 
@@ -176,12 +177,14 @@ export default function OffrePage() {
           <p className="mt-2 text-sm text-muted-foreground">
             L&apos;officine en sera informée. Merci pour votre réponse.
           </p>
-          <button
+          <Button
             onClick={() => router.push('/offres')}
-            className="mt-4 rounded-lg border border-border px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            variant="outline"
+            size="lg"
+            className="mt-4 px-6"
           >
             Retour aux offres
-          </button>
+          </Button>
         </div>
       )}
 
@@ -207,29 +210,32 @@ export default function OffrePage() {
             ))}
           </div>
           {refusalReason === 'Autre' && (
-            <textarea
+            <Textarea
               value={customReason}
               onChange={(e) => setCustomReason(e.target.value)}
               placeholder="Précisez…"
               rows={3}
-              className={inputCls}
             />
           )}
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex gap-3">
-            <button
+            <Button
               onClick={() => setView('detail')}
-              className="flex-1 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+              variant="outline"
+              size="lg"
+              className="flex-1"
             >
               Annuler
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleRefuse}
               disabled={!refusalReason || submitting}
-              className="flex-1 rounded-lg bg-destructive py-2.5 text-sm font-medium text-destructive-foreground transition-colors hover:opacity-90 disabled:opacity-40"
+              variant="destructive"
+              size="lg"
+              className="flex-1"
             >
               {submitting ? 'Envoi…' : 'Confirmer le refus'}
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -350,11 +356,10 @@ export default function OffrePage() {
                     (optionnel)
                   </span>
                 </label>
-                <input
+                <Input
                   value={pickedUpBy}
                   onChange={(e) => setPickedUpBy(e.target.value)}
                   placeholder="Prénom Nom"
-                  className={inputCls}
                 />
               </div>
 
@@ -367,19 +372,22 @@ export default function OffrePage() {
               {error && <p className="text-sm text-destructive">{error}</p>}
 
               <div className="flex gap-3">
-                <button
+                <Button
                   onClick={handleAccept}
                   disabled={submitting || !selectedSlot}
-                  className="flex-1 rounded-xl bg-primary py-3 font-semibold text-primary-foreground transition-colors hover:opacity-90 disabled:opacity-40"
+                  size="lg"
+                  className="h-11 flex-1 text-sm"
                 >
                   {submitting ? 'Envoi…' : '✅ Accepter ce don'}
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={() => setView('refuse_form')}
-                  className="rounded-xl border border-destructive/30 px-4 py-3 text-sm font-medium text-destructive transition-colors hover:bg-destructive/5"
+                  variant="outline"
+                  size="lg"
+                  className="h-11 border-destructive/30 px-4 text-sm text-destructive hover:bg-destructive/5 hover:text-destructive"
                 >
                   ❌ Refuser
-                </button>
+                </Button>
               </div>
             </div>
           )}

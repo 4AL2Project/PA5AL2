@@ -2,6 +2,9 @@
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { type AssoProfile, fetchProfile, updateProfile } from '@/lib/api';
 
 const CATEGORIES = [
@@ -80,22 +83,21 @@ function AddressAutocomplete({
 
   return (
     <div className="relative">
-      <input
+      <Input
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         onBlur={() => setTimeout(() => setOpen(false), 150)}
         placeholder="12 rue de la Paix"
         required
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 focus:border-savely-500 outline-none"
       />
       {open && (
-        <ul className="absolute z-50 left-0 right-0 bg-white border border-gray-200 rounded-lg mt-1 shadow-lg overflow-hidden">
+        <ul className="absolute z-50 left-0 right-0 bg-popover border border-border rounded-lg mt-1 shadow-lg overflow-hidden">
           {suggestions.map((s) => (
             <li key={s.label}>
               <button
                 type="button"
                 onMouseDown={() => pick(s)}
-                className="w-full text-left px-3 py-2 text-sm hover:bg-savely-50 text-gray-800"
+                className="w-full text-left px-3 py-2 text-[13px] hover:bg-primary-tint text-foreground"
               >
                 {s.label}
               </button>
@@ -173,42 +175,34 @@ export default function SetupPage() {
   if (!profile)
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-savely-600 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <div className="max-w-lg mx-auto px-4 py-12">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
           <div className="flex gap-1 mb-8">
             {[1, 2].map((s) => (
               <div
                 key={s}
-                className={`h-1.5 flex-1 rounded-full ${s <= step ? 'bg-savely-600' : 'bg-gray-200'}`}
+                className={`h-1.5 flex-1 rounded-full ${s <= step ? 'bg-primary' : 'bg-muted'}`}
               />
             ))}
           </div>
 
           {step === 1 && (
             <div className="space-y-5">
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-foreground">
                 Vos informations
               </h1>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nom de l'association *
-                </label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 focus:border-savely-500 outline-none"
-                />
+                <Label className="mb-1.5">Nom de l'association *</Label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Adresse *
-                </label>
+                <Label className="mb-1.5">Adresse *</Label>
                 <AddressAutocomplete
                   value={address}
                   onChange={setAddress}
@@ -221,67 +215,56 @@ export default function SetupPage() {
               </div>
               <div className="grid grid-cols-[120px_1fr] gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Code postal *
-                  </label>
-                  <input
+                  <Label className="mb-1.5">Code postal *</Label>
+                  <Input
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
                     placeholder="75001"
                     required
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 focus:border-savely-500 outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Ville *
-                  </label>
-                  <input
+                  <Label className="mb-1.5">Ville *</Label>
+                  <Input
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     placeholder="Paris"
                     required
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 focus:border-savely-500 outline-none"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Téléphone
-                </label>
-                <input
+                <Label className="mb-1.5">Téléphone</Label>
+                <Input
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 focus:border-savely-500 outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Site web
-                </label>
-                <input
+                <Label className="mb-1.5">Site web</Label>
+                <Input
                   value={siteWeb}
                   onChange={(e) => setSiteWeb(e.target.value)}
                   placeholder="https://"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-savely-500 focus:border-savely-500 outline-none"
                 />
               </div>
-              <button
+              <Button
                 onClick={() => setStep(2)}
                 disabled={!name || !address || !postalCode || !city}
-                className="w-full bg-savely-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-savely-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                size="lg"
+                className="w-full"
               >
                 Suivant →
-              </button>
+              </Button>
             </div>
           )}
 
           {step === 2 && (
             <div className="space-y-5">
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-foreground">
                 Catégories acceptées
               </h1>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 Sélectionnez les types de produits que vous êtes en mesure de
                 réceptionner.
               </p>
@@ -291,10 +274,10 @@ export default function SetupPage() {
                     key={cat}
                     type="button"
                     onClick={() => toggleCat(cat)}
-                    className={`text-sm font-medium px-3 py-1.5 rounded-full border transition-colors ${
+                    className={`text-[13px] font-medium px-3 py-1.5 rounded-full border transition-colors ${
                       categories.includes(cat)
-                        ? 'bg-savely-50 border-savely-400 text-savely-700'
-                        : 'border-gray-200 text-gray-600 hover:border-savely-300'
+                        ? 'bg-primary-tint border-primary text-primary'
+                        : 'border-border text-muted-foreground hover:border-primary/40'
                     }`}
                   >
                     {categories.includes(cat) && '✓ '}
@@ -302,21 +285,24 @@ export default function SetupPage() {
                   </button>
                 ))}
               </div>
-              {error && <p className="text-sm text-red-600">{error}</p>}
+              {error && <p className="text-sm text-destructive">{error}</p>}
               <div className="flex gap-3">
-                <button
+                <Button
                   onClick={() => setStep(1)}
-                  className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg font-medium text-sm hover:bg-gray-50 transition-colors"
+                  variant="outline"
+                  size="lg"
+                  className="flex-1"
                 >
                   ← Retour
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleFinish}
                   disabled={saving || categories.length === 0}
-                  className="flex-1 bg-savely-600 text-white py-2.5 rounded-lg font-medium text-sm hover:bg-savely-700 disabled:opacity-40 transition-colors"
+                  size="lg"
+                  className="flex-1"
                 >
                   {saving ? 'Enregistrement…' : 'Finaliser mon inscription'}
-                </button>
+                </Button>
               </div>
             </div>
           )}

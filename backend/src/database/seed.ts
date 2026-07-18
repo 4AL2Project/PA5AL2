@@ -1332,6 +1332,41 @@ async function seedProductsForPharmacy(
   return skuToId;
 }
 
+// ─── DonParametres ────────────────────────────────────────────────────────────
+
+async function seedDonParametres() {
+  const configs = [
+    {
+      pharmacy_id: PHARMACY_1_ID,
+      seuil_dormance_jours: 90,
+      rayon_matching_km: 50,
+    },
+    {
+      pharmacy_id: PHARMACY_2_ID,
+      seuil_dormance_jours: 75,
+      rayon_matching_km: 30,
+    },
+    {
+      pharmacy_id: PHARMACY_3_ID,
+      seuil_dormance_jours: 100,
+      rayon_matching_km: 60,
+    },
+  ];
+  let created = 0;
+  for (const cfg of configs) {
+    const existing = await prisma.donParametres.findUnique({
+      where: { pharmacy_id: cfg.pharmacy_id },
+    });
+    if (!existing) {
+      await prisma.donParametres.create({ data: cfg });
+      created++;
+    }
+  }
+  console.log(
+    `✅ DonParametres : ${created} créé(s), ${configs.length - created} déjà présent(s)`
+  );
+}
+
 // ─── Cycles de don — 4 scénarios du cycle de vie complet ─────────────────────
 
 async function seedDonationCycles(
@@ -1758,6 +1793,9 @@ async function main() {
   console.log(
     `   Pharmacie 3 (Butte Montmartre)            : ${PRODUCTS_P3.length} produits`
   );
+
+  console.log('\n⚙️  DonParametres...');
+  await seedDonParametres();
 
   console.log('\n💝 Cycles de dons...');
   await seedDonationCycles(p1Ids, assoByName);

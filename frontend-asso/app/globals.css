@@ -7,10 +7,14 @@
   --foreground: oklch(0.14 0.01 260);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.14 0.01 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.14 0.01 260);
   --muted: oklch(0.93 0.005 260);
   --muted-foreground: oklch(0.45 0.01 260);
   --accent: oklch(0.93 0.005 260);
   --accent-foreground: oklch(0.2 0.01 260);
+  --secondary: oklch(0.93 0.005 260);
+  --secondary-foreground: oklch(0.2 0.01 260);
   --border: oklch(0.88 0.008 260);
   --input: oklch(0.88 0.008 260);
   --primary: oklch(0.6 0.118 184.704);
@@ -29,6 +33,7 @@
     background-color: var(--background);
     color: var(--foreground);
     font-family:
+      var(--font-geist-sans),
       ui-sans-serif,
       system-ui,
       -apple-system,

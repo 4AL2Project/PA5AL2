@@ -12,15 +12,16 @@ interface DemoModalProps {
 type State = 'idle' | 'loading' | 'success' | 'error';
 
 const inputStyle: React.CSSProperties = {
-  padding: '11px 14px',
-  border: '1.5px solid #E5E7EB',
+  padding: '7px 10px',
+  border: '1px solid #E5E7EB',
   borderRadius: 10,
-  fontSize: 14,
+  fontSize: 13,
   outline: 'none',
   color: '#1A1A1A',
   width: '100%',
-  transition: 'border-color .2s',
-  background: '#fff',
+  transition: 'border-color .2s, box-shadow .2s',
+  background: '#FAFAFA',
+  boxShadow: '0 1px 2px 0 rgba(0,0,0,0.03)',
 };
 
 export function DemoModal({ isOpen, onClose }: DemoModalProps) {
@@ -81,7 +82,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
   if (!isOpen) return null;
 
   const focus = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    (e.currentTarget.style.borderColor = '#4A9B8E');
+    (e.currentTarget.style.borderColor = '#009689');
   const blur = (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     (e.currentTarget.style.borderColor = '#E5E7EB');
 
@@ -152,7 +153,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               style={{
                 width: 56,
                 height: 56,
-                background: '#F0F7F6',
+                background: '#e8f9f6',
                 borderRadius: '50%',
                 display: 'flex',
                 alignItems: 'center',
@@ -163,7 +164,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M5 13l4 4L19 7"
-                  stroke="#4A9B8E"
+                  stroke="#009689"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -189,7 +190,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               onClick={onClose}
               style={{
                 marginTop: 24,
-                background: '#4A9B8E',
+                background: '#009689',
                 color: '#fff',
                 fontSize: 14,
                 fontWeight: 700,
@@ -235,7 +236,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 <label
                   style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
                 >
-                  Prénom <span style={{ color: '#4A9B8E' }}>*</span>
+                  Prénom <span style={{ color: '#009689' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -253,7 +254,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 <label
                   style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
                 >
-                  Nom <span style={{ color: '#4A9B8E' }}>*</span>
+                  Nom <span style={{ color: '#009689' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -280,7 +281,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                 <label
                   style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
                 >
-                  Email <span style={{ color: '#4A9B8E' }}>*</span>
+                  Email <span style={{ color: '#009689' }}>*</span>
                 </label>
                 <input
                   type="email"
@@ -325,7 +326,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
                   style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}
                 >
                   Nom de l'officine / groupement{' '}
-                  <span style={{ color: '#4A9B8E' }}>*</span>
+                  <span style={{ color: '#009689' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -408,7 +409,7 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               type="submit"
               disabled={state === 'loading'}
               style={{
-                background: '#4A9B8E',
+                background: '#009689',
                 color: '#fff',
                 fontSize: 15,
                 fontWeight: 700,
@@ -421,10 +422,10 @@ export function DemoModal({ isOpen, onClose }: DemoModalProps) {
               }}
               onMouseEnter={(e) => {
                 if (state !== 'loading')
-                  e.currentTarget.style.background = '#2D6B62';
+                  e.currentTarget.style.background = '#00786c';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = '#4A9B8E';
+                e.currentTarget.style.background = '#009689';
               }}
             >
               {state === 'loading' ? 'Envoi…' : 'Demander ma démo →'}

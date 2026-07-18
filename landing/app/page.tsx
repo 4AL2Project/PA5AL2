@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Navbar } from '@/components/navbar';
+import { SavelyLogo } from '@/components/savely-logo';
 import { Associations } from '@/components/associations';
 import { Particuliers } from '@/components/particuliers';
 import { FadeUp } from '@/components/fade-up';
@@ -12,10 +13,10 @@ import { DemoModal } from '@/components/demo-modal';
 function CheckCircleTeal() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-      <circle cx="9" cy="9" r="9" fill="#F0F7F6" />
+      <circle cx="9" cy="9" r="9" fill="#e8f9f6" />
       <path
         d="M5.5 9l2.5 2.5 4.5-4.5"
-        stroke="#4A9B8E"
+        stroke="#009689"
         strokeWidth="1.8"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -57,10 +58,10 @@ function CheckCircleWhiteLg() {
 function TrustCheckmark() {
   return (
     <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-      <circle cx="7.5" cy="7.5" r="7.5" fill="#4A9B8E" opacity=".15" />
+      <circle cx="7.5" cy="7.5" r="7.5" fill="#009689" opacity=".15" />
       <path
         d="M4.5 7.5L6.5 9.5L10.5 5.5"
-        stroke="#4A9B8E"
+        stroke="#009689"
         strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -74,7 +75,7 @@ function ArrowRight() {
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
       <path
         d="M5 12h14M14 7l5 5-5 5"
-        stroke="#C5E0DC"
+        stroke="#b9e3dd"
         strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -106,8 +107,8 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 8,
-                  background: '#F0F7F6',
-                  border: '1px solid #C5E0DC',
+                  background: '#e8f9f6',
+                  border: '1px solid #b9e3dd',
                   borderRadius: 100,
                   padding: '6px 14px',
                   marginBottom: 28,
@@ -118,12 +119,12 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
                   style={{
                     width: 7,
                     height: 7,
-                    background: '#4A9B8E',
+                    background: '#009689',
                     borderRadius: '50%',
                   }}
                 />
                 <span
-                  style={{ fontSize: 13, fontWeight: 600, color: '#4A9B8E' }}
+                  style={{ fontSize: 13, fontWeight: 600, color: '#009689' }}
                 >
                   Pour les officines et groupements
                 </span>
@@ -143,7 +144,7 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
               >
                 Vos produits cosmétiques dorment.
                 <br />
-                <span style={{ color: '#4A9B8E' }}>Savely les réveille.</span>
+                <span style={{ color: '#009689' }}>Savely les réveille.</span>
               </h1>
             </FadeUp>
 
@@ -175,22 +176,22 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
                 <button
                   onClick={onDemoClick}
                   style={{
-                    background: '#4A9B8E',
+                    background: '#009689',
                     color: '#fff',
                     fontSize: 15,
                     fontWeight: 700,
                     padding: '15px 28px',
-                    borderRadius: 12,
+                    borderRadius: 10,
                     display: 'inline-block',
                     transition: 'background .2s',
-                    boxShadow: '0 4px 16px rgba(74,155,142,.35)',
+                    boxShadow: '0 4px 16px rgba(0, 150, 137,.35)',
                     cursor: 'pointer',
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = '#2D6B62')
+                    (e.currentTarget.style.background = '#00786c')
                   }
                   onMouseLeave={(e) =>
-                    (e.currentTarget.style.background = '#4A9B8E')
+                    (e.currentTarget.style.background = '#009689')
                   }
                 >
                   Demander une démo →
@@ -199,17 +200,17 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
                   href="#particuliers"
                   style={{
                     background: 'transparent',
-                    color: '#4A9B8E',
+                    color: '#009689',
                     fontSize: 15,
                     fontWeight: 600,
                     padding: '15px 24px',
-                    borderRadius: 12,
+                    borderRadius: 10,
                     display: 'inline-block',
-                    border: '1.5px solid #4A9B8E',
+                    border: '1px solid #009689',
                     transition: 'background .2s',
                   }}
                   onMouseEnter={(e) =>
-                    (e.currentTarget.style.background = '#F0F7F6')
+                    (e.currentTarget.style.background = '#e8f9f6')
                   }
                   onMouseLeave={(e) =>
                     (e.currentTarget.style.background = 'transparent')
@@ -262,16 +263,16 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
                   background: '#fff',
                   borderRadius: 20,
                   boxShadow:
-                    '0 24px 64px rgba(0,0,0,.12),0 4px 16px rgba(74,155,142,.15)',
+                    '0 24px 64px rgba(0,0,0,.12),0 4px 16px rgba(0, 150, 137,.15)',
                   overflow: 'hidden',
-                  border: '1px solid rgba(74,155,142,.1)',
+                  border: '1px solid rgba(0, 150, 137,.1)',
                 }}
               >
                 {/* Window bar */}
                 <div
                   style={{
                     background: '#F8FFFE',
-                    borderBottom: '1px solid #EAF4F3',
+                    borderBottom: '1px solid #e8f9f6',
                     padding: '14px 20px',
                     display: 'flex',
                     alignItems: 'center',
@@ -338,7 +339,7 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
                     </div>
                     <div
                       style={{
-                        background: '#4A9B8E',
+                        background: '#009689',
                         color: '#fff',
                         fontSize: 11,
                         fontWeight: 700,
@@ -361,13 +362,13 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
                   >
                     {[
                       {
-                        gradient: 'linear-gradient(135deg,#4A9B8E,#3a8a7d)',
+                        gradient: 'linear-gradient(135deg,#009689,#00877a)',
                         label: 'Économisé',
                         value: '284€',
                         sub: 'ce mois',
                       },
                       {
-                        gradient: 'linear-gradient(135deg,#3a8a7d,#2D6B62)',
+                        gradient: 'linear-gradient(135deg,#00877a,#00786c)',
                         label: 'Dons',
                         value: '3',
                         sub: 'complétés',
@@ -439,11 +440,11 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
                       }}
                     >
                       {[
-                        { h: '35%', c: '#C5E0DC' },
-                        { h: '55%', c: '#4A9B8E' },
-                        { h: '40%', c: '#C5E0DC' },
-                        { h: '70%', c: '#4A9B8E' },
-                        { h: '85%', c: '#4A9B8E' },
+                        { h: '35%', c: '#b9e3dd' },
+                        { h: '55%', c: '#009689' },
+                        { h: '40%', c: '#b9e3dd' },
+                        { h: '70%', c: '#009689' },
+                        { h: '85%', c: '#009689' },
                         { h: '100%', c: '#F5A623' },
                       ].map(({ h, c }, i) => (
                         <div
@@ -466,13 +467,13 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 10,
-                      background: '#F0F7F6',
+                      background: '#e8f9f6',
                       borderRadius: 10,
                       padding: '12px 14px',
                     }}
                   >
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                      <rect width="18" height="18" rx="5" fill="#4A9B8E" />
+                      <rect width="18" height="18" rx="5" fill="#009689" />
                       <path
                         d="M5 9l3 3 5-5"
                         stroke="#fff"
@@ -500,7 +501,7 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
                         marginLeft: 'auto',
                         fontSize: 11,
                         fontWeight: 700,
-                        color: '#4A9B8E',
+                        color: '#009689',
                         cursor: 'pointer',
                       }}
                     >
@@ -521,7 +522,7 @@ function Hero({ onDemoClick }: { onDemoClick?: () => void }) {
 
 function Stats() {
   return (
-    <section style={{ background: '#F0F7F6', padding: '96px 0' }}>
+    <section style={{ background: '#e8f9f6', padding: '96px 0' }}>
       <div className="lp-container">
         <FadeUp style={{ textAlign: 'center', marginBottom: 56 }}>
           <h2
@@ -560,14 +561,14 @@ function Stats() {
           {[
             {
               value: '650€–3 750€',
-              color: '#4A9B8E',
+              color: '#009689',
               title: 'perdus par mois',
               desc: 'par officine sur les produits dormants non valorisés',
               delay: 0,
             },
             {
               value: '47 jours',
-              color: '#4A9B8E',
+              color: '#009689',
               title: "d'immobilisation moyenne",
               desc: "avant qu'une action soit prise sur un cosmétique à rotation lente",
               delay: 0.1,
@@ -586,8 +587,8 @@ function Stats() {
                   background: '#fff',
                   borderRadius: 20,
                   padding: '40px 32px',
-                  border: '1px solid #EAF4F3',
-                  boxShadow: '0 4px 24px rgba(74,155,142,.08)',
+                  border: '1px solid #e8f9f6',
+                  boxShadow: '0 4px 24px rgba(0, 150, 137,.08)',
                   height: '100%',
                 }}
               >
@@ -624,7 +625,7 @@ function Stats() {
         </div>
 
         <FadeUp style={{ textAlign: 'center', marginTop: 48 }}>
-          <p style={{ fontSize: 17, fontWeight: 600, color: '#2D6B62' }}>
+          <p style={{ fontSize: 17, fontWeight: 600, color: '#00786c' }}>
             Savely transforme ces pertes en avantages fiscaux traçables.
           </p>
         </FadeUp>
@@ -646,18 +647,18 @@ function HowItWorks() {
             width="16"
             height="20"
             rx="3"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="2"
           />
           <path
             d="M12 10h8M12 14h8M12 18h5"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="1.8"
             strokeLinecap="round"
           />
           <path
             d="M16 24v4M12 26l4 2 4-2"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -672,16 +673,16 @@ function HowItWorks() {
     {
       icon: (
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <circle cx="16" cy="16" r="10" stroke="#4A9B8E" strokeWidth="2" />
+          <circle cx="16" cy="16" r="10" stroke="#009689" strokeWidth="2" />
           <path
             d="M16 11v5l3 3"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="2"
             strokeLinecap="round"
           />
           <path
             d="M10 7l2 2M22 7l-2 2"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="1.5"
             strokeLinecap="round"
           />
@@ -701,19 +702,19 @@ function HowItWorks() {
             width="20"
             height="16"
             rx="4"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="2"
           />
           <path
             d="M11 16l3 3 7-6"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
           <path
             d="M16 4v4"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="1.8"
             strokeLinecap="round"
           />
@@ -773,13 +774,13 @@ function HowItWorks() {
                 style={{
                   width: 72,
                   height: 72,
-                  background: '#F0F7F6',
+                  background: '#e8f9f6',
                   borderRadius: 20,
                   margin: '0 auto 24px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  border: '2px solid #C5E0DC',
+                  border: '2px solid #b9e3dd',
                 }}
               >
                 {step.icon}
@@ -791,7 +792,7 @@ function HowItWorks() {
                   justifyContent: 'center',
                   width: 28,
                   height: 28,
-                  background: '#4A9B8E',
+                  background: '#009689',
                   borderRadius: '50%',
                   color: '#fff',
                   fontSize: 13,
@@ -851,17 +852,17 @@ function HowItWorks() {
 function Features() {
   const items = [
     {
-      iconBg: '#F0F7F6',
+      iconBg: '#e8f9f6',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="3" width="7" height="7" rx="2" fill="#4A9B8E" />
+          <rect x="3" y="3" width="7" height="7" rx="2" fill="#009689" />
           <rect
             x="3"
             y="14"
             width="7"
             height="7"
             rx="2"
-            fill="#4A9B8E"
+            fill="#009689"
             opacity=".4"
           />
           <rect
@@ -870,7 +871,7 @@ function Features() {
             width="7"
             height="7"
             rx="2"
-            fill="#4A9B8E"
+            fill="#009689"
             opacity=".4"
           />
           <rect
@@ -879,7 +880,7 @@ function Features() {
             width="7"
             height="7"
             rx="2"
-            fill="#4A9B8E"
+            fill="#009689"
             opacity=".7"
           />
         </svg>
@@ -888,15 +889,15 @@ function Features() {
       desc: "KPIs, actions prioritaires, ROI de vos dons — tout en un coup d'œil.",
     },
     {
-      iconBg: '#F0F7F6',
+      iconBg: '#e8f9f6',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-          <circle cx="9" cy="12" r="5" stroke="#4A9B8E" strokeWidth="2" />
+          <circle cx="9" cy="12" r="5" stroke="#009689" strokeWidth="2" />
           <circle
             cx="15"
             cy="12"
             r="5"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="2"
             strokeDasharray="2 1"
           />
@@ -930,7 +931,7 @@ function Features() {
       desc: 'Reçu fiscal généré et signé dès que le pickup est confirmé. 60% de réduction fiscale tracée.',
     },
     {
-      iconBg: '#F0F7F6',
+      iconBg: '#e8f9f6',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <rect
@@ -939,12 +940,12 @@ function Features() {
             width="14"
             height="18"
             rx="3"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="2"
           />
           <path
             d="M9 7h6M9 11h6M9 15h3"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="1.5"
             strokeLinecap="round"
           />
@@ -954,7 +955,7 @@ function Features() {
             width="6"
             height="5"
             rx="1"
-            fill="#4A9B8E"
+            fill="#009689"
             opacity=".2"
           />
         </svg>
@@ -963,18 +964,18 @@ function Features() {
       desc: 'Vos équipes terrain confirment les pickups en scannant un QR code. Simple et rapide.',
     },
     {
-      iconBg: '#F0F7F6',
+      iconBg: '#e8f9f6',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <path
             d="M12 3L4 7v5c0 4.4 3.4 8.5 8 9.5 4.6-1 8-5.1 8-9.5V7l-8-4z"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="2"
             strokeLinejoin="round"
           />
           <path
             d="M9 12l2 2 4-4"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -985,19 +986,19 @@ function Features() {
       desc: 'Données hébergées en France. Aucune donnée patient collectée. Audit disponible.',
     },
     {
-      iconBg: '#F0F7F6',
+      iconBg: '#e8f9f6',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
           <path
             d="M3 17l4-8 4 5 3-3 4 6"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
           <path
             d="M3 21h18"
-            stroke="#4A9B8E"
+            stroke="#009689"
             strokeWidth="1.5"
             strokeLinecap="round"
           />
@@ -1011,7 +1012,7 @@ function Features() {
   return (
     <section
       id="fonctionnalites"
-      style={{ background: '#F0F7F6', padding: '96px 0' }}
+      style={{ background: '#e8f9f6', padding: '96px 0' }}
     >
       <div className="lp-container">
         <FadeUp style={{ textAlign: 'center', marginBottom: 56 }}>
@@ -1095,13 +1096,13 @@ function Groupements({ onDemoClick }: { onDemoClick?: () => void }) {
       name: 'Pharmacie du Centre — Paris 11e',
       sub: '3 dons ce mois · 284€ économisés',
       badge: '+60%',
-      badgeBg: '#4A9B8E',
+      badgeBg: '#009689',
     },
     {
       name: 'Pharmacie Belleville — Paris 20e',
       sub: '1 don ce mois · 96€ économisés',
       badge: '+60%',
-      badgeBg: '#4A9B8E',
+      badgeBg: '#009689',
     },
     {
       name: 'Pharmacie Lafayette — Lyon 6e',
@@ -1114,7 +1115,7 @@ function Groupements({ onDemoClick }: { onDemoClick?: () => void }) {
   return (
     <section
       id="groupements"
-      style={{ background: '#4A9B8E', padding: '96px 0' }}
+      style={{ background: '#009689', padding: '96px 0' }}
     >
       <div className="lp-container">
         <div
@@ -1197,11 +1198,11 @@ function Groupements({ onDemoClick }: { onDemoClick?: () => void }) {
               onClick={onDemoClick}
               style={{
                 background: '#fff',
-                color: '#4A9B8E',
+                color: '#009689',
                 fontSize: 15,
                 fontWeight: 700,
                 padding: '15px 28px',
-                borderRadius: 12,
+                borderRadius: 10,
                 display: 'inline-block',
                 transition: 'background .2s',
                 boxShadow: '0 4px 20px rgba(0,0,0,.15)',
@@ -1279,7 +1280,7 @@ function Groupements({ onDemoClick }: { onDemoClick?: () => void }) {
                         padding: '5px 10px',
                         borderRadius: 8,
                         border:
-                          badgeBg === '#4A9B8E'
+                          badgeBg === '#009689'
                             ? '1px solid rgba(255,255,255,.3)'
                             : undefined,
                       }}
@@ -1405,7 +1406,7 @@ function SocialProof() {
                   background: '#fff',
                   borderRadius: 20,
                   padding: 32,
-                  border: '1px solid #EAF4F3',
+                  border: '1px solid #e8f9f6',
                   boxShadow: '0 4px 20px rgba(0,0,0,.06)',
                   height: '100%',
                 }}
@@ -1431,13 +1432,13 @@ function SocialProof() {
                     style={{
                       width: 40,
                       height: 40,
-                      background: '#F0F7F6',
+                      background: '#e8f9f6',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontWeight: 800,
-                      color: '#4A9B8E',
+                      color: '#009689',
                       fontSize: 14,
                     }}
                   >
@@ -1539,7 +1540,7 @@ function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
   ];
 
   return (
-    <section id="tarifs" style={{ background: '#F0F7F6', padding: '96px 0' }}>
+    <section id="tarifs" style={{ background: '#e8f9f6', padding: '96px 0' }}>
       <div className="lp-container">
         <FadeUp style={{ textAlign: 'center', marginBottom: 56 }}>
           <h2
@@ -1575,7 +1576,7 @@ function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
                 background: '#fff',
                 borderRadius: 24,
                 padding: '40px 36px',
-                border: '1px solid #EAF4F3',
+                border: '1px solid #e8f9f6',
                 boxShadow: '0 4px 24px rgba(0,0,0,.06)',
                 height: '100%',
                 display: 'flex',
@@ -1588,7 +1589,7 @@ function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '.1em',
-                  color: '#4A9B8E',
+                  color: '#009689',
                   marginBottom: 20,
                 }}
               >
@@ -1612,7 +1613,7 @@ function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
               <div
                 style={{
                   fontSize: 14,
-                  color: '#4A9B8E',
+                  color: '#009689',
                   fontWeight: 600,
                   marginBottom: 28,
                 }}
@@ -1650,23 +1651,23 @@ function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
                   display: 'block',
                   width: '100%',
                   textAlign: 'center',
-                  background: '#F0F7F6',
-                  color: '#4A9B8E',
+                  background: '#e8f9f6',
+                  color: '#009689',
                   fontSize: 15,
                   fontWeight: 700,
                   padding: 14,
-                  borderRadius: 12,
-                  border: '1.5px solid #4A9B8E',
+                  borderRadius: 10,
+                  border: '1px solid #009689',
                   transition: 'background .2s, color .2s',
                   cursor: 'pointer',
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#4A9B8E';
+                  e.currentTarget.style.background = '#009689';
                   e.currentTarget.style.color = '#fff';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#F0F7F6';
-                  e.currentTarget.style.color = '#4A9B8E';
+                  e.currentTarget.style.background = '#e8f9f6';
+                  e.currentTarget.style.color = '#009689';
                 }}
               >
                 Commencer gratuitement
@@ -1678,10 +1679,10 @@ function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
           <FadeUp delay={0.1}>
             <div
               style={{
-                background: '#4A9B8E',
+                background: '#009689',
                 borderRadius: 24,
                 padding: '40px 36px',
-                boxShadow: '0 16px 48px rgba(74,155,142,.35)',
+                boxShadow: '0 16px 48px rgba(0, 150, 137,.35)',
                 position: 'relative',
                 overflow: 'hidden',
                 height: '100%',
@@ -1772,11 +1773,11 @@ function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
                   width: '100%',
                   textAlign: 'center',
                   background: '#fff',
-                  color: '#4A9B8E',
+                  color: '#009689',
                   fontSize: 15,
                   fontWeight: 700,
                   padding: 14,
-                  borderRadius: 12,
+                  borderRadius: 10,
                   transition: 'background .2s',
                   cursor: 'pointer',
                 }}
@@ -1801,7 +1802,7 @@ function Pricing({ onDemoClick }: { onDemoClick?: () => void }) {
 
 function CtaFinal({ onDemoClick }: { onDemoClick?: () => void }) {
   return (
-    <section id="demo" style={{ background: '#4A9B8E', padding: '96px 0' }}>
+    <section id="demo" style={{ background: '#009689', padding: '96px 0' }}>
       <div className="lp-container">
         <FadeUp
           style={{ textAlign: 'center', maxWidth: 640, margin: '0 auto' }}
@@ -1833,11 +1834,11 @@ function CtaFinal({ onDemoClick }: { onDemoClick?: () => void }) {
             style={{
               display: 'inline-block',
               background: '#fff',
-              color: '#4A9B8E',
+              color: '#009689',
               fontSize: 17,
               fontWeight: 800,
               padding: '18px 40px',
-              borderRadius: 14,
+              borderRadius: 10,
               transition: 'background .2s, transform .15s',
               boxShadow: '0 8px 32px rgba(0,0,0,.2)',
               cursor: 'pointer',
@@ -1893,41 +1894,10 @@ function Footer() {
                 alignItems: 'center',
                 gap: 8,
                 marginBottom: 16,
+                color: '#fff',
               }}
             >
-              <svg
-                width="32"
-                height="32"
-                viewBox="0 0 48 48"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <rect
-                  width="48"
-                  height="48"
-                  rx="11"
-                  fill="#fff"
-                  fillOpacity=".1"
-                />
-                <path
-                  d="M8 13L16 35L24 13"
-                  stroke="white"
-                  strokeWidth="4.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path d="M28 13H42V35H34L28 29V13Z" fill="white" />
-              </svg>
-              <span
-                style={{
-                  fontSize: 18,
-                  fontWeight: 800,
-                  color: '#fff',
-                  letterSpacing: '-.5px',
-                }}
-              >
-                Savely
-              </span>
+              <SavelyLogo className="h-7 w-auto" />
             </div>
             <p
               style={{
@@ -1955,7 +1925,7 @@ function Footer() {
                 transition: 'background .2s',
               }}
               onMouseEnter={(e) =>
-                (e.currentTarget.style.background = '#4A9B8E')
+                (e.currentTarget.style.background = '#009689')
               }
               onMouseLeave={(e) =>
                 (e.currentTarget.style.background = '#2A2A2A')

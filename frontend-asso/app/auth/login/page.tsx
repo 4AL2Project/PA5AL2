@@ -3,6 +3,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 import { SavelyLogo } from '@/components/savely-logo';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { requestAssoMagicLink } from '@/lib/api';
 
 type State = 'idle' | 'loading' | 'sent' | 'error';
@@ -34,9 +37,8 @@ function LoginContent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm space-y-6 text-center">
-        <div className="mb-8 flex items-center justify-center gap-2.5">
-          <SavelyLogo size={36} />
-          <span className="text-xl font-bold text-foreground">Savely</span>
+        <div className="mb-8 flex items-center justify-center">
+          <SavelyLogo className="h-auto w-28 text-foreground" />
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-8">
@@ -86,13 +88,10 @@ function LoginContent() {
               </div>
 
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-foreground mb-1"
-                >
+                <Label htmlFor="email" className="mb-1.5 text-foreground">
                   Email de contact
-                </label>
-                <input
+                </Label>
+                <Input
                   id="email"
                   type="email"
                   required
@@ -100,7 +99,6 @@ function LoginContent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="contact@mon-association.fr"
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30 transition-colors"
                 />
               </div>
 
@@ -110,10 +108,11 @@ function LoginContent() {
                 </p>
               )}
 
-              <button
+              <Button
                 type="submit"
+                size="lg"
                 disabled={state === 'loading' || !email}
-                className="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+                className="w-full"
               >
                 {state === 'loading' ? (
                   <span className="flex items-center justify-center gap-2">
@@ -123,7 +122,7 @@ function LoginContent() {
                 ) : (
                   'Recevoir mon lien de connexion'
                 )}
-              </button>
+              </Button>
             </form>
           )}
         </div>

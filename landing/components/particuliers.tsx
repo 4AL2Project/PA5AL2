@@ -28,7 +28,7 @@ export function Particuliers() {
   return (
     <section
       id="particuliers"
-      style={{ background: '#F0F7F6', paddingTop: 72, paddingBottom: 72 }}
+      style={{ background: '#e8f9f6', paddingTop: 72, paddingBottom: 72 }}
     >
       <div className="lp-container">
         <FadeUp
@@ -41,7 +41,7 @@ export function Particuliers() {
               borderRadius: 100,
               padding: '6px 16px',
               marginBottom: 20,
-              border: '1px solid #EAF4F3',
+              border: '1px solid #e8f9f6',
             }}
           >
             <span style={{ fontSize: 13, fontWeight: 600, color: '#6B7280' }}>
@@ -77,11 +77,11 @@ export function Particuliers() {
                 background: '#fff',
                 borderRadius: 14,
                 padding: '20px 28px',
-                border: '2px solid #4A9B8E',
+                border: '2px solid #009689',
                 display: 'inline-block',
               }}
             >
-              <span style={{ fontSize: 16, fontWeight: 700, color: '#4A9B8E' }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: '#009689' }}>
                 Vous serez parmi les premiers prévenus&nbsp;!
               </span>
             </div>
@@ -113,14 +113,14 @@ export function Particuliers() {
                   background: '#fff',
                   color: '#1A1A1A',
                 }}
-                onFocus={(e) => (e.currentTarget.style.borderColor = '#4A9B8E')}
+                onFocus={(e) => (e.currentTarget.style.borderColor = '#009689')}
                 onBlur={(e) => (e.currentTarget.style.borderColor = '#E5E7EB')}
               />
               <button
                 type="submit"
                 disabled={loading}
                 style={{
-                  background: '#4A9B8E',
+                  background: '#009689',
                   color: '#fff',
                   fontSize: 14,
                   fontWeight: 700,
@@ -132,10 +132,10 @@ export function Particuliers() {
                   cursor: loading ? 'not-allowed' : 'pointer',
                 }}
                 onMouseEnter={(e) => {
-                  if (!loading) e.currentTarget.style.background = '#2D6B62';
+                  if (!loading) e.currentTarget.style.background = '#00786c';
                 }}
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.background = '#4A9B8E')
+                  (e.currentTarget.style.background = '#009689')
                 }
               >
                 {loading ? 'Envoi…' : 'Je veux être prévenu(e)'}

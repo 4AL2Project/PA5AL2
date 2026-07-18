@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from 'react';
 
 import { saveToken, verifyAssoToken } from '@/lib/api';
 import { SavelyLogo } from '@/components/savely-logo';
+import { buttonVariants } from '@/components/ui/button';
 
 type State = 'loading' | 'success' | 'expired' | 'invalid' | 'no_token';
 
@@ -40,9 +41,8 @@ function VerifyContent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6">
       <div className="w-full max-w-sm space-y-6 text-center">
-        <div className="mb-8 flex items-center justify-center gap-2.5">
-          <SavelyLogo size={36} />
-          <span className="text-xl font-bold text-foreground">Savely</span>
+        <div className="mb-8 flex items-center justify-center">
+          <SavelyLogo className="h-auto w-28 text-foreground" />
         </div>
 
         {state === 'loading' && (
@@ -99,7 +99,7 @@ function VerifyContent() {
             </p>
             <a
               href="/auth/login"
-              className="mt-5 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              className={buttonVariants({ size: 'lg', className: 'mt-5' })}
             >
               Se connecter →
             </a>
@@ -129,7 +129,7 @@ function VerifyContent() {
             </p>
             <a
               href="/auth/login"
-              className="mt-5 inline-block rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+              className={buttonVariants({ size: 'lg', className: 'mt-5' })}
             >
               Se connecter →
             </a>

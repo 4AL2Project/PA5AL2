@@ -7,16 +7,19 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
+import * as QRCode from 'qrcode';
 
 import { config } from '../../core/config';
+import { StorageService } from '../../core/storage/storage.service';
 import { prisma } from '../../database/client';
 import { EmailService } from '../email/email.service';
 import { CerfaService } from './cerfa.service';
 import {
   computePickupSlots,
   DonationLineSnapshot,
+  generateRecoveryCode,
   intersectWindows,
-  isValidPickupSlot,
   MAX_DONATION_AGE_DAYS,
   MAX_PROPOSALS_PER_DONATION,
   MISSED_PICKUP_GRACE_HOURS,
@@ -30,6 +33,10 @@ export interface CreateDonationInput {
   // Mode avancé : proposer d'abord à cette asso (si elle est éligible) —
   // le reste de la cascade reste piloté par l'orchestrateur
   preferred_association_id?: string;
+  // Créneaux spécifiques fixés par le titulaire à la création du don.
+  // Si renseigné, ces slots sont utilisés pour toutes les propositions de
+  // ce don (sinon l'orchestrateur calcule depuis pharmacy.donation_pickup_windows).
+  pickup_windows?: { start: string; end: string }[];
 }
 
 export interface RespondInput {
@@ -56,7 +63,8 @@ export class DonationOrchestratorService {
   constructor(
     private readonly matching: DonationMatchingService,
     private readonly email: EmailService,
-    private readonly cerfa: CerfaService
+    private readonly cerfa: CerfaService,
+    private readonly storage: StorageService
   ) {}
 
   // ── Création (le titulaire valide le don UNE fois, ensuite le système pilote)
@@ -99,6 +107,9 @@ export class DonationOrchestratorService {
         pharmacy_id: pharmacyId,
         action_id: input.action_id ?? null,
         status: 'EN_COURS',
+        pickup_windows: input.pickup_windows
+          ? JSON.parse(JSON.stringify(input.pickup_windows))
+          : undefined,
         lines: {
           create: input.lines.map((l) => ({
             product_id: l.product_id,
@@ -247,7 +258,7 @@ export class DonationOrchestratorService {
             next.contact_email!,
             next.name,
             donation.pharmacy.name,
-            `${config.frontUrl}/don/${proposal.token}`,
+            `${config.assoAppUrl}/offres/${proposal.proposal_id}`,
             expiresAt
           )
       );
@@ -327,6 +338,8 @@ export class DonationOrchestratorService {
         payload: reason ? { reason } : undefined,
       },
     });
+    // Refus d'offre → -5 fiabilité
+    await this.updateAssoScore(proposal.association_id, -5);
     // Refus → cascade immédiate vers l'asso suivante
     await this.proposeNext(proposal.donation_id);
     return this.getProposalView(proposal.token);
@@ -341,6 +354,9 @@ export class DonationOrchestratorService {
       proposed_lines: unknown;
       donation: {
         version: number;
+        // Créneaux spécifiques fixés par le titulaire à la création du don.
+        // Prioritaires sur les fenêtres hebdo de la pharmacie.
+        pickup_windows?: unknown;
         pharmacy: {
           name: string;
           address: string | null;
@@ -386,25 +402,33 @@ export class DonationOrchestratorService {
       );
     }
 
+    const donationSlots = proposal.donation.pickup_windows as
+      | { start: string; end: string }[]
+      | null
+      | undefined;
+
+    if (!donationSlots?.length) {
+      throw new BadRequestException(
+        'Aucun créneau disponible — contactez la pharmacie'
+      );
+    }
     if (!input.slot_start || !input.slot_end) {
       throw new BadRequestException('Choisissez un créneau de récupération');
     }
     const slotStart = new Date(input.slot_start);
     const slotEnd = new Date(input.slot_end);
-    const windows = intersectWindows(
-      parsePickupWindows(proposal.donation.pharmacy.donation_pickup_windows),
-      proposal.association.pickup_windows
+    if (isNaN(slotStart.getTime()) || isNaN(slotEnd.getTime())) {
+      throw new BadRequestException(
+        "Ce créneau n'est plus disponible — rechargez la page"
+      );
+    }
+    const now = new Date();
+    const matches = donationSlots.some(
+      (s) =>
+        new Date(s.start).getTime() === slotStart.getTime() &&
+        new Date(s.end).getTime() === slotEnd.getTime()
     );
-    if (
-      isNaN(slotStart.getTime()) ||
-      isNaN(slotEnd.getTime()) ||
-      !isValidPickupSlot(
-        windows,
-        proposal.association.pickup_sla_days,
-        slotStart,
-        slotEnd
-      )
-    ) {
+    if (!matches || slotStart <= now) {
       throw new BadRequestException(
         "Ce créneau n'est plus disponible — rechargez la page"
       );
@@ -458,6 +482,7 @@ export class DonationOrchestratorService {
             lines: accepted as unknown as object[],
             pickup_slot_start: slotStart,
             pickup_slot_end: slotEnd,
+            recovery_code: generateRecoveryCode(),
           },
         });
         await tx.donationEvent.create({
@@ -503,6 +528,36 @@ export class DonationOrchestratorService {
       );
     }
 
+    // Générer et stocker l'image QR code sur S3 après le commit de l'allocation
+    try {
+      const allocation = await prisma.donationAllocation.findUnique({
+        where: { proposal_id: proposal.proposal_id },
+        select: { allocation_id: true, qr_code: true },
+      });
+      if (allocation) {
+        const qrUrl = `${config.assoAppUrl}/pickup/${allocation.qr_code}`;
+        const qrBuffer = await QRCode.toBuffer(qrUrl, {
+          type: 'png',
+          width: 300,
+        });
+        const qrCodeUrl = await this.storage.upload({
+          key: `dons/qrcodes/${allocation.allocation_id}.png`,
+          body: qrBuffer,
+          contentType: 'image/png',
+        });
+        await prisma.donationAllocation.update({
+          where: { allocation_id: allocation.allocation_id },
+          data: { qr_code_url: qrCodeUrl },
+        });
+        this.logger.log(
+          `[allocation ${allocation.allocation_id}] QR code uploadé → ${qrCodeUrl}`
+        );
+      }
+    } catch (err) {
+      // Non bloquant : le QR code peut être regénéré à la demande
+      this.logger.warn(`QR code upload failed: ${err}`);
+    }
+
     // Le reliquat n'est re-proposé qu'après commit de l'allocation (cas n°3)
     if (isPartial) {
       await this.proposeNext(proposal.donation_id);
@@ -515,7 +570,16 @@ export class DonationOrchestratorService {
   async cancelDonation(donationId: string, pharmacyId: string, userId: string) {
     const donation = await prisma.donation.findFirst({
       where: { donation_id: donationId, pharmacy_id: pharmacyId },
-      include: { allocations: { where: { status: 'PLANIFIEE' } } },
+      include: {
+        allocations: {
+          where: { status: 'PLANIFIEE' },
+          include: {
+            association: { select: { name: true, contact_email: true } },
+          },
+        },
+        lines: { include: { product: { select: { name: true } } } },
+        pharmacy: { select: { name: true } },
+      },
     });
     if (!donation) throw new NotFoundException('Don introuvable');
     if (donation.status !== 'EN_COURS') {
@@ -525,7 +589,7 @@ export class DonationOrchestratorService {
     }
     if (donation.allocations.length > 0) {
       throw new BadRequestException(
-        'Un retrait est déjà planifié — le don ne peut plus être annulé'
+        'Un retrait est déjà planifié, le don ne peut plus être annulé'
       );
     }
 
@@ -544,14 +608,45 @@ export class DonationOrchestratorService {
         where: { donation_id: donationId, status: 'ENVOYEE' },
         data: { status: 'SUPERSEDED' },
       });
+      // Si une asso avait déjà accepté, on marque son allocation comme non récupérée
+      if (donation.allocations.length > 0) {
+        await tx.donationAllocation.updateMany({
+          where: { donation_id: donationId, status: 'PLANIFIEE' },
+          data: { status: 'NON_RECUPEREE' },
+        });
+      }
       await tx.donationEvent.create({
         data: {
           donation_id: donationId,
           type: 'DON_ANNULE',
           actor: `TITULAIRE:${userId}`,
+          payload:
+            donation.allocations.length > 0
+              ? {
+                  notified_assos: donation.allocations.map(
+                    (a) => a.association.name
+                  ),
+                }
+              : undefined,
         },
       });
     });
+
+    // Notifier les associations dont le retrait était planifié
+    const productSummary = donation.lines
+      .map((l) => `${l.product.name} ×${l.quantity_total}`)
+      .join(', ');
+    for (const allocation of donation.allocations) {
+      if (allocation.association.contact_email) {
+        await this.email.sendDonationCancelledByPharmacyEmail(
+          allocation.association.contact_email,
+          allocation.association.name,
+          donation.pharmacy.name,
+          productSummary,
+          allocation.pickup_slot_start
+        );
+      }
+    }
 
     if (donation.action_id) {
       await prisma.action.updateMany({
@@ -567,7 +662,7 @@ export class DonationOrchestratorService {
   async confirmPickup(
     allocationId: string,
     pharmacyId: string,
-    pickedUpBy: string,
+    pickedUpBy: string | undefined,
     actor: string
   ) {
     const allocation = await prisma.donationAllocation.findFirst({
@@ -575,18 +670,24 @@ export class DonationOrchestratorService {
         allocation_id: allocationId,
         donation: { pharmacy_id: pharmacyId },
       },
-      include: { donation: true, association: true },
+      include: {
+        donation: {
+          include: { pharmacy: { select: { name: true, email: true } } },
+        },
+        association: true,
+      },
     });
     if (!allocation) throw new NotFoundException('Allocation introuvable');
+    if (pickedUpBy !== undefined && !pickedUpBy.trim()) {
+      throw new BadRequestException(
+        'Le nom du récupérateur ne peut pas être vide'
+      );
+    }
     if (allocation.status !== 'PLANIFIEE') {
       throw new BadRequestException(
         `Retrait non confirmable (statut : ${allocation.status})`
       );
     }
-    if (!pickedUpBy?.trim()) {
-      throw new BadRequestException('Le nom du récupérateur est requis');
-    }
-
     // Suffixe aléatoire : deux retraits confirmés dans la même milliseconde
     // ne doivent jamais partager un numéro de reçu fiscal
     const cerfaNumber = `CERFA-DON-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
@@ -597,7 +698,7 @@ export class DonationOrchestratorService {
         where: { allocation_id: allocationId, status: 'PLANIFIEE' },
         data: {
           status: 'RETIREE',
-          picked_up_by: pickedUpBy.trim(),
+          picked_up_by: pickedUpBy?.trim() ?? null,
           picked_up_at: new Date(),
           cerfa_number: cerfaNumber,
         },
@@ -631,7 +732,7 @@ export class DonationOrchestratorService {
           actor,
           payload: {
             association_name: allocation.association.name,
-            picked_up_by: pickedUpBy.trim(),
+            picked_up_by: pickedUpBy?.trim() ?? null,
             cerfa_number: cerfaNumber,
             lines: allocation.lines as object[],
           },
@@ -639,15 +740,75 @@ export class DonationOrchestratorService {
       });
     });
 
-    // Cerfa envoyé à l'asso + disponible côté titulaire (endpoint PDF)
-    if (allocation.association.contact_email) {
+    // Cerfa envoyé à l'asso + au titulaire + disponible côté titulaire (endpoint PDF)
+    // Le PDF est aussi stocké sur S3 pour consultation ultérieure (cerfa_url)
+    const lineSummary = lines.map((l) => `${l.name} ×${l.quantity}`).join(', ');
+    try {
+      const pdf = await this.cerfa.generateCerfa(allocationId, pharmacyId);
+      const cerfaUrl = await this.storage.upload({
+        key: `dons/cerfa/${allocationId}/cerfa-${cerfaNumber}.pdf`,
+        body: pdf,
+        contentType: 'application/pdf',
+      });
+      await prisma.donationAllocation.update({
+        where: { allocation_id: allocationId },
+        data: { cerfa_url: cerfaUrl },
+      });
+      this.logger.log(
+        `[allocation ${allocationId}] Cerfa uploadé → ${cerfaUrl}`
+      );
+
+      if (allocation.association.contact_email) {
+        await this.sendOnce(
+          { allocation_id: allocationId, email_type: 'CONFIRMATION_RETRAIT' },
+          () =>
+            this.email.sendPickupConfirmedEmail(
+              allocation.association.contact_email!,
+              allocation.association.name,
+              pdf
+            )
+        );
+      }
+      // Cerfa également envoyé au titulaire de l'officine
       await this.sendOnce(
-        { allocation_id: allocationId, email_type: 'CONFIRMATION_RETRAIT' },
+        { allocation_id: allocationId, email_type: 'CERFA_TITULAIRE' },
+        () =>
+          this.email.sendCerfaToPharmacyEmail(
+            allocation.donation.pharmacy.email,
+            allocation.association.name,
+            lineSummary,
+            pdf
+          )
+      );
+    } catch (err) {
+      // Fallback : générer le Cerfa à la volée si l'upload échoue
+      this.logger.error(
+        `Cerfa upload failed, falling back to on-the-fly: ${err}`
+      );
+      if (allocation.association.contact_email) {
+        await this.sendOnce(
+          { allocation_id: allocationId, email_type: 'CONFIRMATION_RETRAIT' },
+          async () => {
+            const pdf = await this.cerfa.generateCerfa(
+              allocationId,
+              pharmacyId
+            );
+            await this.email.sendPickupConfirmedEmail(
+              allocation.association.contact_email!,
+              allocation.association.name,
+              pdf
+            );
+          }
+        );
+      }
+      await this.sendOnce(
+        { allocation_id: allocationId, email_type: 'CERFA_TITULAIRE' },
         async () => {
           const pdf = await this.cerfa.generateCerfa(allocationId, pharmacyId);
-          await this.email.sendPickupConfirmedEmail(
-            allocation.association.contact_email!,
+          await this.email.sendCerfaToPharmacyEmail(
+            allocation.donation.pharmacy.email,
             allocation.association.name,
+            lineSummary,
             pdf
           );
         }
@@ -655,20 +816,48 @@ export class DonationOrchestratorService {
     }
 
     await this.completeIfDone(allocation.donation_id);
+    // Retrait confirmé → +5 fiabilité
+    await this.updateAssoScore(allocation.association_id, +5);
     return prisma.donationAllocation.findUnique({
       where: { allocation_id: allocationId },
     });
   }
 
   /**
-   * Confirmation par scan du QR de l'allocation (app Flutter préparateur).
-   * Résout l'allocation dans le périmètre de l'officine puis délègue au flux
-   * de confirmation standard.
+   * Confirmation par saisie du code de récupération de l'allocation
+   * (app préparateur ou interface web). Résout l'allocation dans le périmètre
+   * de l'officine puis délègue au flux de confirmation standard.
    */
+  async confirmPickupByCode(
+    recoveryCode: string,
+    pharmacyId: string,
+    pickedUpBy: string,
+    actor: string
+  ) {
+    const allocation = await prisma.donationAllocation.findFirst({
+      where: {
+        recovery_code: recoveryCode,
+        donation: { pharmacy_id: pharmacyId },
+      },
+    });
+    if (!allocation) {
+      throw new NotFoundException(
+        'Code de récupération inconnu pour cette officine'
+      );
+    }
+    return this.confirmPickup(
+      allocation.allocation_id,
+      pharmacyId,
+      pickedUpBy,
+      actor
+    );
+  }
+
+  /** @deprecated Utiliser confirmPickupByCode */
   async confirmPickupByQr(
     qrCode: string,
     pharmacyId: string,
-    pickedUpBy: string,
+    pickedUpBy: string | undefined,
     actor: string
   ) {
     const allocation = await prisma.donationAllocation.findFirst({
@@ -771,7 +960,7 @@ export class DonationOrchestratorService {
           this.email.sendDonationReminderEmail(
             proposal.association.contact_email!,
             proposal.association.name,
-            `${config.frontUrl}/don/${proposal.token}`,
+            `${config.assoAppUrl}/offres/${proposal.proposal_id}`,
             proposal.expires_at
           )
       );
@@ -867,6 +1056,9 @@ export class DonationOrchestratorService {
         return true;
       });
       if (!claimed) continue;
+
+      // Non-récupération → -20 fiabilité
+      await this.updateAssoScore(allocation.association_id, -20);
 
       const summary = lines.map((l) => `${l.name} ×${l.quantity}`).join(', ');
       if (allocation.association.contact_email) {
@@ -972,6 +1164,7 @@ export class DonationOrchestratorService {
     donation: {
       donation_id: string;
       status: string;
+      pickup_windows?: unknown;
       pharmacy: {
         name: string;
         address: string | null;
@@ -990,6 +1183,7 @@ export class DonationOrchestratorService {
       pickup_slot_end: Date;
       cerfa_number: string | null;
       qr_code: string;
+      recovery_code: string;
     } | null;
   }) {
     const base = {
@@ -1012,18 +1206,25 @@ export class DonationOrchestratorService {
       ) {
         return { state: 'EXPIREE', ...base };
       }
-      const windows = intersectWindows(
-        parsePickupWindows(proposal.donation.pharmacy.donation_pickup_windows),
-        proposal.association.pickup_windows
-      );
-      return {
-        state: 'ACTIVE',
-        ...base,
-        slots: computePickupSlots(
-          windows,
-          proposal.association.pickup_sla_days
-        ),
-      };
+      // Si le titulaire a fixé des créneaux spécifiques à la création du don,
+      // on les utilise directement. Sinon on calcule depuis les fenêtres
+      // hebdomadaires de la pharmacie et de l'association.
+      const donationSlots = proposal.donation.pickup_windows as
+        | { start: string; end: string }[]
+        | null
+        | undefined;
+      const slots = donationSlots?.length
+        ? donationSlots
+        : computePickupSlots(
+            intersectWindows(
+              parsePickupWindows(
+                proposal.donation.pharmacy.donation_pickup_windows
+              ),
+              proposal.association.pickup_windows
+            ),
+            proposal.association.pickup_sla_days
+          );
+      return { state: 'ACTIVE', ...base, slots };
     }
     if (
       proposal.status === 'ACCEPTEE' ||
@@ -1039,11 +1240,11 @@ export class DonationOrchestratorService {
               pickup_slot_start: proposal.allocation.pickup_slot_start,
               pickup_slot_end: proposal.allocation.pickup_slot_end,
               cerfa_available: proposal.allocation.cerfa_number != null,
-              // QR à présenter au retrait : scanné par le préparateur pour
-              // confirmer le pickup (uniquement tant que le retrait est dû)
-              qr_code:
+              // Code de récupération à présenter au retrait : saisi par le
+              // préparateur pour confirmer le pickup (uniquement si PLANIFIEE)
+              recovery_code:
                 proposal.allocation.status === 'PLANIFIEE'
-                  ? proposal.allocation.qr_code
+                  ? proposal.allocation.recovery_code
                   : null,
             }
           : null,
@@ -1057,6 +1258,36 @@ export class DonationOrchestratorService {
       return { state: 'REMPLACEE', ...base };
     }
     return { state: 'EXPIREE', ...base };
+  }
+
+  // ── Score de fiabilité association ────────────────────────────────────────
+
+  /**
+   * Ajuste le score de fiabilité d'une association.
+   * delta positif = bon comportement (retrait confirmé)
+   * delta négatif = mauvais comportement (refus, non-récupération)
+   * Le score est borné à [0, 100]. Si le score passe sous 30, l'asso est SUSPENDUE.
+   */
+  private async updateAssoScore(
+    associationId: string,
+    delta: number,
+    tx?: Prisma.TransactionClient
+  ): Promise<void> {
+    const db = tx ?? prisma;
+    const asso = await db.association.findUnique({
+      where: { association_id: associationId },
+      select: { score_pickup: true },
+    });
+    if (!asso) return;
+
+    const newScore = Math.min(100, Math.max(0, asso.score_pickup + delta));
+    await db.association.update({
+      where: { association_id: associationId },
+      data: {
+        score_pickup: newScore,
+        ...(newScore < 30 ? { status: 'SUSPENDUE' } : {}),
+      },
+    });
   }
 
   // ── Idempotence des envois (le cron ne renvoie jamais deux fois) ──────────

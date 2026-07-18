@@ -1,24 +1,14 @@
 'use client';
 
-import {
-  CheckCheck,
-  Loader2,
-  Package,
-  QrCode,
-  RefreshCw,
-  Search,
-  X,
-} from 'lucide-react';
+import { Loader2, Package, RefreshCw, X } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { IconButton } from '@/components/ui/icon-button';
-import { Input } from '@/components/ui/input';
 import {
   Pagination,
   PaginationContent,
@@ -45,7 +35,6 @@ import {
 } from '@/components/ui/table';
 import {
   cancelOrder,
-  fetchOrderByQr,
   fetchOrders,
   markOrderReady,
   prepareOrder,
@@ -125,10 +114,6 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('RESERVEE');
   const [actionId, setActionId] = useState<string | null>(null);
-  const [qrInput, setQrInput] = useState('');
-  const [qrOrder, setQrOrder] = useState<Order | null>(null);
-  const [qrLoading, setQrLoading] = useState(false);
-  const [qrError, setQrError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [confirmOrder, setConfirmOrder] = useState<Order | null>(null);
 
@@ -168,21 +153,6 @@ export default function OrdersPage() {
     }
   };
 
-  const handleQrSearch = async () => {
-    if (!qrInput.trim()) return;
-    setQrLoading(true);
-    setQrError(null);
-    setQrOrder(null);
-    try {
-      setQrOrder(await fetchOrderByQr(qrInput.trim()));
-    } catch {
-      setQrError('QR code introuvable ou non rattaché à votre pharmacie.');
-      toast.error('QR code introuvable');
-    } finally {
-      setQrLoading(false);
-    }
-  };
-
   const handleStatusFilter = (v: string) => {
     setStatusFilter(v);
     setPage(1);
@@ -207,95 +177,6 @@ export default function OrdersPage() {
         }
       >
         <div className="space-y-6">
-          {/* QR Scanner */}
-          <Card className="border-border/50">
-            <CardContent>
-              <div className="flex items-center gap-2 mb-3">
-                <QrCode className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Scanner un QR code</span>
-              </div>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Collez ou scannez le QR code ici…"
-                  value={qrInput}
-                  onChange={(e) => setQrInput(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && void handleQrSearch()}
-                  className="max-w-sm font-mono text-sm"
-                />
-                <Button
-                  variant="outline"
-                  onClick={() => void handleQrSearch()}
-                  disabled={qrLoading || !qrInput.trim()}
-                >
-                  {qrLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Search className="h-4 w-4" />
-                  )}
-                </Button>
-                {qrInput && (
-                  <IconButton
-                    variant="ghost"
-                    size="icon"
-                    tooltip="Effacer"
-                    onClick={() => {
-                      setQrInput('');
-                      setQrOrder(null);
-                      setQrError(null);
-                    }}
-                  >
-                    <X className="h-4 w-4" />
-                  </IconButton>
-                )}
-              </div>
-              {qrError && (
-                <p className="mt-2 text-sm text-destructive">{qrError}</p>
-              )}
-              {qrOrder && (
-                <div className="mt-3 rounded-lg border border-border/50 bg-muted/30 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div>
-                    {qrOrder.lines.map((line) => (
-                      <p
-                        key={line.order_line_id}
-                        className="font-medium text-sm"
-                      >
-                        {line.quantity}× {line.offer.product.name}
-                      </p>
-                    ))}
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {qrOrder.customer.first_name} {qrOrder.customer.last_name}{' '}
-                      · {qrOrder.customer.email}
-                    </p>
-                    <div className="mt-1">
-                      <OrderStatusBadge status={qrOrder.status} />
-                    </div>
-                  </div>
-                  {qrOrder.status === 'PRETE' && (
-                    <Button
-                      size="sm"
-                      className="gap-2 shrink-0"
-                      disabled={actionId === qrOrder.order_id}
-                      onClick={() =>
-                        withAction(
-                          qrOrder.order_id,
-                          () => withdrawOrder(qrOrder.order_id),
-                          'Retrait validé'
-                        ).then(() => setQrOrder(null))
-                      }
-                    >
-                      {actionId === qrOrder.order_id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <CheckCheck className="h-4 w-4" />
-                      )}
-                      Valider le retrait
-                    </Button>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
           {/* Filters + table */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">

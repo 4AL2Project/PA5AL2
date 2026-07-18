@@ -136,14 +136,14 @@ function OnboardingContent() {
   if (loadState.kind === 'error') {
     return (
       <AuthShell
-        title="Lien d’invitation invalide"
-        description="Ce lien n’est plus valide ou a déjà été utilisé."
+        title="Lien d'invitation invalide"
+        description="Ce lien n'est plus valide ou a déjà été utilisé."
       >
         <div className="rounded-lg border bg-muted/30 p-4 flex items-start gap-3 mb-5">
           <AlertCircle className="h-4 w-4 text-destructive mt-0.5" />
           <p className="text-xs text-muted-foreground">
             Les invitations expirent au bout de 48 heures. Contactez votre
-            administrateur Savely pour qu’une nouvelle invitation vous soit
+            administrateur Savely pour qu'une nouvelle invitation vous soit
             envoyée.
           </p>
         </div>
@@ -288,9 +288,9 @@ function OnboardingContent() {
             htmlFor="terms"
             className="text-xs leading-relaxed text-muted-foreground"
           >
-            J’accepte les{' '}
+            J'accepte les{' '}
             <Link href="/legal/terms" className="text-primary hover:underline">
-              conditions générales d’utilisation
+              conditions générales d'utilisation
             </Link>{' '}
             et la{' '}
             <Link

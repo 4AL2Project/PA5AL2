@@ -3,9 +3,9 @@ import {
   Body,
   Controller,
   Get,
-  Header,
   Param,
   Post,
+  Put,
   Query,
   Res,
   UseGuards,
@@ -35,6 +35,7 @@ import {
   CreateDonationDto,
   EligiblePreviewDto,
   ScanPickupDto,
+  UpdateDonParametresDto,
 } from './dto/donation.dto';
 
 @ApiTags('donations')
@@ -74,6 +75,25 @@ export class DonationsController {
   })
   upcomingPickups(@TenantPharmacyId() pharmacyId: string) {
     return this.donationsService.upcomingPickups(pharmacyId);
+  }
+
+  @Get('parametres')
+  @Roles(UserRole.TITULAIRE)
+  @ApiOperation({
+    summary: 'Paramètres de don (seuil dormance, rayon matching)',
+  })
+  getParametres(@TenantPharmacyId() pharmacyId: string) {
+    return this.donationsService.getParametres(pharmacyId);
+  }
+
+  @Put('parametres')
+  @Roles(UserRole.TITULAIRE)
+  @ApiOperation({ summary: 'Modifier les paramètres de don' })
+  updateParametres(
+    @TenantPharmacyId() pharmacyId: string,
+    @Body() dto: UpdateDonParametresDto
+  ) {
+    return this.donationsService.updateParametres(pharmacyId, dto);
   }
 
   @Post('eligible-preview')
@@ -124,17 +144,17 @@ export class DonationsController {
   @Post('pickup/scan')
   @ApiOperation({
     summary:
-      "Confirmer un retrait par scan du QR de l'allocation (app préparateur)",
+      'Confirmer un retrait par saisie du code de récupération (app préparateur)',
   })
   scanPickup(
     @TenantPharmacyId() pharmacyId: string,
     @CurrentUser() user: { sub: string; role: string },
     @Body() dto: ScanPickupDto
   ) {
-    return this.orchestrator.confirmPickupByQr(
-      dto.qr_code,
+    return this.orchestrator.confirmPickupByCode(
+      dto.recovery_code,
       pharmacyId,
-      dto.picked_up_by,
+      dto.picked_up_by ?? '',
       `${user.role}:${user.sub}`
     );
   }
@@ -163,16 +183,17 @@ export class DonationsController {
     summary: 'Télécharger le reçu Cerfa PDF (allocation RETIREE requise)',
   })
   @ApiProduces('application/pdf')
-  @Header('Content-Type', 'application/pdf')
   async downloadCerfa(
     @Param('id') id: string,
     @TenantPharmacyId() pharmacyId: string,
     @Res() res: Response
   ) {
     const pdf = await this.cerfaService.generateCerfa(id, pharmacyId);
+    // @Header() decorator n'est pas appliqué avec @Res() sans passthrough
+    res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="cerfa-16216-${id}.pdf"`
+      `inline; filename="cerfa-16216-${id}.pdf"`
     );
     res.setHeader('Content-Length', pdf.length);
     res.end(pdf);

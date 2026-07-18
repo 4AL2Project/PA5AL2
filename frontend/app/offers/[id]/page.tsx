@@ -80,6 +80,18 @@ function toDateInputValue(iso: string | null): string {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * Empêche la saisie d'une quantité supérieure au stock : la valeur est
+ * plafonnée dès la frappe (les valeurs vides/partielles sont laissées telles
+ * quelles pour ne pas gêner la saisie).
+ */
+function clampQuantityInput(value: string, max: number): string {
+  if (value === '') return value;
+  const n = parseInt(value, 10);
+  if (Number.isNaN(n)) return value;
+  return n > max ? String(max) : value;
+}
+
 export default function OfferDetailPage({
   params,
 }: {
@@ -128,6 +140,9 @@ export default function OfferDetailPage({
   }, []);
 
   const isTerminated = offer?.status === 'TERMINEE';
+  // Dès qu'au moins une réservation est en cours, la quantité proposée est
+  // verrouillée et l'offre ne peut plus être suspendue.
+  const hasReservations = (offer?.reserved_quantity ?? 0) > 0;
 
   const validate = (o: OfferDetail) => {
     const errs: typeof errors = {};
@@ -464,13 +479,27 @@ export default function OfferDetailPage({
                     type="number"
                     step="1"
                     min="1"
-                    disabled={isTerminated}
+                    max={offer.product.stock_quantity}
+                    disabled={isTerminated || hasReservations}
                     value={quantity}
                     onChange={(e) => {
-                      setQuantity(e.target.value);
+                      setQuantity(
+                        clampQuantityInput(
+                          e.target.value,
+                          offer.product.stock_quantity
+                        )
+                      );
                       setErrors((prev) => ({ ...prev, quantity: undefined }));
                     }}
                   />
+                  {hasReservations && !isTerminated && (
+                    <p className="text-xs text-muted-foreground">
+                      Quantité verrouillée : {offer.reserved_quantity}{' '}
+                      réservation
+                      {offer.reserved_quantity !== 1 ? 's' : ''} en cours sur
+                      cette offre.
+                    </p>
+                  )}
                   {errors.quantity && (
                     <p className="text-xs text-destructive">
                       {errors.quantity}
@@ -560,7 +589,12 @@ export default function OfferDetailPage({
                     <Button
                       variant="outline"
                       className="gap-2"
-                      disabled={statusBusy}
+                      disabled={statusBusy || hasReservations}
+                      title={
+                        hasReservations
+                          ? 'Impossible de suspendre : des réservations sont en cours.'
+                          : undefined
+                      }
                       onClick={() =>
                         changeStatus(
                           () => suspendOffer(offer.offer_id),
@@ -599,6 +633,17 @@ export default function OfferDetailPage({
                   </Button>
                   {statusBusy && (
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                  {offer.status === 'ACTIVE' && hasReservations && (
+                    <p className="w-full text-xs text-muted-foreground">
+                      Cette offre a {offer.reserved_quantity} réservation
+                      {offer.reserved_quantity !== 1 ? 's' : ''} en cours et ne
+                      peut pas être suspendue tant que{' '}
+                      {offer.reserved_quantity !== 1
+                        ? 'elles ne sont pas retirées'
+                        : "elle n'est pas retirée"}
+                      .
+                    </p>
                   )}
                 </div>
               )}

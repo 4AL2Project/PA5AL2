@@ -7,7 +7,11 @@ import { DeactivateOfficineButton } from '@/components/admin/deactivate-officine
 import { DeleteOfficineButton } from '@/components/admin/delete-officine-button';
 import { OfficineDetail } from '@/components/admin/officine-detail';
 import { Button } from '@/components/ui/button';
-import { fetchPharmacy } from '@/lib/admin';
+import {
+  fetchAdminDonations,
+  fetchAdminDonParametres,
+  fetchPharmacy,
+} from '@/lib/admin';
 import { getSession } from '@/lib/session';
 
 export default async function OfficineDetailPage({
@@ -21,13 +25,21 @@ export default async function OfficineDetailPage({
   }
 
   const { id } = await params;
-  const pharmacy = await fetchPharmacy(session.access_token, id);
+  const [pharmacy, recentDons, donParams] = await Promise.all([
+    fetchPharmacy(session.access_token, id),
+    fetchAdminDonations(session.access_token, {
+      pharmacy_id: id,
+      page: 1,
+      limit: 5,
+    }),
+    fetchAdminDonParametres(session.access_token, id),
+  ]);
 
   if (!pharmacy) {
     return (
       <AdminShell
         title="Officine introuvable"
-        description="Cette officine n’existe pas ou n’est plus accessible."
+        description="Cette officine n'existe pas ou n'est plus accessible."
         adminEmail={session.claims.email}
         actions={
           <Button asChild variant="outline" size="sm" className="gap-1.5">
@@ -72,11 +84,15 @@ export default async function OfficineDetailPage({
       {isInactive && (
         <div className="mb-6 flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-2.5 text-xs text-destructive">
           <Ban className="h-3.5 w-3.5" />
-          Cette officine est désactivée. Ses utilisateurs n’ont plus accès à
+          Cette officine est désactivée. Ses utilisateurs n'ont plus accès à
           Savely.
         </div>
       )}
-      <OfficineDetail pharmacy={pharmacy} />
+      <OfficineDetail
+        pharmacy={pharmacy}
+        recentDons={recentDons}
+        donParams={donParams}
+      />
     </AdminShell>
   );
 }

@@ -32,6 +32,7 @@ model Pharmacy {
   offers            Offer[]
   orders            Order[]
   categories        Category[]
+  don_parametres    DonParametres?
 }
 
 // Catégorie de classement d'une Offer B2C (référentiel exposé au catalogue mobile).
@@ -72,6 +73,7 @@ model User {
   auth_tokens AuthToken[]
   otps        UserOtp[]
   order_activities OrderActivity[]
+  notifications    Notification[]
 }
 
 model AuthToken {
@@ -213,9 +215,18 @@ model Association {
   contact_email   String?
   contact_phone   String?
   logo_url        String?
-  // ACTIVE | EN_ATTENTE_VALIDATION | REJETEE | SUSPENDUE
+  // ACTIVE | EN_ATTENTE_VALIDATION | REJETEE | SUSPENDUE | BLACKLISTEE
   status          String    @default("ACTIVE")
   rejection_reason String?
+  // Agrément préfectoral / habilitation ouvrant droit au reçu fiscal (Cerfa)
+  agrement_numero  String?
+  agrement_valide  Boolean   @default(false)
+  // Horodatage de mise en liste noire (BLACKLISTEE, uniquement depuis SUSPENDUE)
+  blacklisted_at   DateTime?
+  // Score de fiabilité (0–100, démarre à 100) :
+  // +5 retrait confirmé, -5 refus d'offre, -20 non-récupération.
+  // < 30 → statut SUSPENDUE automatiquement.
+  score_pickup    Int       @default(100)
   // Éligibilité au reçu fiscal vérifiée par l'admin (art. 200/238 bis CGI)
   fiscal_receipt_verified Boolean @default(false)
   email_verified_at DateTime?
@@ -229,9 +240,46 @@ model Association {
   // matching sans requête d'agrégation à chaque classement
   last_proposal_at DateTime?
   created_at      DateTime  @default(now())
+  // Espace association : magic link de connexion
+  magic_link_token_hash  String?   @unique
+  magic_link_expires_at  DateTime?
+  // true après le premier passage dans PUT /asso/me (onboarding complété)
+  is_onboarded           Boolean   @default(false)
+  description            String?
+  site_web               String?
 
   proposals       DonationProposal[]
   allocations     DonationAllocation[]
+  notes           AssociationNote[]
+  logs            AssociationLog[]
+}
+
+// Note interne rédigée par un admin Savely sur une association (back-office).
+model AssociationNote {
+  note_id        String      @id @default(uuid())
+  association_id String
+  admin_email    String
+  contenu        String
+  created_at     DateTime    @default(now())
+
+  association    Association @relation(fields: [association_id], references: [association_id], onDelete: Cascade)
+
+  @@index([association_id, created_at(sort: Desc)])
+}
+
+// Journal d'audit des actions admin sur une association (back-office).
+// action : CREATED | INVITED | STATUS_CHANGED | NOTE_ADDED | UPDATED | ONBOARDED …
+model AssociationLog {
+  log_id         String      @id @default(uuid())
+  association_id String
+  admin_email    String?
+  action         String
+  details        String?
+  created_at     DateTime    @default(now())
+
+  association    Association @relation(fields: [association_id], references: [association_id], onDelete: Cascade)
+
+  @@index([association_id, created_at(sort: Desc)])
 }
 
 // Don = LOT multi-produits piloté par l'orchestrateur.
@@ -239,14 +287,18 @@ model Association {
 // version : optimistic locking sur les transitions concurrentes (réponse asso
 // vs annulation titulaire vs cron d'expiration).
 model Donation {
-  donation_id   String    @id @default(uuid())
-  pharmacy_id   String
-  action_id     String?
-  status        String    @default("EN_COURS") // EN_COURS|COMPLETEE|ECHOUEE|ANNULEE
-  attempt_count Int       @default(0)
-  version       Int       @default(0)
-  created_at    DateTime  @default(now())
-  updated_at    DateTime  @updatedAt
+  donation_id      String    @id @default(uuid())
+  pharmacy_id      String
+  action_id        String?
+  status           String    @default("EN_COURS") // EN_COURS|COMPLETEE|ECHOUEE|ANNULEE
+  attempt_count    Int       @default(0)
+  version          Int       @default(0)
+  // Créneaux de récupération spécifiques fixés par le titulaire à la création
+  // du don. Format : [{ start: ISO, end: ISO }]. Si null, l'orchestrateur
+  // calcule les créneaux depuis pharmacy.donation_pickup_windows.
+  pickup_windows   Json?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
 
   pharmacy      Pharmacy  @relation(fields: [pharmacy_id], references: [pharmacy_id])
   action        Action?   @relation(fields: [action_id], references: [action_id])
@@ -312,14 +364,17 @@ model DonationAllocation {
   // [{product_id, name, quantity, unit_value}]
   lines             Json
   status            String    @default("PLANIFIEE") // PLANIFIEE|RETIREE|NON_RECUPEREE
-  // QR présenté par l'asso au retrait, scanné par le préparateur (app
-  // Flutter) pour confirmer le pickup — le web reste un fallback titulaire
+  // Code présenté par l'asso au retrait, saisi par le préparateur pour
+  // confirmer le pickup — le web reste un fallback titulaire
   qr_code           String    @unique @default(uuid())
+  recovery_code     String    @unique @default("")
   pickup_slot_start DateTime
   pickup_slot_end   DateTime
   picked_up_by      String?
   picked_up_at      DateTime?
   cerfa_number      String?
+  cerfa_url         String?   // URL S3/CloudFront du PDF Cerfa généré
+  qr_code_url       String?   // URL S3/CloudFront de l'image QR code
 
   donation          Donation    @relation(fields: [donation_id], references: [donation_id], onDelete: Cascade)
   association       Association @relation(fields: [association_id], references: [association_id])
@@ -396,7 +451,8 @@ model Customer {
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
 
-  orders      Order[]
+  orders        Order[]
+  notifications Notification[]
 }
 
 // Code OTP à usage unique pour la connexion Customer B2C (app mobile).
@@ -510,4 +566,60 @@ model OrderActivity {
   actor       User?    @relation(fields: [actor_id], references: [user_id])
 
   @@index([order_id, created_at])
+}
+
+// Historique des notifications reçues, alimentant le centre in-app (cloche).
+// Un seul destinataire renseigné : customer_id (B2C) ou user_id (préparateur).
+model Notification {
+  notification_id String    @id @default(uuid())
+  customer_id     String?
+  user_id         String?
+  type            String    // ORDER_CONFIRMED|ORDER_READY|ORDER_CANCELLED|NEW_ORDER_FOR_PREP
+  title           String
+  body            String
+  data            Json?
+  read_at         DateTime?
+  created_at      DateTime  @default(now())
+
+  customer        Customer? @relation(fields: [customer_id], references: [customer_id], onDelete: Cascade)
+  user            User?     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([customer_id, created_at])
+  @@index([user_id, created_at])
+}
+
+model DonParametres {
+  id                   String   @id @default(uuid())
+  pharmacy_id          String   @unique
+  seuil_dormance_jours Int      @default(90)
+  rayon_matching_km    Int      @default(50)
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+  pharmacy             Pharmacy @relation(fields: [pharmacy_id], references: [pharmacy_id])
+}
+
+// Demandes de démo soumises depuis la landing page.
+model DemoRequest {
+  id             String    @id @default(uuid())
+  first_name     String
+  last_name      String
+  email          String
+  phone          String?
+  pharmacy_name  String
+  pharmacy_count Int       @default(1)
+  message        String?
+  contacted_at   DateTime?
+  created_at     DateTime  @default(now())
+
+  @@index([created_at(sort: Desc)])
+  @@index([email])
+}
+
+// Emails de particuliers intéressés par l'app mobile (waitlist landing).
+model WaitlistEntry {
+  id         String   @id @default(uuid())
+  email      String   @unique
+  created_at DateTime @default(now())
+
+  @@index([created_at(sort: Desc)])
 }

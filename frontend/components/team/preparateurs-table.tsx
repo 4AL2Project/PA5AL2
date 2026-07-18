@@ -156,7 +156,7 @@ function InvitePreparateurDialog({
             <Button type="submit" disabled={submitting || !canSubmit}>
               {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               <Mail className="h-3.5 w-3.5" />
-              Envoyer l’invitation
+              Envoyer l'invitation
             </Button>
           </DialogFooter>
         </form>
@@ -518,7 +518,7 @@ export function PreparateursTable({
             <AlertDialogTitle>Supprimer ce préparateur ?</AlertDialogTitle>
             <AlertDialogDescription>
               {deleteTarget &&
-                `${preparateurName(deleteTarget)} perdra l’accès à l’officine. Cette action est irréversible.`}
+                `${preparateurName(deleteTarget)} perdra l'accès à l'officine. Cette action est irréversible.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

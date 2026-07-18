@@ -27,6 +27,7 @@ const ID_FIELDS: Record<string, string> = {
   donationAllocation: 'allocation_id',
   donationEvent: 'event_id',
   donationEmailLog: 'id',
+  donParametres: 'id',
 };
 
 const RELATIONS: Record<string, Record<string, RelationDef>> = {
@@ -274,6 +275,12 @@ export function createFakeDb(): FakeDb {
         allocation_id: null,
         sent_at: new Date(),
       });
+    if (model === 'donParametres')
+      Object.assign(row, {
+        seuil_dormance_jours: 90,
+        rayon_matching_km: 50,
+      });
+    if (model === 'association') Object.assign(row, { score_pickup: 100 });
 
     // Nested create ({relation: {create: ...}}) vs colonne scalaire (ex. le
     // JSON `lines` d'une allocation) : seuls les objets {create} avec une
@@ -364,6 +371,16 @@ export function createFakeDb(): FakeDb {
           row.updated_at = new Date();
         }
         return { count: rows.length };
+      },
+      upsert: async ({ where, update, create, include }: Row) => {
+        const existing = tables[model].find((r) => matches(model, r, where));
+        if (existing) {
+          applyData(existing, update);
+          existing.updated_at = new Date();
+          return attachIncludes(model, existing, include);
+        }
+        const row = insert(model, create);
+        return attachIncludes(model, row, include);
       },
       deleteMany: async ({ where }: Row = {}) => {
         const keep = tables[model].filter((r) => !matches(model, r, where));

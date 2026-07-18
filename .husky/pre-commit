@@ -1,3 +1,15 @@
+# Corrige le style, puis re-stage les fichiers déjà indexés pour que les
+# corrections automatiques (eslint --fix + prettier) atterrissent DANS le commit
+# au lieu de dériver dans le working tree (sinon le formatage se retrouve décalé
+# d'un commit). On ne re-stage que les fichiers déjà stagés : les modifications
+# non indexées (WIP hors commit) restent en dehors.
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+
 npm run lint:fix
 npm run format
-npm run typecheck 
+
+if [ -n "$staged" ]; then
+  printf '%s\n' "$staged" | xargs -I {} git add -- {}
+fi
+
+npm run typecheck

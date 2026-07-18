@@ -169,6 +169,8 @@ export class OrderService {
 
     const notifPayload = {
       order_id: order.order_id,
+      customer_id: customerId,
+      pharmacy_id: order.pharmacy_id,
       customer_email: customer.email,
       customer_name: [customer.first_name, customer.last_name]
         .filter(Boolean)
@@ -317,6 +319,8 @@ export class OrderService {
 
     await this.notifications.orderReady({
       order_id: order.order_id,
+      customer_id: order.customer_id,
+      pharmacy_id: order.pharmacy_id,
       customer_email: customer.email,
       customer_name: [customer.first_name, customer.last_name]
         .filter(Boolean)
@@ -409,6 +413,8 @@ export class OrderService {
     await this.notifications.orderCancelled(
       {
         order_id: order.order_id,
+        customer_id: order.customer_id,
+        pharmacy_id: order.pharmacy_id,
         customer_email: order.customer.email,
         customer_name: [order.customer.first_name, order.customer.last_name]
           .filter(Boolean)
@@ -468,6 +474,8 @@ export class OrderService {
         this.notifications.orderCancelled(
           {
             order_id: order.order_id,
+            customer_id: order.customer_id,
+            pharmacy_id: order.pharmacy_id,
             customer_email: order.customer.email,
             customer_name: [order.customer.first_name, order.customer.last_name]
               .filter(Boolean)

@@ -175,6 +175,55 @@ describe('DonationsService — bilan RSE', () => {
   });
 });
 
+describe('DonationsService — getParametres / updateParametres', () => {
+  it('doit retourner les defaults si aucun paramètre existant', async () => {
+    const params = await service.getParametres(PHARMACY_ID);
+    expect(params.pharmacy_id).toBe(PHARMACY_ID);
+    expect(params.seuil_dormance_jours).toBe(90);
+    expect(params.rayon_matching_km).toBe(50);
+  });
+
+  it('doit créer une seule entrée même si appelé deux fois (idempotence)', async () => {
+    await service.getParametres(PHARMACY_ID);
+    await service.getParametres(PHARMACY_ID);
+    expect(
+      db.tables['donParametres'].filter((r) => r.pharmacy_id === PHARMACY_ID)
+    ).toHaveLength(1);
+  });
+
+  it('doit mettre à jour le seuil et le rayon dans les limites', async () => {
+    const updated = await service.updateParametres(PHARMACY_ID, {
+      seuil_dormance_jours: 100,
+      rayon_matching_km: 75,
+    });
+    expect(updated.seuil_dormance_jours).toBe(100);
+    expect(updated.rayon_matching_km).toBe(75);
+  });
+
+  it("doit créer l'entrée via updateParametres si elle n'existe pas encore", async () => {
+    const result = await service.updateParametres(PHARMACY_ID, {
+      seuil_dormance_jours: 80,
+      rayon_matching_km: 30,
+    });
+    expect(result.seuil_dormance_jours).toBe(80);
+    expect(result.pharmacy_id).toBe(PHARMACY_ID);
+  });
+
+  // Note : la validation des plages [63,117] et [10,100] est assurée par
+  // class-validator dans UpdateDonParametresDto (frontière HTTP). Le service
+  // fait confiance aux données reçues — pas de vérification de plage ici.
+  it("le service ne lève pas d'erreur sur des valeurs hors plage — la validation est au niveau DTO", async () => {
+    // Ceci n'est PAS le comportement attendu en prod (le DTO bloque avant),
+    // mais confirme que le service lui-même ne rejette pas les données.
+    await expect(
+      service.updateParametres(PHARMACY_ID, {
+        seuil_dormance_jours: 200,
+        rayon_matching_km: 5,
+      })
+    ).resolves.toBeDefined();
+  });
+});
+
 describe('DonationsService — aperçu éligibilité', () => {
   it('retourne le nombre d’assos éligibles pour le dialog de validation', async () => {
     const { product } = seedDonation(PHARMACY_ID);

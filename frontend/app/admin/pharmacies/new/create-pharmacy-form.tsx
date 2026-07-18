@@ -156,9 +156,9 @@ export function CreatePharmacyForm({
         } else if (res.status === 400) {
           setError('Certains champs sont invalides. Vérifiez votre saisie.');
         } else if (res.status === 403) {
-          setError('Vous n’avez pas les droits pour cette action.');
+          setError("Vous n'avez pas les droits pour cette action.");
         } else {
-          setError('Impossible de créer l’officine pour le moment.');
+          setError("Impossible de créer l'officine pour le moment.");
         }
         return;
       }
@@ -189,7 +189,7 @@ export function CreatePharmacyForm({
         </div>
         <h2 className="text-sm font-semibold">Invitation envoyée</h2>
         <p className="mx-auto mt-1 max-w-md text-xs text-muted-foreground">
-          Un email d’activation vient d’être envoyé à{' '}
+          Un email d&apos;activation vient d&apos;être envoyé à{' '}
           <span className="text-foreground font-medium">
             {success.titulaire_email}
           </span>
@@ -224,7 +224,7 @@ export function CreatePharmacyForm({
         </h2>
         <div className="relative space-y-1.5">
           <Label htmlFor="pharmacy-name" className="text-xs">
-            Nom de l’officine
+            Nom de l'officine
           </Label>
           <Input
             id="pharmacy-name"
@@ -363,7 +363,7 @@ export function CreatePharmacyForm({
         )}
         <Button type="submit" disabled={submitting || !canSubmit}>
           {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-          Créer l’officine
+          Créer l'officine
         </Button>
       </div>
     </form>

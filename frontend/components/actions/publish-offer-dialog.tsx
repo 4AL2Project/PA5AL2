@@ -141,7 +141,15 @@ export function PublishOfferDialog({
                 max={action.stock}
                 value={quantity}
                 onChange={(e) => {
-                  setQuantity(e.target.value);
+                  // Plafonne la quantité proposée au stock disponible dès la
+                  // frappe : elle ne doit jamais le dépasser.
+                  const v = e.target.value;
+                  const n = parseInt(v, 10);
+                  setQuantity(
+                    v !== '' && !Number.isNaN(n) && n > action.stock
+                      ? String(action.stock)
+                      : v
+                  );
                   setErrors((prev) => ({ ...prev, quantity: undefined }));
                 }}
               />
